@@ -27,17 +27,19 @@ import { byCategory } from '@/analytics/core';
 import { ACTIVE_TEMPLATE_ID } from '@/domain/templates/registry';
 import { formatR, formatPct } from '@/lib/format';
 import { cn } from '@/lib/cn';
+import { useChartTheme } from '@/lib/chartTheme';
 import type { CategoryBucket } from '@/analytics/core';
 
 /** Color for a bucket based on its avgR. */
-function barColor(avgR: number): string {
-  if (avgR > 0) return 'var(--win)'; // win
-  if (avgR < 0) return 'var(--loss)'; // loss
-  return 'var(--be)'; // be
+function barColor(avgR: number, chartPalette: ReturnType<typeof useChartTheme>): string {
+  if (avgR > 0) return chartPalette.win;
+  if (avgR < 0) return chartPalette.loss;
+  return chartPalette.be;
 }
 
 export function MistakesPage() {
   const { trades, loaded, load } = useTradesStore();
+  const chart = useChartTheme();
 
   useEffect(() => { bootTradesStore(); }, []);
   useEffect(() => { if (!loaded) void load(); }, [loaded, load]);
@@ -212,7 +214,7 @@ export function MistakesPage() {
             </div>
           )}
 
-          {/* R Impact bar chart */}
+{/* R Impact bar chart */}
           {chartData.length > 0 && (
             <Card>
               <CardHeader>
@@ -230,12 +232,12 @@ export function MistakesPage() {
                   >
                     <CartesianGrid
                       strokeDasharray="3 3"
-                      stroke="var(--line)"
+                      stroke={chart.grid}
                       horizontal={false}
                     />
                     <XAxis
                       type="number"
-                      tick={{ fontSize: 11, fill: 'var(--fg-dim)' }}
+                      tick={{ fontSize: 11, fill: chart.axisText }}
                       axisLine={false}
                       tickLine={false}
                       tickFormatter={(v: number) => `${v}R`}
@@ -243,18 +245,18 @@ export function MistakesPage() {
                     <YAxis
                       type="category"
                       dataKey="name"
-                      tick={{ fontSize: 11, fill: 'var(--fg-muted)' }}
+                      tick={{ fontSize: 11, fill: chart.axisMuted }}
                       axisLine={false}
                       tickLine={false}
                       width={110}
                     />
                     <ReTooltip
                       contentStyle={{
-                        background: 'rgb(var(--bg-2))',
-                        border: '1px solid var(--line)',
+                        background: chart.tooltipBg,
+                        border: `1px solid ${chart.tooltipBorder}`,
                         borderRadius: '0.75rem',
-                        boxShadow: 'var(--shadow-pop)',
-                        color: 'rgb(var(--fg))',
+                        boxShadow: chart.tooltipShadow,
+                        color: chart.tooltipText,
                         fontSize: '0.75rem',
                       }}
                       formatter={(value: unknown, _name: unknown, item: TooltipPayloadEntry) => {
@@ -269,7 +271,7 @@ export function MistakesPage() {
                     />
                     <Bar dataKey="totalR" radius={[0, 4, 4, 0]} isAnimationActive={false}>
                       {chartData.map((entry) => (
-                        <Cell key={entry.name} fill={barColor(entry.totalR)} />
+                        <Cell key={entry.name} fill={barColor(entry.totalR, chart)} />
                       ))}
                     </Bar>
                   </BarChart>
