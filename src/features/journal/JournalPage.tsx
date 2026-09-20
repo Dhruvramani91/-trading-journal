@@ -73,12 +73,12 @@ export function JournalPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <PageHeader
         title="Journal"
         description={`${trades.length} trade${trades.length === 1 ? '' : 's'} recorded`}
         actions={
-          <Button asChild leftIcon={<Plus className="h-4 w-4" />}>
+          <Button asChild variant="primary" leftIcon={<Plus className="h-4 w-4" />}>
             <Link to="/journal/new">New trade</Link>
           </Button>
         }
@@ -95,7 +95,7 @@ export function JournalPage() {
                 title="No trades yet"
                 description="Add your first trade to start tracking performance."
                 action={
-                  <Button asChild leftIcon={<Plus className="h-4 w-4" />}>
+                  <Button asChild variant="primary" leftIcon={<Plus className="h-4 w-4" />}>
                     <Link to="/journal/new">Add first trade</Link>
                   </Button>
                 }
@@ -125,6 +125,7 @@ export function JournalPage() {
                   <TH>Alignment</TH>
                   <TH>Module</TH>
                   <TH>Confluence</TH>
+                  <TH>Trade Type</TH>
                   <TH>L/S</TH>
                   <TH>
                     <SortHeader
@@ -168,10 +169,10 @@ export function JournalPage() {
                     <TD className="text-fg-dim text-center">
                       {t.number ? String(t.number).padStart(2, '0') : '—'}
                     </TD>
-                    <TD className="whitespace-nowrap">{formatDate(t.openedAt)}</TD>
+                    <TD className="whitespace-nowrap font-mono">{formatDate(t.openedAt)}</TD>
                     <TD>{readFieldLabel(t, 'dayOfWeek')}</TD>
                     <TD>
-                      <span className="font-medium">{t.instrument}</span>
+                      <span className="font-semibold text-fg">{t.instrument}</span>
                     </TD>
                     <TD>{readFieldLabel(t, 'dailyCandle')}</TD>
                     <TD>{readFieldLabel(t, 'dailyProfile')}</TD>
@@ -189,6 +190,11 @@ export function JournalPage() {
                       <Badge tone="accent">{readFieldLabel(t, 'confluence')}</Badge>
                     </TD>
                     <TD>
+                      <Badge tone={readFieldLabel(t, 'tradeType') === 'Reversal' ? 'accent' : 'neutral'}>
+                        {readFieldLabel(t, 'tradeType')}
+                      </Badge>
+                    </TD>
+                    <TD>
                       <DirectionPill direction={t.direction} />
                     </TD>
                     <TD>
@@ -198,10 +204,10 @@ export function JournalPage() {
                       align="right"
                       className={
                         t.r > 0
-                          ? 'text-win num'
+                          ? 'text-win font-bold num'
                           : t.r < 0
-                            ? 'text-loss num'
-                            : 'text-be num'
+                            ? 'text-loss font-bold num'
+                            : 'text-be font-bold num'
                       }
                     >
                       {formatR(t.r)}
@@ -248,7 +254,7 @@ function SortHeader({
       type="button"
       onClick={onClick}
       className={
-        'inline-flex items-center gap-1 hover:text-fg transition-colors ' +
+        'inline-flex items-center gap-1 font-semibold hover:text-fg transition-colors ' +
         (align === 'right' ? 'flex-row-reverse' : '')
       }
     >

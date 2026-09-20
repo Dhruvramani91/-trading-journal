@@ -15,18 +15,13 @@ import type { DayPerformance } from '@/analytics/core';
 
 const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-/** Get the number of days in a given month (0-indexed month). */
 function daysInMonth(year: number, month: number): number {
   return new Date(year, month + 1, 0).getDate();
 }
 
-/**
- * Get the weekday offset (0=Mon, 6=Sun) for the 1st of the month.
- * JS getDay() returns 0=Sun, so we convert to Mon-first.
- */
 function firstDayOffset(year: number, month: number): number {
   const d = new Date(year, month, 1).getDay();
-  return d === 0 ? 6 : d - 1; // convert Sun=0→6, Mon=1→0, etc.
+  return d === 0 ? 6 : d - 1;
 }
 
 function monthLabel(year: number, month: number): string {
@@ -43,7 +38,6 @@ function dayKeyFromParts(year: number, month: number, day: number): string {
   return `${y}-${m}-${d}`;
 }
 
-/** Tone class for a given R total. */
 function rTone(totalR: number): string {
   if (totalR > 0) return 'text-win';
   if (totalR < 0) return 'text-loss';
@@ -51,9 +45,9 @@ function rTone(totalR: number): string {
 }
 
 function rBg(totalR: number): string {
-  if (totalR > 0) return 'bg-win/10 border-win/30 hover:bg-win/15';
-  if (totalR < 0) return 'bg-loss/10 border-loss/30 hover:bg-loss/15';
-  return 'bg-be/10 border-be/30 hover:bg-be/15';
+  if (totalR > 0) return 'bg-win/10 border-win/30 hover:bg-win/20';
+  if (totalR < 0) return 'bg-loss/10 border-loss/30 hover:bg-loss/20';
+  return 'bg-be/10 border-be/30 hover:bg-be/20';
 }
 
 export function CalendarPage() {
@@ -67,7 +61,6 @@ export function CalendarPage() {
   useEffect(() => { bootTradesStore(); }, []);
   useEffect(() => { if (!loaded) void load(); }, [loaded, load]);
 
-  // Build a map of date → DayPerformance for fast lookup
   const dayMap = useMemo(() => {
     if (!loaded) return new Map<string, DayPerformance>();
     const days = byDay(trades);
@@ -76,7 +69,6 @@ export function CalendarPage() {
     return map;
   }, [loaded, trades]);
 
-  // Trades for the currently displayed month
   const monthTrades = useMemo(() => {
     if (!loaded) return [] as Trade[];
     const prefix = `${year}-${String(month + 1).padStart(2, '0')}`;
@@ -92,7 +84,6 @@ export function CalendarPage() {
     return summary(monthTrades);
   }, [monthTrades]);
 
-  // Grid data
   const totalDays = daysInMonth(year, month);
   const offset = firstDayOffset(year, month);
 
@@ -118,35 +109,35 @@ export function CalendarPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-4 sm:space-y-6 animate-fade-in">
       <PageHeader
         title="Monthly Performance"
         description="A calendar view of your daily R, with each day colored by performance."
       />
 
-      {/* Month navigator */}
+      {/* Month navigator & Calendar card */}
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" onClick={goPrev} leftIcon={<ChevronLeft className="h-4 w-4" />}>
-                Prev
-              </Button>
-              <h2 className="text-lg font-semibold text-fg min-w-[11rem] text-center">
-                {monthLabel(year, month)}
-              </h2>
-              <Button variant="ghost" size="sm" onClick={goNext} leftIcon={<ChevronRight className="h-4 w-4" />}>
-                Next
-              </Button>
-            </div>
-            {!isCurrentMonth && (
-              <Button variant="secondary" size="sm" onClick={goToday}>
+        <CardHeader className="flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
+            <Button variant="secondary" size="sm" onClick={goPrev} leftIcon={<ChevronLeft className="h-4 w-4" />}>
+              Prev
+            </Button>
+            <h2 className="text-base sm:text-lg font-bold text-fg min-w-[9rem] sm:min-w-[11rem] text-center">
+              {monthLabel(year, month)}
+            </h2>
+            <Button variant="secondary" size="sm" onClick={goNext} leftIcon={<ChevronRight className="h-4 w-4" />}>
+              Next
+            </Button>
+          </div>
+          {!isCurrentMonth && (
+            <div className="flex justify-end">
+              <Button variant="outline" size="sm" onClick={goToday}>
                 Today
               </Button>
-            )}
-          </div>
+            </div>
+          )}
         </CardHeader>
-        <CardBody>
+        <CardBody className="p-2 sm:p-4 md:p-5">
           {trades.length === 0 ? (
             <EmptyState
               icon={<Calendar className="h-6 w-6" />}
@@ -156,25 +147,23 @@ export function CalendarPage() {
           ) : (
             <>
               {/* Weekday header */}
-              <div className="grid grid-cols-7 gap-1 mb-1">
+              <div className="grid grid-cols-7 gap-1 sm:gap-1.5 mb-1 sm:mb-2">
                 {WEEKDAY_LABELS.map((label) => (
                   <div
                     key={label}
-                    className="text-center text-2xs uppercase tracking-wider text-fg-dim font-medium py-1.5"
+                    className="text-center text-[10px] sm:text-2xs uppercase tracking-wider text-fg-dim font-bold py-1"
                   >
                     {label}
                   </div>
                 ))}
               </div>
 
-              {/* Day cells */}
-              <div className="grid grid-cols-7 gap-1">
-                {/* Empty cells for offset */}
+              {/* Day cells grid */}
+              <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
                 {Array.from({ length: offset }, (_, i) => (
-                  <div key={`empty-${i}`} className="aspect-square" />
+                  <div key={`empty-${i}`} className="min-h-[44px] sm:min-h-[64px] rounded-lg bg-bg-3/30" />
                 ))}
 
-                {/* Actual day cells */}
                 {Array.from({ length: totalDays }, (_, i) => {
                   const day = i + 1;
                   const key = dayKeyFromParts(year, month, day);
@@ -192,34 +181,34 @@ export function CalendarPage() {
                         if (perf) navigate('/journal');
                       }}
                       className={cn(
-                        'relative flex flex-col items-center justify-center rounded-lg border transition-all aspect-square',
+                        'relative flex flex-col items-center justify-between p-1 sm:p-2 rounded-lg border transition-all min-h-[44px] sm:min-h-[64px]',
                         perf
                           ? cn(
                               rBg(perf.totalR),
-                              'cursor-pointer hover:scale-[1.04] hover:shadow-pop',
+                              'cursor-pointer hover:scale-[1.02] shadow-sm',
                             )
-                          : 'border-transparent',
-                        isToday && 'ring-1 ring-accent/60',
+                          : 'border-line/60 bg-bg-2/60 text-fg-dim hover:border-line',
+                        isToday && 'ring-2 ring-accent shadow-sm',
                       )}
                     >
                       <span
                         className={cn(
-                          'text-xs font-medium',
+                          'text-[10px] sm:text-xs font-semibold self-start',
                           perf ? 'text-fg' : 'text-fg-dim',
-                          isToday && 'text-accent',
+                          isToday && 'text-accent font-bold',
                         )}
                       >
                         {day}
                       </span>
                       {perf && (
-                        <>
-                          <span className={cn('text-sm font-bold tabular-nums mt-0.5', rTone(perf.totalR))}>
-                            {formatR(perf.totalR)}
+                        <div className="flex flex-col items-center w-full my-auto">
+                          <span className={cn('text-[11px] sm:text-xs md:text-sm font-bold tabular-nums', rTone(perf.totalR))}>
+                            {formatR(perf.totalR, 1)}
                           </span>
-                          <span className="text-2xs text-fg-dim mt-0.5">
-                            {perf.count} trade{perf.count === 1 ? '' : 's'}
+                          <span className="hidden sm:inline text-[9px] sm:text-2xs text-fg-dim font-medium">
+                            {perf.count} {perf.count === 1 ? 'tr' : 'trs'}
                           </span>
-                        </>
+                        </div>
                       )}
                     </button>
                   );
@@ -232,9 +221,9 @@ export function CalendarPage() {
 
       {/* Month summary */}
       {monthSummary && (
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 sm:gap-3">
           <Card>
-            <CardBody>
+            <CardBody className="p-3.5 sm:p-4">
               <Stat
                 label="Total R"
                 value={formatR(monthSummary.totalR)}
@@ -243,12 +232,12 @@ export function CalendarPage() {
             </CardBody>
           </Card>
           <Card>
-            <CardBody>
+            <CardBody className="p-3.5 sm:p-4">
               <Stat label="Trades" value={String(monthSummary.count)} />
             </CardBody>
           </Card>
           <Card>
-            <CardBody>
+            <CardBody className="p-3.5 sm:p-4">
               <Stat
                 label="Win Rate"
                 value={monthSummary.winRate == null ? '—' : formatPct(monthSummary.winRate)}
@@ -256,7 +245,7 @@ export function CalendarPage() {
             </CardBody>
           </Card>
           <Card>
-            <CardBody>
+            <CardBody className="p-3.5 sm:p-4">
               <Stat
                 label="Best R"
                 value={formatR(monthSummary.bestR)}
@@ -264,8 +253,8 @@ export function CalendarPage() {
               />
             </CardBody>
           </Card>
-          <Card>
-            <CardBody>
+          <Card className="col-span-2 sm:col-span-1">
+            <CardBody className="p-3.5 sm:p-4">
               <Stat
                 label="Worst R"
                 value={formatR(monthSummary.worstR)}
@@ -276,7 +265,7 @@ export function CalendarPage() {
         </div>
       )}
 
-      {/* Trading days breakdown */}
+      {/* Daily breakdown */}
       {monthTrades.length > 0 && (
         <Card>
           <CardHeader>
@@ -290,10 +279,10 @@ export function CalendarPage() {
               {byDay(monthTrades).map((d) => (
                 <div
                   key={d.date}
-                  className="flex items-center justify-between px-4 py-2.5 text-sm hover:bg-bg-3/50 transition-colors"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-3 text-sm hover:bg-bg-3 transition-colors gap-2"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-fg-muted text-xs font-mono w-24">
+                    <span className="text-fg font-semibold text-xs font-mono w-24">
                       {new Date(d.date + 'T00:00:00').toLocaleDateString('en-US', {
                         weekday: 'short',
                         month: 'short',
@@ -304,11 +293,11 @@ export function CalendarPage() {
                       {d.count} trade{d.count === 1 ? '' : 's'}
                     </span>
                   </div>
-                  <div className="flex items-center gap-4">
+                  <div className="flex items-center justify-between sm:justify-end gap-4">
                     <span className="text-2xs text-fg-dim">
                       {d.wins}W / {d.losses}L / {d.bes}BE
                     </span>
-                    <span className={cn('font-semibold tabular-nums', rTone(d.totalR))}>
+                    <span className={cn('font-bold tabular-nums', rTone(d.totalR))}>
                       {formatR(d.totalR)}
                     </span>
                   </div>
