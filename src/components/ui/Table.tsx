@@ -43,7 +43,7 @@ export function TH({
     <th
       scope="col"
       className={cn(
-        'sticky top-0 z-10 bg-white px-3 py-2.5 text-2xs font-semibold uppercase tracking-wider text-fg-dim border-b border-line whitespace-nowrap',
+        'sticky top-0 z-10 bg-bg-2 px-3 py-2.5 text-2xs font-semibold uppercase tracking-wider text-fg-dim border-b border-line whitespace-nowrap',
         align === 'right' && 'text-right',
         align === 'center' && 'text-center',
         className,
