@@ -5,6 +5,7 @@ export interface UserProfile {
   id: string;
   email: string;
   name?: string;
+  avatarUrl?: string;
   isGuest?: boolean;
 }
 
@@ -12,12 +13,15 @@ interface AuthState {
   user: UserProfile | null;
   loading: boolean;
   error: string | null;
+  otpSent: boolean;
   initialized: boolean;
-  signInWithPassword: (email: string, pass: string) => Promise<void>;
-  signUpWithPassword: (email: string, pass: string, name?: string) => Promise<void>;
+  sendOtp: (email: string) => Promise<void>;
+  verifyOtp: (email: string, token: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signInAsGuest: () => Promise<void>;
   signOut: () => Promise<void>;
   clearError: () => void;
+  resetOtp: () => void;
   init: () => Promise<void>;
 }
 
@@ -27,7 +31,7 @@ function getStoredUser(): UserProfile | null {
   if (typeof localStorage === 'undefined') return null;
   try {
     const raw = localStorage.getItem(STORAGE_USER_KEY);
-    return raw ? JSON.parse(raw) : null;
+    return raw ? (JSON.parse(raw) as UserProfile) : null;
   } catch {
     return null;
   }
@@ -42,13 +46,24 @@ function setStoredUser(user: UserProfile | null): void {
   }
 }
 
+function profileFromSupabaseUser(u: { id: string; email?: string | null; user_metadata?: Record<string, unknown> }): UserProfile {
+  return {
+    id: u.id,
+    email: u.email || '',
+    name: (u.user_metadata?.full_name as string) || (u.user_metadata?.name as string) || u.email?.split('@')[0] || 'Trader',
+    avatarUrl: u.user_metadata?.avatar_url as string | undefined,
+  };
+}
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: getStoredUser(),
   loading: false,
   error: null,
+  otpSent: false,
   initialized: false,
 
   clearError: () => set({ error: null }),
+  resetOtp: () => set({ otpSent: false, error: null }),
 
   init: async () => {
     if (get().initialized) return;
@@ -57,11 +72,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
-          const profile: UserProfile = {
-            id: session.user.id,
-            email: session.user.email || 'trader@example.com',
-            name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0],
-          };
+          const profile = profileFromSupabaseUser(session.user);
           set({ user: profile, initialized: true });
           setStoredUser(profile);
         } else {
@@ -70,11 +81,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
         supabase.auth.onAuthStateChange((_event, session) => {
           if (session?.user) {
-            const profile: UserProfile = {
-              id: session.user.id,
-              email: session.user.email || 'trader@example.com',
-              name: session.user.user_metadata?.full_name || session.user.email?.split('@')[0],
-            };
+            const profile = profileFromSupabaseUser(session.user);
             set({ user: profile });
             setStoredUser(profile);
           } else {
@@ -91,89 +98,95 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  signInWithPassword: async (email: string, pass: string) => {
+  sendOtp: async (email: string) => {
     set({ loading: true, error: null });
     try {
       if (isSupabaseConfigured && supabase) {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password: pass,
+        const { error } = await supabase.auth.signInWithOtp({
+          email: email.trim().toLowerCase(),
+          options: {
+            shouldCreateUser: true,
+          },
         });
         if (error) throw error;
-        if (data.user) {
-          const profile: UserProfile = {
-            id: data.user.id,
-            email: data.user.email || email,
-            name: data.user.user_metadata?.full_name || email.split('@')[0],
-          };
-          set({ user: profile, loading: false });
-          setStoredUser(profile);
-        }
+        set({ otpSent: true, loading: false });
       } else {
-        // Local-first instant authentication
-        if (!email || !pass) throw new Error('Please enter an email and password.');
+        // Local-first fallback: auto-sign in
         const profile: UserProfile = {
-          id: 'user_' + btoa(email.toLowerCase()).slice(0, 12),
+          id: 'user_' + email.trim().toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 10),
           email: email.trim().toLowerCase(),
           name: email.split('@')[0],
         };
-        set({ user: profile, loading: false });
+        set({ user: profile, otpSent: false, loading: false });
         setStoredUser(profile);
       }
     } catch (err) {
-      set({ error: (err as Error).message || 'Failed to sign in', loading: false });
+      set({ error: (err as Error).message || 'Failed to send code', loading: false });
       throw err;
     }
   },
 
-  signUpWithPassword: async (email: string, pass: string, name?: string) => {
+  verifyOtp: async (email: string, token: string) => {
     set({ loading: true, error: null });
     try {
       if (isSupabaseConfigured && supabase) {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password: pass,
-          options: {
-            data: { full_name: name || email.split('@')[0] },
-          },
+        const { data, error } = await supabase.auth.verifyOtp({
+          email: email.trim().toLowerCase(),
+          token: token.trim(),
+          type: 'email',
         });
         if (error) throw error;
         if (data.user) {
-          const profile: UserProfile = {
-            id: data.user.id,
-            email: data.user.email || email,
-            name: name || email.split('@')[0],
-          };
-          set({ user: profile, loading: false });
+          const profile = profileFromSupabaseUser(data.user);
+          set({ user: profile, loading: false, otpSent: false });
           setStoredUser(profile);
         }
       } else {
-        // Local-first instant account registration
-        if (!email || !pass) throw new Error('Please enter an email and password.');
-        if (pass.length < 6) throw new Error('Password must be at least 6 characters.');
+        throw new Error('Supabase is not configured. Enable it to use OTP verification.');
+      }
+    } catch (err) {
+      set({ error: (err as Error).message || 'Invalid or expired code', loading: false });
+      throw err;
+    }
+  },
+
+  signInWithGoogle: async () => {
+    set({ loading: true, error: null });
+    try {
+      if (isSupabaseConfigured && supabase) {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback`,
+          },
+        });
+        if (error) throw error;
+        // Browser redirects, loading stays true
+      } else {
+        // Local-first fallback: demo Google user
         const profile: UserProfile = {
-          id: 'user_' + btoa(email.toLowerCase()).slice(0, 12),
-          email: email.trim().toLowerCase(),
-          name: name?.trim() || email.split('@')[0],
+          id: 'google_demo_user',
+          email: 'trader@gmail.com',
+          name: 'Google Trader',
+          avatarUrl: undefined,
         };
         set({ user: profile, loading: false });
         setStoredUser(profile);
       }
     } catch (err) {
-      set({ error: (err as Error).message || 'Failed to create account', loading: false });
+      set({ error: (err as Error).message || 'Google sign-in failed', loading: false });
       throw err;
     }
   },
 
   signInAsGuest: async () => {
-    set({ loading: true, error: null });
     const guestUser: UserProfile = {
       id: 'guest_user',
-      email: 'guest@tradingjournal.app',
+      email: 'guest@journey.app',
       name: 'Guest Trader',
       isGuest: true,
     };
-    set({ user: guestUser, loading: false });
+    set({ user: guestUser });
     setStoredUser(guestUser);
   },
 
@@ -182,7 +195,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     if (isSupabaseConfigured && supabase) {
       await supabase.auth.signOut();
     }
-    set({ user: null, loading: false });
+    set({ user: null, loading: false, otpSent: false });
     setStoredUser(null);
   },
 }));
