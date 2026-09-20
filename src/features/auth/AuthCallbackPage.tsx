@@ -31,7 +31,7 @@ export function AuthCallbackPage() {
         <img
           src="/logo.png"
           alt="PrecisionJournal"
-          className="h-12 w-12 mx-auto rounded-2xl bg-white border border-line object-contain animate-pulse"
+          className="h-12 w-12 mx-auto rounded-2xl bg-bg-2 border border-line object-contain animate-pulse"
         />
         <div className="space-y-1">
           <p className="text-sm font-semibold text-fg">Signing you in...</p>

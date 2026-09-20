@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/store/authStore';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 const ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -63,6 +64,7 @@ export function MobileNav() {
           <span className="text-sm font-bold text-fg tracking-tight">PrecisionJournal</span>
         </div>
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <Link
             to="/journal/new"
             className="inline-flex items-center justify-center gap-1 h-8 px-3 rounded-lg bg-accent text-white text-xs font-semibold shadow-sm hover:bg-accent-hover transition-colors"

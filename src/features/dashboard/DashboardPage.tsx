@@ -208,11 +208,11 @@ export function DashboardPage() {
               <ResponsiveContainer width="100%" height="100%">
                 {chartR === 'cum' ? (
                   <LineChart data={curveData} margin={{ top: 8, right: 16, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#eef0f1" vertical={false} />
-                    <XAxis dataKey="dateLabel" tick={{ fontSize: 11, fill: '#a2a4a7' }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11, fill: '#a2a4a7' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${v}R`} width={45} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
+                    <XAxis dataKey="dateLabel" tick={{ fontSize: 11, fill: 'var(--fg-dim)' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 11, fill: 'var(--fg-dim)' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${v}R`} width={45} />
                     <ReTooltip
-                      contentStyle={{ background: '#ffffff', border: '1px solid #eef0f1', borderRadius: '0.75rem', boxShadow: '0 4px 16px rgba(0,0,0,0.08)', color: '#101014', fontSize: '0.75rem' }}
+                      contentStyle={{ background: 'rgb(var(--bg-2))', border: '1px solid var(--line)', borderRadius: '0.75rem', boxShadow: 'var(--shadow-pop)', color: 'rgb(var(--fg))', fontSize: '0.75rem' }}
                       formatter={(value: unknown, _name: unknown, item: TooltipPayloadEntry) => {
                         const p = item.payload as { dateLabel: string; r: number } | undefined;
                         if (!p) return ['—', 'Cumulative'];
@@ -220,15 +220,15 @@ export function DashboardPage() {
                         return [`${formatR(r)} (${p.dateLabel})`, 'Cumulative'];
                       }}
                     />
-                    <Line type="monotone" dataKey="cumR" stroke="#9143d0" strokeWidth={2.5} dot={{ r: 3, fill: '#9143d0' }} activeDot={{ r: 5, fill: '#9143d0' }} isAnimationActive={false} />
+                    <Line type="monotone" dataKey="cumR" stroke="var(--accent)" strokeWidth={2.5} dot={{ r: 3, fill: 'var(--accent)' }} activeDot={{ r: 5, fill: 'var(--accent)' }} isAnimationActive={false} />
                   </LineChart>
                 ) : (
                   <LineChart data={dailyData} margin={{ top: 8, right: 16, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#eef0f1" vertical={false} />
-                    <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#a2a4a7' }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11, fill: '#a2a4a7' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${v}R`} width={45} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" vertical={false} />
+                    <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'var(--fg-dim)' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 11, fill: 'var(--fg-dim)' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${v}R`} width={45} />
                     <ReTooltip
-                      contentStyle={{ background: '#ffffff', border: '1px solid #eef0f1', borderRadius: '0.75rem', boxShadow: '0 4px 16px rgba(0,0,0,0.08)', color: '#101014', fontSize: '0.75rem' }}
+                      contentStyle={{ background: 'rgb(var(--bg-2))', border: '1px solid var(--line)', borderRadius: '0.75rem', boxShadow: 'var(--shadow-pop)', color: 'rgb(var(--fg))', fontSize: '0.75rem' }}
                       formatter={(value: unknown, _name: unknown, item: TooltipPayloadEntry) => {
                         const p = item.payload as { date: string; count: number } | undefined;
                         if (!p) return ['—', 'Daily R'];
@@ -236,7 +236,7 @@ export function DashboardPage() {
                         return [`${formatR(r)} (${p.count} trade${p.count === 1 ? '' : 's'})`, 'Daily R'];
                       }}
                     />
-                    <Line type="monotone" dataKey="totalR" stroke="#9143d0" strokeWidth={2.5} dot={{ r: 3, fill: '#9143d0' }} activeDot={{ r: 5, fill: '#9143d0' }} isAnimationActive={false} />
+                    <Line type="monotone" dataKey="totalR" stroke="var(--accent)" strokeWidth={2.5} dot={{ r: 3, fill: 'var(--accent)' }} activeDot={{ r: 5, fill: 'var(--accent)' }} isAnimationActive={false} />
                   </LineChart>
                 )}
               </ResponsiveContainer>

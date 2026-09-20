@@ -10,6 +10,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { Card, CardBody } from '@/components/ui/Card';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { FormField } from '@/components/ui/Select';
@@ -154,6 +155,9 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen bg-bg-0 flex flex-col justify-center items-center p-4 sm:p-6">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div className="max-w-md w-full space-y-6">
         {/* Brand Header */}
         <div className="text-center space-y-2">
@@ -161,7 +165,7 @@ export function LoginPage() {
             <img
               src="/logo.png"
               alt="PrecisionJournal"
-              className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white border border-line object-contain shadow-sm"
+              className="flex h-10 w-10 items-center justify-center rounded-2xl bg-bg-2 border border-line object-contain shadow-sm"
             />
             <span className="text-2xl font-extrabold tracking-tight text-fg">PrecisionJournal</span>
           </Link>
@@ -173,7 +177,7 @@ export function LoginPage() {
         </div>
 
         {/* Auth Card */}
-        <Card className="shadow-pop border-line bg-white">
+        <Card className="shadow-pop border-line bg-bg-2">
           <CardBody className="p-6 sm:p-8 space-y-6">
             {/* Error Message */}
             {(localError || error) && (
@@ -193,7 +197,7 @@ export function LoginPage() {
                   size="lg"
                   onClick={handleGoogleSignIn}
                   disabled={loading}
-                  className="w-full h-11 flex items-center justify-center gap-3 border-line hover:border-line-strong bg-white text-fg font-medium shadow-sm"
+                  className="w-full h-11 flex items-center justify-center gap-3 border-line hover:border-line-strong bg-bg-2 text-fg font-medium shadow-sm"
                 >
                   <svg className="h-4 w-4" viewBox="0 0 24 24">
                     <path
@@ -219,7 +223,7 @@ export function LoginPage() {
                 {/* Divider */}
                 <div className="relative flex items-center justify-center">
                   <div className="border-t border-line w-full" />
-                  <span className="bg-white px-3 text-2xs font-semibold uppercase tracking-wider text-fg-dim absolute">
+                  <span className="bg-bg-2 px-3 text-2xs font-semibold uppercase tracking-wider text-fg-dim absolute">
                     or with email code
                   </span>
                 </div>
@@ -295,7 +299,7 @@ export function LoginPage() {
                       value={digit}
                       onChange={(e) => handleOtpChange(index, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                      className="w-11 h-13 text-center text-xl font-bold font-mono rounded-xl border border-line bg-bg-4 text-fg focus:bg-white focus:border-accent focus:ring-2 focus:ring-accent/30 transition-all outline-none"
+                      className="w-11 h-13 text-center text-xl font-bold font-mono rounded-xl border border-line bg-bg-4 text-fg focus:bg-bg-2 focus:border-accent focus:ring-2 focus:ring-accent/30 transition-all outline-none"
                     />
                   ))}
                 </div>

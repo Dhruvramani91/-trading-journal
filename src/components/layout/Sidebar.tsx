@@ -53,7 +53,7 @@ function NavRow({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
           cn(
             'group relative flex items-center justify-center mx-auto transition-all duration-150',
             isActive
-              ? 'h-12 w-12 rounded-2xl bg-[#101014] text-white shadow-md'
+              ? 'h-12 w-12 rounded-2xl bg-fg text-fg-inverse shadow-md'
               : 'h-11 w-11 rounded-xl text-fg-dim hover:text-fg hover:bg-bg-4',
           )
         }

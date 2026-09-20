@@ -1,6 +1,7 @@
 import { Plus, PanelLeftOpen, LogOut, Home } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { useSidebarStore } from '@/store/sidebarStore';
 import { useAuthStore } from '@/store/authStore';
 
@@ -44,6 +45,8 @@ export function Topbar() {
       </div>
 
       <div className="flex items-center gap-2.5 shrink-0">
+        <ThemeToggle />
+
         <Button asChild variant="ghost" size="sm">
           <Link to="/" title="Homepage" className="flex items-center gap-1.5 text-xs">
             <Home className="h-3.5 w-3.5 text-fg-dim" />

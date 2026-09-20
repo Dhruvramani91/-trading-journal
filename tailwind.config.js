@@ -1,45 +1,46 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
         bg: {
-          DEFAULT: '#ffffff',
-          0: '#f7f8fa',
-          1: '#ffffff',
-          2: '#ffffff',
-          3: '#ffffff',
-          4: '#f7f8fa',
+          DEFAULT: 'rgb(var(--bg) / <alpha-value>)',
+          0: 'rgb(var(--bg-0) / <alpha-value>)',
+          1: 'rgb(var(--bg-1) / <alpha-value>)',
+          2: 'rgb(var(--bg-2) / <alpha-value>)',
+          3: 'rgb(var(--bg-3) / <alpha-value>)',
+          4: 'rgb(var(--bg-4) / <alpha-value>)',
         },
         line: {
-          DEFAULT: '#eef0f1',
-          strong: '#e0e2e6',
-          subtle: '#f4f5f7',
+          DEFAULT: 'rgb(var(--line) / <alpha-value>)',
+          strong: 'rgb(var(--line-strong) / <alpha-value>)',
+          subtle: 'rgb(var(--line-subtle) / <alpha-value>)',
         },
         fg: {
-          DEFAULT: '#101014',
-          muted: '#64748b',
-          dim: '#a2a4a7',
-          inverse: '#ffffff',
+          DEFAULT: 'rgb(var(--fg) / <alpha-value>)',
+          muted: 'rgb(var(--fg-muted) / <alpha-value>)',
+          dim: 'rgb(var(--fg-dim) / <alpha-value>)',
+          inverse: 'rgb(var(--fg-inverse) / <alpha-value>)',
         },
         accent: {
-          DEFAULT: '#3b82f6',
-          hover: '#2563eb',
-          muted: 'rgba(59,130,246,0.10)',
-          fg: '#ffffff',
+          DEFAULT: 'rgb(var(--accent) / <alpha-value>)',
+          hover: 'rgb(var(--accent-hover) / <alpha-value>)',
+          muted: 'rgb(var(--accent-muted) / <alpha-value>)',
+          fg: 'rgb(var(--accent-fg) / <alpha-value>)',
         },
         win: {
-          DEFAULT: '#39bd9a',
-          muted: 'rgba(66,213,161,0.12)',
+          DEFAULT: 'rgb(var(--win) / <alpha-value>)',
+          muted: 'rgb(var(--win-muted) / <alpha-value>)',
         },
         loss: {
-          DEFAULT: '#d95d65',
-          muted: 'rgba(242,79,84,0.10)',
+          DEFAULT: 'rgb(var(--loss) / <alpha-value>)',
+          muted: 'rgb(var(--loss-muted) / <alpha-value>)',
         },
         be: {
-          DEFAULT: '#a2a4a7',
-          muted: 'rgba(162,164,167,0.12)',
+          DEFAULT: 'rgb(var(--be) / <alpha-value>)',
+          muted: 'rgb(var(--be-muted) / <alpha-value>)',
         },
       },
       fontFamily: {
@@ -59,10 +60,10 @@ export default {
         shell: '1.75rem',
       },
       boxShadow: {
-        card: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
-        pop: '0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)',
-        shell: '0 4px 32px rgba(0,0,0,0.10), 0 1px 4px rgba(0,0,0,0.06)',
-        input: '0 1px 2px rgba(0,0,0,0.04)',
+        card: 'var(--shadow-card)',
+        pop: 'var(--shadow-pop)',
+        shell: 'var(--shadow-shell)',
+        input: 'var(--shadow-input)',
       },
       keyframes: {
         'fade-in': {
