@@ -364,7 +364,7 @@ export function MistakesPage() {
 
 function MistakeRow({ bucket, muted }: { bucket: CategoryBucket; muted?: boolean }) {
   return (
-    <tr className={cn('transition-colors hover:bg-bg-3/50', muted && 'opacity-50')}>
+    <tr className={cn('transition-colors hover:bg-bg-4', muted && 'opacity-50')}>
       <td className="px-4 py-2.5">
         <Badge tone={muted ? 'accent' : bucket.totalR < 0 ? 'loss' : bucket.totalR > 0 ? 'win' : 'be'}>
           {bucket.label}

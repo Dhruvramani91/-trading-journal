@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { NavLink, useLocation, Link } from 'react-router-dom';
+import { NavLink, useLocation, Link, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   ScrollText,
@@ -10,11 +10,14 @@ import {
   Menu,
   X,
   Plus,
+  Home,
+  LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { useAuthStore } from '@/store/authStore';
 
 const ITEMS = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/journal', label: 'Journal', icon: ScrollText },
   { to: '/statistics', label: 'Statistics', icon: BarChart3 },
   { to: '/calendar', label: 'Monthly Performance', icon: Calendar },
@@ -24,13 +27,13 @@ const ITEMS = [
 export function MobileNav() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuthStore();
 
-  // Close mobile nav on route change
   useEffect(() => {
     setOpen(false);
   }, [location.pathname]);
 
-  // Prevent background scroll when mobile nav is open
   useEffect(() => {
     if (open) {
       document.body.style.overflow = 'hidden';
@@ -41,6 +44,12 @@ export function MobileNav() {
       document.body.style.overflow = '';
     };
   }, [open]);
+
+  async function handleSignOut() {
+    setOpen(false);
+    await signOut();
+    navigate('/');
+  }
 
   return (
     <div className="md:hidden relative z-50">
@@ -104,6 +113,28 @@ export function MobileNav() {
                 </NavLink>
               );
             })}
+
+            <div className="pt-2 mt-2 border-t border-line space-y-1">
+              <Link
+                to="/"
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium text-fg-muted hover:text-fg hover:bg-bg-4 transition-colors"
+              >
+                <Home className="h-4 w-4" />
+                <span>Homepage</span>
+              </Link>
+
+              {user && (
+                <button
+                  type="button"
+                  onClick={handleSignOut}
+                  className="w-full flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium text-loss hover:bg-loss/10 transition-colors"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Sign Out</span>
+                </button>
+              )}
+            </div>
           </nav>
         </div>
       )}

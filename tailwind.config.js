@@ -5,12 +5,12 @@ export default {
     extend: {
       colors: {
         bg: {
-          DEFAULT: '#f4f4f6',
-          0: '#d9d9d9',
-          1: '#fdfdfd',
+          DEFAULT: '#ffffff',
+          0: '#f7f8fa',
+          1: '#ffffff',
           2: '#ffffff',
-          3: '#f7f8fa',
-          4: '#eef0f3',
+          3: '#ffffff',
+          4: '#f7f8fa',
         },
         line: {
           DEFAULT: '#eef0f1',

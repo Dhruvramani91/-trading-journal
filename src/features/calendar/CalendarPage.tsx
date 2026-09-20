@@ -279,7 +279,7 @@ export function CalendarPage() {
               {byDay(monthTrades).map((d) => (
                 <div
                   key={d.date}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-3 text-sm hover:bg-bg-3 transition-colors gap-2"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-3 text-sm hover:bg-bg-4 transition-colors gap-2"
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-fg font-semibold text-xs font-mono w-24">

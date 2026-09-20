@@ -11,16 +11,20 @@ interface SidebarState {
 const STORAGE_COLLAPSED_KEY = 'tj:sidebar:collapsed';
 const STORAGE_WIDTH_KEY = 'tj:sidebar:width';
 
+const DEFAULT_EXPANDED_WIDTH = 240;
+const MIN_EXPANDED_WIDTH = 180;
+const MAX_EXPANDED_WIDTH = 360;
+
 function getInitialCollapsed(): boolean {
   if (typeof localStorage === 'undefined') return false;
   return localStorage.getItem(STORAGE_COLLAPSED_KEY) === 'true';
 }
 
 function getInitialWidth(): number {
-  if (typeof localStorage === 'undefined') return 240;
+  if (typeof localStorage === 'undefined') return DEFAULT_EXPANDED_WIDTH;
   const raw = localStorage.getItem(STORAGE_WIDTH_KEY);
-  const n = raw ? parseInt(raw, 10) : 240;
-  return isNaN(n) ? 240 : Math.max(180, Math.min(360, n));
+  const n = raw ? parseInt(raw, 10) : DEFAULT_EXPANDED_WIDTH;
+  return isNaN(n) ? DEFAULT_EXPANDED_WIDTH : Math.max(MIN_EXPANDED_WIDTH, Math.min(MAX_EXPANDED_WIDTH, n));
 }
 
 export const useSidebarStore = create<SidebarState>((set) => ({
@@ -44,7 +48,7 @@ export const useSidebarStore = create<SidebarState>((set) => ({
   },
 
   setWidth: (width) => {
-    const clamped = Math.max(180, Math.min(360, width));
+    const clamped = Math.max(MIN_EXPANDED_WIDTH, Math.min(MAX_EXPANDED_WIDTH, width));
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(STORAGE_WIDTH_KEY, String(clamped));
     }
