@@ -11,7 +11,6 @@ import {
   CartesianGrid,
   type TooltipPayloadEntry,
 } from 'recharts';
-import { PageHeader } from '@/components/ui/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Stat } from '@/components/ui/Stat';
@@ -29,6 +28,7 @@ import { ACTIVE_TEMPLATE_ID } from '@/domain/templates/registry';
 import type { EquityPoint, DayPerformance } from '@/analytics/core';
 import { cn } from '@/lib/cn';
 import { FilterBar } from '@/components/filters/FilterBar';
+import { useAuthStore } from '@/store/authStore';
 
 interface WeekdayRow {
   label: string;
@@ -37,9 +37,22 @@ interface WeekdayRow {
   winRate: number | null;
 }
 
+function greetingFirstName(name?: string, email?: string): string {
+  if (name) {
+    const first = name.trim().split(/\s+/)[0];
+    if (first) return first;
+  }
+  if (email) {
+    const local = email.split('@')[0];
+    if (local) return local;
+  }
+  return 'Trader';
+}
+
 export function DashboardPage() {
   const { loaded, load } = useTradesStore();
   const { filtered } = useFilteredTrades();
+  const { user } = useAuthStore();
   const tradesToUseRaw = loaded ? (filtered as Trade[]) : [];
   const navigate = useNavigate();
   const [chartR, setChartR] = useState<'cum' | 'daily'>('cum');
@@ -111,15 +124,27 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Dashboard"
-        description={tradesToUse.length === 0 ? 'Add your first trade to see your stats.' : `${tradesToUse.length} trade${tradesToUse.length === 1 ? '' : 's'} · ${formatDateLong(tradesToUse[0]?.openedAt ?? '')}`}
-        actions={
+      {/* Personalized greeting */}
+      <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-1">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-fg leading-tight">
+            Welcome Back, <span className="text-accent">{greetingFirstName(user?.name, user?.email)}</span>
+          </h1>
+          <p className="mt-1 text-sm text-fg-muted">
+            Here's your trading performance overview.
+          </p>
+          <p className="mt-0.5 text-xs text-fg-dim">
+            {tradesToUse.length === 0
+              ? 'Add your first trade to see your stats.'
+              : `${tradesToUse.length} trade${tradesToUse.length === 1 ? '' : 's'} · ${formatDateLong(tradesToUse[0]?.openedAt ?? '')}`}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
           <Button asChild variant="primary" leftIcon={<TrendingUp className="h-4 w-4" />}>
             <Link to="/journal/new">New trade</Link>
           </Button>
-        }
-      />
+        </div>
+      </header>
 
       <FilterBar />
 
