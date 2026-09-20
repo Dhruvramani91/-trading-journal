@@ -6,7 +6,6 @@ import {
   BarChart3,
   Calendar,
   AlertTriangle,
-  TrendingUp,
   Menu,
   X,
   Plus,
@@ -56,10 +55,12 @@ export function MobileNav() {
       {/* Mobile Top Bar */}
       <div className="flex items-center justify-between h-14 px-4 border-b border-line bg-bg-1">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-white shadow-sm">
-            <TrendingUp className="h-4 w-4" />
-          </div>
-          <span className="text-sm font-bold text-fg tracking-tight">TradingLog</span>
+          <img
+            src="/logo.png"
+            alt="PrecisionJournal"
+            className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-line object-contain shadow-sm"
+          />
+          <span className="text-sm font-bold text-fg tracking-tight">PrecisionJournal</span>
         </div>
         <div className="flex items-center gap-2">
           <Link

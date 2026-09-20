@@ -22,10 +22,12 @@ export function LandingPage() {
         <div className="max-w-6xl mx-auto px-5 sm:px-8 h-14 flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#111] text-white">
-              <TrendingUp className="h-4 w-4" />
-            </div>
-            <span className="text-sm font-bold tracking-tight text-[#111]">Journey</span>
+            <img
+              src="/logo.png"
+              alt="PrecisionJournal"
+              className="flex h-7 w-7 items-center justify-center rounded-lg bg-white border border-[#e8e8e8] object-contain"
+            />
+            <span className="text-sm font-bold tracking-tight text-[#111]">PrecisionJournal</span>
           </Link>
 
           {/* Nav Links */}
@@ -75,7 +77,7 @@ export function LandingPage() {
             <span className="text-[#888]">Improve your edge.</span>
           </h1>
           <p className="mt-5 text-base sm:text-lg text-[#555] leading-relaxed max-w-lg">
-            Journey is a clean, simple trading journal that gamifies discipline.
+            PrecisionJournal is a clean, simple trading journal that gamifies discipline.
             Record every trade, review your performance, and eliminate what's costing you R.
           </p>
 
@@ -190,7 +192,7 @@ export function LandingPage() {
               Record. Review.<br />Improve.
             </h2>
             <p className="mt-3 text-sm text-[#555] leading-relaxed">
-              Journey makes it effortless to build the habit of structured trade journaling — so your performance compounds over time.
+              PrecisionJournal makes it effortless to build the habit of structured trade journaling — so your performance compounds over time.
             </p>
           </div>
 
@@ -334,7 +336,7 @@ export function LandingPage() {
             Start journaling your trades today.
           </h2>
           <p className="text-sm text-[#555] mb-8 leading-relaxed">
-            Join disciplined traders who use Journey to track every session, identify patterns, and build consistency.
+            Join disciplined traders who use PrecisionJournal to track every session, identify patterns, and build consistency.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-3">
             <Link
@@ -357,12 +359,16 @@ export function LandingPage() {
       <footer className="border-t border-[#e8e8e8] py-8 px-5 sm:px-8">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#aaa]">
           <div className="flex items-center gap-2">
-            <div className="flex h-5 w-5 items-center justify-center rounded-md bg-[#111] text-white">
-              <TrendingUp className="h-3 w-3" />
-            </div>
-            <span className="font-semibold text-[#555]">Journey</span>
+            <img
+              src="/logo.png"
+              alt="PrecisionJournal"
+              className="flex h-5 w-5 items-center justify-center rounded-md bg-white border border-[#e8e8e8] object-contain"
+            />
+            <span className="font-semibold text-[#555]">PrecisionJournal</span>
           </div>
-          <p>© {new Date().getFullYear()} Journey. Journal your trades.</p>
+          <p className="text-xs text-[#aaa]">
+            © {new Date().getFullYear()} PrecisionJournal. Journal your trades.
+          </p>
           <div className="flex items-center gap-5">
             <Link to="/login" className="hover:text-[#111] transition-colors">Sign in</Link>
             <Link to="/login" className="hover:text-[#111] transition-colors">Get started</Link>

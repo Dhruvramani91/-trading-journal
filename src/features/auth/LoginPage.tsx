@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  TrendingUp,
   ArrowRight,
   Mail,
   AlertCircle,
@@ -159,10 +158,12 @@ export function LoginPage() {
         {/* Brand Header */}
         <div className="text-center space-y-2">
           <Link to="/" className="inline-flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-accent text-white shadow-sm">
-              <TrendingUp className="h-6 w-6" />
-            </div>
-            <span className="text-2xl font-extrabold tracking-tight text-fg">TradingLog</span>
+            <img
+              src="/logo.png"
+              alt="PrecisionJournal"
+              className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white border border-line object-contain shadow-sm"
+            />
+            <span className="text-2xl font-extrabold tracking-tight text-fg">PrecisionJournal</span>
           </Link>
           <p className="text-xs sm:text-sm text-fg-muted">
             {otpSent

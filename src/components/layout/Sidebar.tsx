@@ -6,7 +6,6 @@ import {
   BarChart3,
   Calendar,
   AlertTriangle,
-  TrendingUp,
   ChevronLeft,
   PanelLeftClose,
   PanelLeftOpen,
@@ -169,21 +168,23 @@ export function Sidebar() {
       {/* Header / Logo */}
       {collapsed ? (
         <div className="flex flex-col items-center justify-center py-4 border-b border-line">
-          <div
-            title="TradingLog"
-            className="flex h-12 w-12 items-center justify-center rounded-2xl bg-accent text-white shadow-md transition-transform hover:scale-105"
-          >
-            <TrendingUp className="h-6 w-6" />
-          </div>
+          <img
+            src="/logo.png"
+            alt="PrecisionJournal"
+            title="PrecisionJournal"
+            className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white border border-line object-contain shadow-md transition-transform hover:scale-105"
+          />
         </div>
       ) : (
         <div className="flex h-14 items-center justify-between border-b border-line px-4">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-white shadow-sm">
-              <TrendingUp className="h-4 w-4" />
-            </div>
+            <img
+              src="/logo.png"
+              alt="PrecisionJournal"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white border border-line object-contain shadow-sm"
+            />
             <div className="flex flex-col leading-tight min-w-0">
-              <span className="text-sm font-bold text-fg tracking-tight truncate">TradingLog</span>
+              <span className="text-sm font-bold text-fg tracking-tight truncate">PrecisionJournal</span>
               <span className="text-2xs text-fg-dim truncate">My Journal</span>
             </div>
           </div>
