@@ -172,7 +172,7 @@ export function Sidebar() {
             src="/logo.png"
             alt="PrecisionJournal"
             title="PrecisionJournal"
-            className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white border border-line object-contain shadow-md transition-transform hover:scale-105"
+            className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white dark:bg-bg-2 border border-line object-contain shadow-md transition-transform hover:..."
           />
         </div>
       ) : (
@@ -181,7 +181,7 @@ export function Sidebar() {
             <img
               src="/logo.png"
               alt="PrecisionJournal"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white border border-line object-contain shadow-sm"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white dark:bg-bg-2 border border-line object-contain shadow-sm"
             />
             <div className="flex flex-col leading-tight min-w-0">
               <span className="text-sm font-bold text-fg tracking-tight truncate">PrecisionJournal</span>
