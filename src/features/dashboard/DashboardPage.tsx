@@ -110,12 +110,12 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       <PageHeader
         title="Dashboard"
         description={tradesToUse.length === 0 ? 'Add your first trade to see your stats.' : `${tradesToUse.length} trade${tradesToUse.length === 1 ? '' : 's'} · ${formatDateLong(tradesToUse[0]?.openedAt ?? '')}`}
         actions={
-          <Button asChild leftIcon={<TrendingUp className="h-4 w-4" />}>
+          <Button asChild variant="primary" leftIcon={<TrendingUp className="h-4 w-4" />}>
             <Link to="/journal/new">New trade</Link>
           </Button>
         }
@@ -129,14 +129,14 @@ export function DashboardPage() {
           title="No trades yet"
           description="Add your first trade to start tracking performance."
           action={
-            <Button asChild leftIcon={<ArrowUp className="h-4 w-4" />}>
+            <Button asChild variant="primary" leftIcon={<ArrowUp className="h-4 w-4" />}>
               <Link to="/journal/new">Add first trade</Link>
             </Button>
           }
         />
       ) : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card>
               <CardBody>
                 <Stat label="Total R" value={formatR(s?.totalR ?? 0)} tone={s && s.totalR > 0 ? 'win' : s && s.totalR < 0 ? 'loss' : 'default'} />
@@ -162,20 +162,32 @@ export function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle>Equity curve</CardTitle>
-              <div className="flex gap-1">
-                <Button size="sm" variant={chartR === 'cum' ? 'primary' : 'ghost'} onClick={() => setChartR('cum')}>Cumulative R</Button>
-                <Button size="sm" variant={chartR === 'daily' ? 'primary' : 'ghost'} onClick={() => setChartR('daily')}>Daily R</Button>
+              <div className="flex gap-1 bg-bg-3 p-1 rounded-lg border border-line">
+                <button
+                  type="button"
+                  className={cn('px-3 py-1 rounded-md text-xs font-semibold transition-all', chartR === 'cum' ? 'bg-bg-2 text-fg shadow-sm' : 'text-fg-muted hover:text-fg')}
+                  onClick={() => setChartR('cum')}
+                >
+                  Cumulative R
+                </button>
+                <button
+                  type="button"
+                  className={cn('px-3 py-1 rounded-md text-xs font-semibold transition-all', chartR === 'daily' ? 'bg-bg-2 text-fg shadow-sm' : 'text-fg-muted hover:text-fg')}
+                  onClick={() => setChartR('daily')}
+                >
+                  Daily R
+                </button>
               </div>
             </CardHeader>
-            <CardBody className="h-64">
+            <CardBody className="h-72">
               <ResponsiveContainer width="100%" height="100%">
                 {chartR === 'cum' ? (
-                  <LineChart data={curveData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                    <XAxis dataKey="dateLabel" tick={{ fontSize: 11, fill: '#6B6B78' }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11, fill: '#6B6B78' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${v}R`} width={45} />
+                  <LineChart data={curveData} margin={{ top: 8, right: 16, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#eef0f1" vertical={false} />
+                    <XAxis dataKey="dateLabel" tick={{ fontSize: 11, fill: '#a2a4a7' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 11, fill: '#a2a4a7' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${v}R`} width={45} />
                     <ReTooltip
-                      contentStyle={{ background: '#15151A', border: '1px solid #26262E', borderRadius: '0.5rem', color: '#E6E6EA', fontSize: '0.75rem' }}
+                      contentStyle={{ background: '#ffffff', border: '1px solid #eef0f1', borderRadius: '0.75rem', boxShadow: '0 4px 16px rgba(0,0,0,0.08)', color: '#101014', fontSize: '0.75rem' }}
                       formatter={(value: unknown, _name: unknown, item: TooltipPayloadEntry) => {
                         const p = item.payload as { dateLabel: string; r: number } | undefined;
                         if (!p) return ['—', 'Cumulative'];
@@ -183,15 +195,15 @@ export function DashboardPage() {
                         return [`${formatR(r)} (${p.dateLabel})`, 'Cumulative'];
                       }}
                     />
-                    <Line type="monotone" dataKey="cumR" stroke="#F59E0B" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: '#F59E0B' }} isAnimationActive={false} />
+                    <Line type="monotone" dataKey="cumR" stroke="#9143d0" strokeWidth={2.5} dot={{ r: 3, fill: '#9143d0' }} activeDot={{ r: 5, fill: '#9143d0' }} isAnimationActive={false} />
                   </LineChart>
                 ) : (
-                  <LineChart data={dailyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                    <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#6B6B78' }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11, fill: '#6B6B78' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${v}R`} width={45} />
+                  <LineChart data={dailyData} margin={{ top: 8, right: 16, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#eef0f1" vertical={false} />
+                    <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#a2a4a7' }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fontSize: 11, fill: '#a2a4a7' }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `${v}R`} width={45} />
                     <ReTooltip
-                      contentStyle={{ background: '#15151A', border: '1px solid #26262E', borderRadius: '0.5rem', color: '#E6E6EA', fontSize: '0.75rem' }}
+                      contentStyle={{ background: '#ffffff', border: '1px solid #eef0f1', borderRadius: '0.75rem', boxShadow: '0 4px 16px rgba(0,0,0,0.08)', color: '#101014', fontSize: '0.75rem' }}
                       formatter={(value: unknown, _name: unknown, item: TooltipPayloadEntry) => {
                         const p = item.payload as { date: string; count: number } | undefined;
                         if (!p) return ['—', 'Daily R'];
@@ -199,14 +211,14 @@ export function DashboardPage() {
                         return [`${formatR(r)} (${p.count} trade${p.count === 1 ? '' : 's'})`, 'Daily R'];
                       }}
                     />
-                    <Line type="monotone" dataKey="totalR" stroke="#F59E0B" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: '#F59E0B' }} isAnimationActive={false} />
+                    <Line type="monotone" dataKey="totalR" stroke="#9143d0" strokeWidth={2.5} dot={{ r: 3, fill: '#9143d0' }} activeDot={{ r: 5, fill: '#9143d0' }} isAnimationActive={false} />
                   </LineChart>
                 )}
               </ResponsiveContainer>
             </CardBody>
           </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2"><TrendingUp className="h-4 w-4 text-win" /> Best setup</CardTitle>
@@ -216,7 +228,7 @@ export function DashboardPage() {
                   <>
                     <div className="flex items-center justify-between">
                       <Badge tone="accent">{bestSetup.label}</Badge>
-                      <span className="font-semibold text-win">{formatR(bestSetup.avgR)} avg R</span>
+                      <span className="font-bold text-win">{formatR(bestSetup.avgR)} avg R</span>
                     </div>
                     <div className="mt-2 text-xs text-fg-muted">
                       {bestSetup.count} trades · {formatR(bestSetup.totalR)} total R · {bestSetup.winRate == null ? '—' : formatPct(bestSetup.winRate)} win rate
@@ -234,7 +246,7 @@ export function DashboardPage() {
                   <>
                     <div className="flex items-center justify-between">
                       <Badge tone="accent">{worstSetup.label}</Badge>
-                      <span className="font-semibold text-loss">{formatR(worstSetup.avgR)} avg R</span>
+                      <span className="font-bold text-loss">{formatR(worstSetup.avgR)} avg R</span>
                     </div>
                     <div className="mt-2 text-xs text-fg-muted">
                       {worstSetup.count} trades · {formatR(worstSetup.totalR)} total R · {worstSetup.winRate == null ? '—' : formatPct(worstSetup.winRate)} win rate
@@ -245,17 +257,17 @@ export function DashboardPage() {
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <Card>
               <CardHeader><CardTitle>Weekdays</CardTitle></CardHeader>
               <CardBody className="p-0">
-                <div className="space-y-2">
+                <div className="divide-y divide-line">
                   {weekdayRows.map((row) => (
-                    <div key={row.label} className="flex items-center justify-between px-4 py-2">
-                      <span className="text-sm text-fg">{row.label}</span>
-                      <div className="flex items-center gap-4 text-sm">
-                        <span className="num text-fg-muted">{row.count}</span>
-                        <span className={cn('num font-semibold', row.totalR > 0 ? 'text-win' : row.totalR < 0 ? 'text-loss' : 'text-be')}>
+                    <div key={row.label} className="flex items-center justify-between px-5 py-3 text-sm">
+                      <span className="font-medium text-fg">{row.label}</span>
+                      <div className="flex items-center gap-4">
+                        <span className="text-xs text-fg-muted num">{row.count} trades</span>
+                        <span className={cn('num font-bold text-sm', row.totalR > 0 ? 'text-win' : row.totalR < 0 ? 'text-loss' : 'text-be')}>
                           {formatR(row.totalR)}
                         </span>
                       </div>
@@ -278,22 +290,20 @@ export function DashboardPage() {
                       <TH>Result</TH>
                       <TH className="text-right">R</TH>
                       <TH className="text-right">Duration</TH>
-                      <TH className="w-10" />
                     </TR>
                   </THead>
                   <TBody>
                     {recent.map((t, i) => (
                       <TR key={t.id} interactive onClick={() => navigate(`/journal/${t.id}`)}>
                         <TD className="text-center text-fg-dim">{t.number ?? i + 1}</TD>
-                        <TD className="whitespace-nowrap text-xs">{formatDate(t.openedAt)}</TD>
-                        <TD><span className="font-medium">{t.instrument}</span></TD>
+                        <TD className="whitespace-nowrap font-mono text-xs">{formatDate(t.openedAt)}</TD>
+                        <TD><span className="font-semibold text-fg">{t.instrument}</span></TD>
                         <TD><DirectionPill direction={t.direction} /></TD>
                         <TD><ResultPill result={t.result} /></TD>
-                        <TD align="right" className={cn('num font-medium', t.r > 0 ? 'text-win' : t.r < 0 ? 'text-loss' : 'text-be')}>
+                        <TD align="right" className={cn('num font-bold', t.r > 0 ? 'text-win' : t.r < 0 ? 'text-loss' : 'text-be')}>
                           {formatR(t.r)}
                         </TD>
                         <TD align="right" className="text-xs text-fg-muted num">{formatDuration(t.durationMin)}</TD>
-                        <TD />
                       </TR>
                     ))}
                   </TBody>

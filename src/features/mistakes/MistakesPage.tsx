@@ -31,9 +31,9 @@ import type { CategoryBucket } from '@/analytics/core';
 
 /** Color for a bucket based on its avgR. */
 function barColor(avgR: number): string {
-  if (avgR > 0) return '#10B981'; // win
-  if (avgR < 0) return '#F43F5E'; // loss
-  return '#9A9AA6'; // be
+  if (avgR > 0) return '#39bd9a'; // win
+  if (avgR < 0) return '#d95d65'; // loss
+  return '#a2a4a7'; // be
 }
 
 export function MistakesPage() {
@@ -230,12 +230,12 @@ export function MistakesPage() {
                   >
                     <CartesianGrid
                       strokeDasharray="3 3"
-                      stroke="rgba(255,255,255,0.06)"
+                      stroke="#eef0f1"
                       horizontal={false}
                     />
                     <XAxis
                       type="number"
-                      tick={{ fontSize: 11, fill: '#6B6B78' }}
+                      tick={{ fontSize: 11, fill: '#a2a4a7' }}
                       axisLine={false}
                       tickLine={false}
                       tickFormatter={(v: number) => `${v}R`}
@@ -243,17 +243,18 @@ export function MistakesPage() {
                     <YAxis
                       type="category"
                       dataKey="name"
-                      tick={{ fontSize: 11, fill: '#9A9AA6' }}
+                      tick={{ fontSize: 11, fill: '#64748b' }}
                       axisLine={false}
                       tickLine={false}
                       width={110}
                     />
                     <ReTooltip
                       contentStyle={{
-                        background: '#15151A',
-                        border: '1px solid #26262E',
-                        borderRadius: '0.5rem',
-                        color: '#E6E6EA',
+                        background: '#ffffff',
+                        border: '1px solid #eef0f1',
+                        borderRadius: '0.75rem',
+                        boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+                        color: '#101014',
                         fontSize: '0.75rem',
                       }}
                       formatter={(value: unknown, _name: unknown, item: TooltipPayloadEntry) => {

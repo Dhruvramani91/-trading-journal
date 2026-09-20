@@ -2,62 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ---------- Base ---------- */
 @layer base {
-  :root {
-    color-scheme: dark;
-  }
-
-  html,
-  body,
-  #root {
+  html, body, #root {
     height: 100%;
   }
 
   body {
-    @apply bg-bg text-fg font-sans antialiased;
+    @apply bg-bg-0 text-fg font-sans antialiased;
     font-feature-settings: 'cv11', 'ss01', 'ss03';
     text-rendering: optimizeLegibility;
   }
 
   *:focus-visible {
-    @apply outline-none ring-2 ring-accent/60 ring-offset-2 ring-offset-bg-0;
+    @apply outline-none ring-2 ring-accent/50 ring-offset-2 ring-offset-bg-1;
   }
 
   ::selection {
-    @apply bg-accent/30 text-fg;
+    @apply bg-accent/20 text-fg;
   }
 
-  /* Scrollbar — minimal */
-  ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
-  ::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
-  ::-webkit-scrollbar-thumb {
-    @apply bg-line-strong rounded-full;
-  }
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-fg-dim;
-  }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-line-strong rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-fg-dim; }
 
-  hr {
-    @apply border-line;
-  }
+  hr { @apply border-line; }
 }
 
-/* ---------- Components ---------- */
 @layer components {
   .card {
-    @apply bg-bg-2 border border-line rounded-lg shadow-card;
+    @apply bg-bg-2 border border-line rounded-xl shadow-card;
   }
   .card-hover {
     @apply transition-colors hover:bg-bg-3;
-  }
-  .hairline {
-    @apply border-line;
   }
   .stat-num {
     @apply font-semibold tracking-tight text-fg tabular-nums;
@@ -66,30 +43,18 @@
     @apply text-2xs uppercase tracking-wider text-fg-dim font-medium;
   }
   .pill {
-    @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium border border-line bg-bg-3 text-fg-muted;
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border border-line bg-bg-3 text-fg-muted;
   }
-  .pill-win {
-    @apply pill text-win border-win/30 bg-win/10;
-  }
-  .pill-loss {
-    @apply pill text-loss border-loss/30 bg-loss/10;
-  }
-  .pill-be {
-    @apply pill text-be border-be/30 bg-be/10;
-  }
-  .pill-accent {
-    @apply pill text-accent border-accent/30 bg-accent/10;
-  }
-  .num {
-    @apply tabular-nums;
-  }
+  .pill-win  { @apply pill text-win  border-win/25  bg-win/8;  }
+  .pill-loss { @apply pill text-loss border-loss/25 bg-loss/8; }
+  .pill-be   { @apply pill text-be   border-be/25   bg-be/8;   }
+  .pill-accent { @apply pill text-accent border-accent/25 bg-accent/8; }
+  .num { @apply tabular-nums; }
 }
 
-/* ---------- Utilities ---------- */
 @layer utilities {
-  .grid-lines {
-    background-image:
-      linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-    background-size: 32px 100%;
-  }
+  .bg-win\/8   { background-color: rgba(57,189,154,0.08); }
+  .bg-loss\/8  { background-color: rgba(217,93,101,0.08); }
+  .bg-be\/8    { background-color: rgba(162,164,167,0.08); }
+  .bg-accent\/8 { background-color: rgba(145,67,208,0.08); }
 }

@@ -1,8 +1,6 @@
 import { type HTMLAttributes, type ReactNode, type ThHTMLAttributes, type TdHTMLAttributes } from 'react';
 import { cn } from '@/lib/cn';
 
-/** Minimal headless table primitives — keeps styling consistent across journal / stats / mistakes. */
-
 export function Table({ className, ...props }: HTMLAttributes<HTMLTableElement>) {
   return (
     <div className="w-full overflow-x-auto">
@@ -27,8 +25,8 @@ export function TR({
   return (
     <tr
       className={cn(
-        'group transition-colors',
-        interactive && 'cursor-pointer hover:bg-bg-3/60',
+        'group transition-colors border-b border-line',
+        interactive && 'cursor-pointer hover:bg-bg-3',
         className,
       )}
       {...props}
@@ -45,7 +43,7 @@ export function TH({
     <th
       scope="col"
       className={cn(
-        'sticky top-0 z-10 bg-bg-2/95 backdrop-blur px-3 py-2 text-2xs font-semibold uppercase tracking-wider text-fg-dim border-b border-line whitespace-nowrap',
+        'sticky top-0 z-10 bg-bg-3 px-3 py-2.5 text-2xs font-semibold uppercase tracking-wider text-fg-dim border-b border-line whitespace-nowrap',
         align === 'right' && 'text-right',
         align === 'center' && 'text-center',
         className,
@@ -66,7 +64,7 @@ export function TD({
   return (
     <td
       className={cn(
-        'px-3 py-2.5 border-b border-line/70 align-middle text-fg',
+        'px-3 py-3 border-b border-line align-middle text-fg text-xs',
         align === 'right' && 'text-right',
         align === 'center' && 'text-center',
         className,

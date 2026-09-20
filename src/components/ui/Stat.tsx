@@ -9,7 +9,6 @@ export interface StatProps {
   className?: string;
 }
 
-/** Compact stat tile — used on dashboard and inside cards. */
 export function Stat({ label, value, hint, tone = 'default', className }: StatProps) {
   const valueColor =
     tone === 'win'
@@ -21,9 +20,9 @@ export function Stat({ label, value, hint, tone = 'default', className }: StatPr
           : 'text-fg';
 
   return (
-    <div className={cn('flex flex-col gap-1.5', className)}>
-      <span className="stat-label">{label}</span>
-      <span className={cn('stat-num text-2xl', valueColor)}>{value}</span>
+    <div className={cn('flex flex-col gap-1', className)}>
+      <span className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">{label}</span>
+      <span className={cn('text-2xl font-bold tracking-tight tabular-nums', valueColor)}>{value}</span>
       {hint ? <span className="text-2xs text-fg-dim">{hint}</span> : null}
     </div>
   );

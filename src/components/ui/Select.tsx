@@ -6,18 +6,15 @@ export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   invalid?: boolean;
 }
 
-/** Native <select> styled to match the rest of the form. Keeps things fast and accessible. */
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, invalid, children, ...props }, ref) => (
     <div className="relative">
       <select
         ref={ref}
         className={cn(
-          'h-9 w-full appearance-none rounded-md border bg-bg-1 pl-3 pr-8 text-sm text-fg',
-          'focus:outline-none focus:ring-2 focus:ring-accent/60',
-          invalid
-            ? 'border-loss/60 focus:ring-loss/40'
-            : 'border-line hover:border-line-strong focus:border-accent/40',
+          'h-9 w-full appearance-none rounded-lg border bg-bg-2 pl-3 pr-8 text-sm text-fg shadow-input',
+          'focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/60',
+          invalid ? 'border-loss/60' : 'border-line hover:border-line-strong',
           'disabled:cursor-not-allowed disabled:opacity-50',
           className,
         )}
@@ -40,7 +37,6 @@ export interface SegmentedProps<T extends string> {
   fullWidth?: boolean;
 }
 
-/** Compact segmented control — used for Long/Short, Win/Loss/BE, boolean YES/NO, etc. */
 export function Segmented<T extends string>({
   value,
   onChange,
@@ -52,7 +48,7 @@ export function Segmented<T extends string>({
   return (
     <div
       className={cn(
-        'inline-flex items-center rounded-md border border-line bg-bg-1 p-0.5',
+        'inline-flex items-center rounded-lg border border-line bg-bg-3 p-0.5',
         size === 'sm' ? 'h-7' : 'h-9',
         fullWidth && 'w-full',
         className,
@@ -63,10 +59,10 @@ export function Segmented<T extends string>({
         const isActive = opt.value === value;
         const activeTone =
           opt.tone === 'win'
-            ? 'bg-win/15 text-win border-win/30'
+            ? 'bg-win/15 text-win font-semibold'
             : opt.tone === 'loss'
-              ? 'bg-loss/15 text-loss border-loss/30'
-              : 'bg-bg-3 text-fg border-line-strong';
+              ? 'bg-loss/15 text-loss font-semibold'
+              : 'bg-bg-2 text-fg shadow-sm font-semibold';
         return (
           <button
             key={opt.value}
@@ -75,11 +71,9 @@ export function Segmented<T extends string>({
             aria-checked={isActive}
             onClick={() => onChange(opt.value)}
             className={cn(
-              'flex-1 inline-flex items-center justify-center gap-1 rounded text-xs font-medium transition-colors',
+              'flex-1 inline-flex items-center justify-center gap-1 rounded-md text-xs transition-all',
               size === 'sm' ? 'h-6 px-2' : 'h-8 px-3',
-              isActive
-                ? activeTone + ' border'
-                : 'text-fg-muted hover:text-fg border border-transparent',
+              isActive ? activeTone : 'text-fg-muted hover:text-fg',
             )}
           >
             {opt.label}
@@ -105,7 +99,7 @@ export function FormField({
 }) {
   return (
     <label className={cn('flex flex-col gap-1.5', className)}>
-      <span className="text-xs font-medium text-fg-muted">
+      <span className="text-xs font-semibold text-fg">
         {label}
         {required ? <span className="text-loss"> *</span> : null}
       </span>
@@ -127,12 +121,12 @@ export function FormSection({
   return (
     <section className="space-y-4">
       <header>
-        <h3 className="text-sm font-semibold text-fg">{title}</h3>
+        <h3 className="text-sm font-bold text-fg tracking-tight">{title}</h3>
         {description ? (
-          <p className="mt-0.5 text-2xs text-fg-dim">{description}</p>
+          <p className="mt-0.5 text-xs text-fg-muted">{description}</p>
         ) : null}
       </header>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{children}</div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">{children}</div>
     </section>
   );
 }

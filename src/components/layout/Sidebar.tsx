@@ -35,21 +35,16 @@ function NavRow({ item }: { item: NavItem }) {
       end={item.to === '/'}
       className={({ isActive }) =>
         cn(
-          'group flex items-center gap-3 rounded-md px-2.5 py-1.5 text-sm transition-colors',
+          'group flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-all',
           isActive
-            ? 'bg-bg-3 text-fg'
-            : 'text-fg-muted hover:text-fg hover:bg-bg-3/60',
+            ? 'bg-fg text-fg-inverse shadow-sm'
+            : 'text-fg-muted hover:text-fg hover:bg-bg-4',
         )
       }
     >
       {({ isActive }) => (
         <>
-          <Icon
-            className={cn(
-              'h-4 w-4 shrink-0',
-              isActive ? 'text-accent' : 'text-fg-dim group-hover:text-fg-muted',
-            )}
-          />
+          <Icon className={cn('h-4 w-4 shrink-0 transition-colors', isActive ? 'text-fg-inverse' : 'text-fg-dim group-hover:text-fg-muted')} />
           <span className="truncate">{item.label}</span>
         </>
       )}
@@ -58,46 +53,38 @@ function NavRow({ item }: { item: NavItem }) {
 }
 
 export function Sidebar() {
-  // useLocation just to keep the component aware of route changes for any future deep-link highlighting needs
   useLocation();
-
   return (
-    <aside className="hidden md:flex md:w-60 lg:w-64 shrink-0 flex-col border-r border-line bg-bg-1">
-      <div className="flex h-14 items-center gap-2 px-4 border-b border-line">
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-accent/15 text-accent">
+    <aside className="hidden md:flex md:w-56 lg:w-60 shrink-0 flex-col border-r border-line bg-bg-1">
+      <div className="flex h-14 items-center gap-2.5 px-4 border-b border-line">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent text-white shadow-sm">
           <TrendingUp className="h-4 w-4" />
         </div>
         <div className="flex flex-col leading-tight">
-          <span className="text-sm font-semibold text-fg">Trading Journal</span>
+          <span className="text-sm font-bold text-fg tracking-tight">TradingLog</span>
           <span className="text-2xs text-fg-dim">My Journal</span>
         </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-5">
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-5">
         <div>
-          <p className="px-2 mb-1.5 text-2xs uppercase tracking-wider text-fg-dim">Daily Essentials</p>
+          <p className="px-1 mb-2 text-2xs font-semibold uppercase tracking-wider text-fg-dim">Daily</p>
           <div className="space-y-0.5">
-            {CORE.map((item) => (
-              <NavRow key={item.to} item={item} />
-            ))}
+            {CORE.map((item) => <NavRow key={item.to} item={item} />)}
           </div>
         </div>
         <div>
-          <p className="px-2 mb-1.5 text-2xs uppercase tracking-wider text-fg-dim">Performance</p>
+          <p className="px-1 mb-2 text-2xs font-semibold uppercase tracking-wider text-fg-dim">Performance</p>
           <div className="space-y-0.5">
-            {ANALYTICS.map((item) => (
-              <NavRow key={item.to} item={item} />
-            ))}
+            {ANALYTICS.map((item) => <NavRow key={item.to} item={item} />)}
           </div>
         </div>
       </nav>
 
       <div className="border-t border-line p-3">
-        <div className="rounded-md border border-line bg-bg-2 p-3">
-          <p className="text-2xs uppercase tracking-wider text-fg-dim">Status</p>
-          <p className="mt-1 text-xs text-fg-muted">
-            Local-first. Data persists in your browser.
-          </p>
+        <div className="rounded-lg border border-line bg-bg-3 px-3 py-2.5">
+          <p className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">Storage</p>
+          <p className="mt-0.5 text-xs text-fg-muted">Local-first · browser storage</p>
         </div>
       </div>
     </aside>

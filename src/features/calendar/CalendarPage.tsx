@@ -51,9 +51,9 @@ function rTone(totalR: number): string {
 }
 
 function rBg(totalR: number): string {
-  if (totalR > 0) return 'bg-win/8 border-win/20';
-  if (totalR < 0) return 'bg-loss/8 border-loss/20';
-  return 'bg-be/8 border-be/20';
+  if (totalR > 0) return 'bg-win/10 border-win/30 hover:bg-win/15';
+  if (totalR < 0) return 'bg-loss/10 border-loss/30 hover:bg-loss/15';
+  return 'bg-be/10 border-be/30 hover:bg-be/15';
 }
 
 export function CalendarPage() {
