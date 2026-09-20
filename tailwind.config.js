@@ -24,9 +24,9 @@ export default {
           inverse: '#ffffff',
         },
         accent: {
-          DEFAULT: '#9143d0',
-          hover: '#8030c0',
-          muted: '#f0e8fa',
+          DEFAULT: '#3b82f6',
+          hover: '#2563eb',
+          muted: 'rgba(59,130,246,0.10)',
           fg: '#ffffff',
         },
         win: {
