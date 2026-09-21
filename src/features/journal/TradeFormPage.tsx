@@ -286,18 +286,22 @@ export function TradeFormPage() {
                   />
                 </FormField>
                 <FormField label="Instrument" required>
-                  <Input
+                  <Select
                     value={form.instrument}
-                    onChange={(e) => patch('instrument', e.target.value.toUpperCase())}
-                    list="instrument-suggestions"
-                    placeholder="ES, NQ, YM, RB…"
+                    onChange={(e) => patch('instrument', e.target.value)}
                     required
-                  />
-                  <datalist id="instrument-suggestions">
-                    {['ES', 'NQ', 'YM', 'RTY', 'GC', 'SI', 'CL', 'RB', 'HO'].map((s) => (
-                      <option key={s} value={s} />
-                    ))}
-                  </datalist>
+                  >
+                    <option value="GC">GC</option>
+                    <option value="SI">SI</option>
+                    <option value="NQ">NQ</option>
+                    <option value="ES">ES</option>
+                    <option value="YM">YM</option>
+                    <option value="CL">CL</option>
+                    <option value="RB">RB</option>
+                    <option value="HO">HO</option>
+                    <option value="EURUSD">EURUSD</option>
+                    <option value="GBPUSD">GBPUSD</option>
+                  </Select>
                 </FormField>
                 <FormField label="Direction">
                   <Segmented<TradeDirection>

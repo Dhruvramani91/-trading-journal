@@ -63,7 +63,7 @@ function NavRow({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
             <Icon
               className={cn(
                 'h-5 w-5 shrink-0 transition-colors',
-                isActive ? 'text-white' : 'text-fg-dim group-hover:text-fg',
+                isActive ? 'text-fg-inverse' : 'text-fg-dim group-hover:text-fg',
               )}
             />
             <span className="sr-only">{item.label}</span>
@@ -172,7 +172,7 @@ export function Sidebar() {
             src="/logo.png"
             alt="PrecisionJournal"
             title="PrecisionJournal"
-            className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white dark:bg-bg-2 border border-line object-contain shadow-md transition-transform hover:..."
+            className="h-12 w-12 rounded-2xl bg-white border border-line object-contain p-1.5 shadow-md"
           />
         </div>
       ) : (
@@ -181,7 +181,7 @@ export function Sidebar() {
             <img
               src="/logo.png"
               alt="PrecisionJournal"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white dark:bg-bg-2 border border-line object-contain shadow-sm"
+              className="h-8 w-8 shrink-0 rounded-lg bg-white border border-line object-contain p-1 shadow-sm"
             />
             <div className="flex flex-col leading-tight min-w-0">
               <span className="text-sm font-bold text-fg tracking-tight truncate">PrecisionJournal</span>
