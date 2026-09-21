@@ -1,7 +1,7 @@
 import type { CategoryBreakdown, CategoryBucket } from '@/analytics/core';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { formatPct, formatR } from '@/lib/format';
+import { formatR } from '@/lib/format';
 import { cn } from '@/lib/cn';
 
 interface BreakdownCardProps {
