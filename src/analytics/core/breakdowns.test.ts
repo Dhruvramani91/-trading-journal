@@ -64,7 +64,7 @@ describe('allBreakdowns', () => {
         'dailyProfile',
         'h4Candle',
         'h4Profile',
-        'mtf',
+        'itf',
         'entry',
         'alignment',
         'module',

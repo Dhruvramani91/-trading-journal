@@ -1,20 +1,70 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
+import { BarChart3 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Stat } from '@/components/ui/Stat';
+import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { WinRateRing } from '@/components/stats/WinRateRing';
 import { BreakdownCard } from '@/components/stats/BreakdownCard';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { BarChart3 } from 'lucide-react';
 import { useTradesStore, bootTradesStore } from '@/store/tradesStore';
 import { summary, allBreakdowns } from '@/analytics/core';
+import type { CategoryBreakdown } from '@/analytics/core';
 import { formatPct, formatR } from '@/lib/format';
 import { ACTIVE_TEMPLATE_ID } from '@/domain/templates/registry';
-import type { CategoryBreakdown } from '@/analytics/core';
+import { cn } from '@/lib/cn';
+
+type Tone = 'win' | 'loss';
+const toneOf = (v: number): Tone | undefined => (v > 0 ? 'win' : v < 0 ? 'loss' : undefined);
+
+/** "dailyCandle" -> "Daily Candle", "h4Candle" -> "H4 Candle" */
+function pretty(key: string) {
+  return key
+    .replace(/[_-]+/g, ' ')
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function Metric({
+  label,
+  value,
+  sub,
+  tone,
+  size = 'lg',
+  aside,
+}: {
+  label: string;
+  value: string;
+  sub?: ReactNode;
+  tone?: Tone;
+  size?: 'lg' | 'sm';
+  aside?: ReactNode;
+}) {
+  return (
+    <div className="flex min-w-0 items-start justify-between gap-3">
+      <div className="min-w-0">
+        <p className="text-2xs text-fg-dim">{label}</p>
+        <p
+          className={cn(
+            'mt-1 font-semibold tabular-nums tracking-tight',
+            size === 'lg' ? 'text-2xl' : 'text-base',
+            tone === 'win' && 'text-win',
+            tone === 'loss' && 'text-loss',
+            !tone && 'text-fg',
+          )}
+        >
+          {value}
+        </p>
+        {sub ? <div className="mt-1.5 text-2xs text-fg-muted">{sub}</div> : null}
+      </div>
+      {aside}
+    </div>
+  );
+}
 
 export function StatisticsPage() {
   const { trades, loaded, load } = useTradesStore();
+  const [tab, setTab] = useState<string>('instrument');
 
   useEffect(() => {
     bootTradesStore();
@@ -27,16 +77,18 @@ export function StatisticsPage() {
   const s = useMemo(() => (loaded ? summary(trades) : null), [loaded, trades]);
 
   const templates = useMemo(
-    () => (loaded ? allBreakdowns(trades, ACTIVE_TEMPLATE_ID) : [] as CategoryBreakdown[]),
+    () => (loaded ? allBreakdowns(trades, ACTIVE_TEMPLATE_ID) : ([] as CategoryBreakdown[])),
     [loaded, trades],
   );
 
-  // Side cards: instrument + direction (core fields) as quick extra stats
   const instruments = useMemo(() => {
     const m = new Map<string, { count: number; totalR: number; wins: number; losses: number }>();
     for (const t of trades) {
       let row = m.get(t.instrument);
-      if (!row) { row = { count: 0, totalR: 0, wins: 0, losses: 0 }; m.set(t.instrument, row); }
+      if (!row) {
+        row = { count: 0, totalR: 0, wins: 0, losses: 0 };
+        m.set(t.instrument, row);
+      }
       row.count++;
       row.totalR += t.r;
       if (t.result === 'win') row.wins++;
@@ -45,14 +97,35 @@ export function StatisticsPage() {
     return Array.from(m.entries()).sort((a, b) => b[1].totalR - a[1].totalR);
   }, [trades]);
 
+  const maxAbs = Math.max(1, ...instruments.map(([, v]) => Math.abs(v.totalR)));
+
+  const tabs = [
+    { key: 'instrument', label: 'Instruments' },
+    ...templates.map((b) => ({ key: b.fieldKey, label: b.fieldKey === 'mtf' ? 'ITF' : pretty(b.fieldKey), })),
+  ];
+  const active = templates.find((b) => b.fieldKey === tab);
+  const showInstruments = tab === 'instrument' || !active;
+
+  function onTabKey(e: KeyboardEvent<HTMLDivElement>) {
+    if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+    e.preventDefault();
+    const i = Math.max(0, tabs.findIndex((t) => t.key === tab));
+    const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+
+      if (!next) return;
+
+    setTab(next.key);
+    document.getElementById(`stats-tab-${next.key}`)?.focus();
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
         title="Statistics"
-        description="Breakdowns across every category — from daily candle to mistake type."
+        description="How your trades perform, broken down by category."
       />
 
-      {!loaded ? (
+      {!loaded || !s ? (
         <div className="text-sm text-fg-muted">Loading statistics…</div>
       ) : trades.length === 0 ? (
         <EmptyState
@@ -62,87 +135,157 @@ export function StatisticsPage() {
         />
       ) : (
         <>
-          {/* Hero stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Card>
-              <CardBody>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Stat label="Total R" value={formatR(s?.totalR ?? 0)} tone="accent" />
+          {/* One summary card: main numbers on top, extremes underneath */}
+          <Card className="overflow-hidden">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-6 p-5 md:grid-cols-5 md:p-6">
+              <Metric
+                label="Total R"
+                value={formatR(s.totalR ?? 0)}
+                tone={toneOf(s.totalR ?? 0)}
+              />
+              <Metric
+                label="Win rate"
+                value={s.winRate == null ? '—' : formatPct(s.winRate)}
+                sub={`Avg R ${formatR(s.avgR ?? 0)}`}
+                aside={<WinRateRing rate={s.winRate ?? 0} size={40} />}
+              />
+              <Metric
+                label="Trades"
+                value={String(s.count ?? 0)}
+                sub={
+                  <span className="flex flex-wrap gap-1.5">
+                    <Badge tone="win">{s.wins ?? 0} W</Badge>
+                    <Badge tone="loss">{s.losses ?? 0} L</Badge>
+                    <Badge tone="be">{s.bes ?? 0} BE</Badge>
+                  </span>
+                }
+              />
+              <Metric
+                label="Expectancy"
+                value={formatR(s.expectancy ?? 0)}
+                tone={toneOf(s.expectancy ?? 0)}
+              />
+              <Metric
+                label="Avg R:R"
+                value={s.avgRR == null ? '—' : s.avgRR.toFixed(2)}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-x-6 gap-y-5 border-t border-line px-5 py-5 md:grid-cols-5 md:px-6">
+              <Metric size="sm" label="Best trade" value={formatR(s.bestR ?? 0)} tone="win" />
+              <Metric size="sm" label="Worst trade" value={formatR(s.worstR ?? 0)} tone="loss" />
+              <Metric size="sm" label="Max drawdown" value={formatR(s.maxDrawdownR ?? 0)} tone="loss" />
+              <Metric size="sm" label="Longest win streak" value={String(s.longestWinStreak ?? 0)} />
+              <Metric size="sm" label="Longest loss streak" value={String(s.longestLossStreak ?? 0)} />
+            </div>
+          </Card>
+
+          {/* One breakdown at a time, chosen with the tabs */}
+          <div>
+            <div
+              role="tablist"
+              aria-label="Break results down by"
+              onKeyDown={onTabKey}
+              className="-mx-1 mb-4 flex gap-2 overflow-x-auto px-1 pb-1"
+            >
+              {tabs.map((t) => {
+                const selected = t.key === (showInstruments ? 'instrument' : tab);
+                return (
+                  <button
+                    key={t.key}
+                    id={`stats-tab-${t.key}`}
+                    type="button"
+                    role="tab"
+                    aria-selected={selected}
+                    aria-controls="stats-panel"
+                    tabIndex={selected ? 0 : -1}
+                    onClick={() => setTab(t.key)}
+                    className={cn(
+                      'shrink-0 rounded-full border px-4 py-1.5 text-sm transition-colors',
+                      selected
+                        ? 'border-fg bg-fg font-medium text-fg-inverse'
+                        : 'border-line text-fg-muted hover:bg-bg-4 hover:text-fg',
+                    )}
+                  >
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div id="stats-panel" role="tabpanel">
+              {showInstruments ? (
+                <Card className="overflow-hidden">
+                  <div className="flex items-baseline justify-between px-5 pb-3 pt-5">
+                    <h2 className="text-base font-semibold text-fg">Instruments</h2>
+                    <span className="text-xs text-fg-dim">{instruments.length} traded</span>
                   </div>
-                  <WinRateRing rate={s?.winRate ?? 0} size={48} />
-                </div>
-              </CardBody>
-            </Card>
-            <Card>
-              <CardBody>
-                <Stat label="Trades" value={String(s?.count ?? 0)} />
-                <div className="mt-2 flex gap-2 text-2xs text-fg-muted">
-                  <Badge tone="win">{s?.wins ?? 0} W</Badge>
-                  <Badge tone="loss">{s?.losses ?? 0} L</Badge>
-                  <Badge tone="be">{s?.bes ?? 0} BE</Badge>
-                </div>
-              </CardBody>
-            </Card>
-            <Card>
-              <CardBody>
-                <Stat label="Win Rate" value={s?.winRate == null ? '—' : formatPct(s.winRate)} />
-                <div className="mt-1 text-2xs text-fg-dim">Avg R{formatR(s?.avgR ?? 0)}</div>
-              </CardBody>
-            </Card>
-            <Card>
-              <CardBody>
-                <Stat label="Expectancy" value={formatR(s?.expectancy ?? 0)} />
-                <div className="mt-1 text-2xs text-fg-dim">Avg R:R {s?.avgRR == null ? '—' : s.avgRR.toFixed(2)}</div>
-              </CardBody>
-            </Card>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <Card>
-              <CardHeader>
-                <CardTitle>Best / Worst</CardTitle>
-              </CardHeader>
-              <CardBody className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-fg-muted">Best</span><span className="text-win font-semibold">{formatR(s?.bestR ?? 0)}</span></div>
-                <div className="flex justify-between"><span className="text-fg-muted">Worst</span><span className="text-loss font-semibold">{formatR(s?.worstR ?? 0)}</span></div>
-                <div className="flex justify-between"><span className="text-fg-muted">Streak W</span><span className="font-semibold">{s?.longestWinStreak ?? 0}</span></div>
-                <div className="flex justify-between"><span className="text-fg-muted">Streak L</span><span className="font-semibold">{s?.longestLossStreak ?? 0}</span></div>
-                <div className="flex justify-between"><span className="text-fg-muted">Max DD</span><span className="text-loss font-semibold">{formatR(s?.maxDrawdownR ?? 0)}</span></div>
-              </CardBody>
-            </Card>
+                  {instruments.length === 0 ? (
+                    <p className="border-t border-line px-5 py-6 text-sm text-fg-dim">
+                      No instrument data.
+                    </p>
+                  ) : (
+                    instruments.map(([instr, v]) => {
+                      const w = (Math.abs(v.totalR) / maxAbs) * 50;
+                      const winPct = v.count ? Math.round((v.wins / v.count) * 100) : 0;
+                      const tone = toneOf(v.totalR);
+                      return (
+                        <div key={instr} className="border-t border-line px-5 py-4">
+                          <div className="flex items-baseline justify-between gap-3">
+                            <span className="truncate font-medium text-fg">{instr}</span>
+                            <span
+                              className={cn(
+                                'text-lg font-semibold tabular-nums tracking-tight',
+                                tone === 'win' && 'text-win',
+                                tone === 'loss' && 'text-loss',
+                                !tone && 'text-fg-muted',
+                              )}
+                            >
+                              {formatR(v.totalR)}
+                            </span>
+                          </div>
 
-            <Card className="md:col-span-2">
-              <CardHeader>
-                <CardTitle>Instrument performance</CardTitle>
-                <span className="text-2xs text-fg-dim">Top by Total R</span>
-              </CardHeader>
-              <CardBody className="space-y-2">
-                {instruments.length === 0 ? (
-                  <p className="text-sm text-fg-dim">No instrument data.</p>
-                ) : (
-                  instruments.slice(0, 6).map(([instr, stats]) => (
-                    <div key={instr} className="flex items-center gap-3 text-sm">
-                      <Badge tone="accent">{instr}</Badge>
-                      <div className="flex-1 h-1.5 bg-bg-1 rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-accent rounded-full"
-                          style={{ width: `${Math.min(100, Math.max(10, (stats.totalR / Math.max(...instruments.map(([,s]) => s.totalR))) * 100))}%` }}
-                        />
-                      </div>
-                      <span className="font-medium text-xs">{stats.count} trades · {formatR(stats.totalR)}</span>
-                    </div>
-                  ))
-                )}
-              </CardBody>
-            </Card>
-          </div>
+                          <div className="mt-1 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-fg-muted">
+                            <span className="flex flex-wrap gap-x-4">
+                              <span>
+                                {v.count} trade{v.count === 1 ? '' : 's'}
+                              </span>
+                              <span>{winPct}% win rate</span>
+                              <span>avg {formatR(v.count ? v.totalR / v.count : 0)}</span>
+                            </span>
+                            <span className="flex gap-1.5">
+                              {v.wins > 0 && <Badge tone="win">{v.wins} W</Badge>}
+                              {v.losses > 0 && <Badge tone="loss">{v.losses} L</Badge>}
+                            </span>
+                          </div>
 
-          {/* Template-driven breakdowns */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {templates.map((b) => (
-              <BreakdownCard key={b.fieldKey} breakdown={b} />
-            ))}
+                          {/* bar grows right for gains, left for losses, same scale for every row */}
+                          <div className="relative mt-3 h-2 rounded-full bg-bg-1">
+                            <span className="absolute inset-y-[-3px] left-1/2 w-px bg-line" />
+                            <span
+                              className={cn(
+                                'absolute inset-y-0 rounded-full',
+                                tone === 'win' && 'bg-win',
+                                tone === 'loss' && 'bg-loss',
+                                !tone && 'bg-fg-dim',
+                              )}
+                              style={
+                                v.totalR === 0
+                                  ? { left: 'calc(50% - 3px)', width: 6 }
+                                  : { left: `${v.totalR > 0 ? 50 : 50 - w}%`, width: `${w}%` }
+                              }
+                            />
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </Card>
+              ) : (
+                active ? <BreakdownCard key={active.fieldKey} breakdown={active} /> : null
+              )}
+            </div>
           </div>
         </>
       )}
