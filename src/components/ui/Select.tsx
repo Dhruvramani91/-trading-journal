@@ -8,21 +8,30 @@ export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, invalid, children, ...props }, ref) => (
-    <div className="relative">
+    <div className="relative group">
       <select
         ref={ref}
         className={cn(
           'h-9 w-full appearance-none rounded-lg border bg-bg-2 pl-3 pr-8 text-sm text-fg shadow-input',
           'focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/60',
-          invalid ? 'border-loss/60' : 'border-line hover:border-line-strong',
+          'focus:shadow-md',
+          invalid ? 'border-loss/60 bg-loss/5' : 'border-line',
           'disabled:cursor-not-allowed disabled:opacity-50',
+          'transition-all duration-150 ease-in-out',
+          // Custom dropdown styling
+          ' [&>option]:bg-bg-2 [&>option]:text-fg [&>option]:py-1.5',
+          '[&>option:hover]:bg-accent/10 [&>option:hover]:text-accent',
+          '[&>option:checked]:bg-accent/10 [&>option:checked]:text-accent [&>option:checked]:font-medium',
           className,
         )}
         {...props}
       >
         {children}
       </select>
-      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-fg-dim" />
+      <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-fg-dim transition-all duration-150 group-hover:text-accent group-hover:scale-110">
+        <ChevronDown className="h-full w-full" />
+      </div>
+      <div className="absolute inset-0 rounded-lg pointer-events-none ring-inset ring-transparent group-focus-within:ring-2 group-focus-within:ring-accent/40" />
     </div>
   ),
 );
