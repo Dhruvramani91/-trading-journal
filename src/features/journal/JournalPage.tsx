@@ -180,7 +180,7 @@ export function JournalPage() {
                       <Badge tone="accent">{readFieldLabel(t, 'h4Candle')}</Badge>
                     </TD>
                     <TD>{readFieldLabel(t, 'h4Profile')}</TD>
-                    <TD>{readFieldLabel(t, 'mtf')}</TD>
+                    <TD>{readFieldLabel(t, 'itf')}</TD>
                     <TD>
                       <Badge tone="accent">{readFieldLabel(t, 'entry')}</Badge>
                     </TD>

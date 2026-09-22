@@ -64,7 +64,7 @@ export const DEFAULT_TEMPLATE: TemplateDefinition = {
       icon: 'Activity',
     },
     {
-      key: 'mtf',
+      key: 'itf',
       label: 'M90 / H1 / M30',
       group: 'Context',
       type: 'enum',

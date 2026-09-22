@@ -102,7 +102,7 @@ export function TradeDetailsPage() {
               <div><dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">Daily Profile</dt><dd className="font-medium text-fg">{readFieldLabel(trade, 'dailyProfile')}</dd></div>
               <div><dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">H4 Candle</dt><dd className="font-medium text-fg">{readFieldLabel(trade, 'h4Candle')}</dd></div>
               <div><dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">H4 Profile</dt><dd className="font-medium text-fg">{readFieldLabel(trade, 'h4Profile')}</dd></div>
-              <div><dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">M90 / H1 / M30</dt><dd className="font-medium text-fg">{readFieldLabel(trade, 'mtf')}</dd></div>
+              <div><dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">M90 / H1 / M30</dt><dd className="font-medium text-fg">{readFieldLabel(trade, 'itf')}</dd></div>
               <div><dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">Day</dt><dd className="font-medium text-fg">{readFieldLabel(trade, 'dayOfWeek')}</dd></div>
               <div><dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">Trade Type</dt><dd className="font-medium text-fg">{readFieldLabel(trade, 'tradeType')}</dd></div>
               <div><dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">Quarter Open</dt><dd className="font-medium text-fg">{readFieldLabel(trade, 'quarterOpen')}</dd></div>

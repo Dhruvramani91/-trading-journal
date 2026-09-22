@@ -17,6 +17,8 @@ interface AuthState {
   initialized: boolean;
   sendOtp: (email: string) => Promise<void>;
   verifyOtp: (email: string, token: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>;
+  signInWithPassword: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signInAsGuest: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -146,6 +148,58 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       }
     } catch (err) {
       set({ error: (err as Error).message || 'Invalid or expired code', loading: false });
+      throw err;
+    }
+  },
+
+  signUp: async (email: string, password: string) => {
+    set({ loading: true, error: null });
+    try {
+      if (isSupabaseConfigured && supabase) {
+        const { error } = await supabase.auth.signUp({
+          email: email.trim().toLowerCase(),
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/login`,
+          },
+        });
+        if (error) throw error;
+        set({ loading: false });
+      } else {
+        // Local-first fallback: auto-sign in
+        const profile: UserProfile = {
+          id: 'user_' + email.trim().toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 10),
+          email: email.trim().toLowerCase(),
+          name: email.split('@')[0],
+        };
+        set({ user: profile, loading: false });
+        setStoredUser(profile);
+      }
+    } catch (err) {
+      set({ error: (err as Error).message || 'Sign-up failed', loading: false });
+      throw err;
+    }
+  },
+
+  signInWithPassword: async (email: string, password: string) => {
+    set({ loading: true, error: null });
+    try {
+      if (isSupabaseConfigured && supabase) {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email.trim().toLowerCase(),
+          password,
+        });
+        if (error) throw error;
+        if (data.user) {
+          const profile = profileFromSupabaseUser(data.user);
+          set({ user: profile, loading: false });
+          setStoredUser(profile);
+        }
+      } else {
+        throw new Error('Supabase is not configured.');
+      }
+    } catch (err) {
+      set({ error: (err as Error).message || 'Invalid email or password', loading: false });
       throw err;
     }
   },
