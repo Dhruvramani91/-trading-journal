@@ -6,6 +6,8 @@ import {
   Sparkles,
   Lock,
   CheckCircle2,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { Card, CardBody } from '@/components/ui/Card';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
@@ -33,6 +35,7 @@ export function LoginPage() {
   const [mode, setMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
   const emailConfirmed = window.location.search.includes('confirmed=1');
 
@@ -51,6 +54,12 @@ export function LoginPage() {
       window.history.replaceState({}, '', url);
     }
   }, [emailConfirmed]);
+
+  // Reset the reveal state whenever the form mode changes, so it doesn't
+  // carry over (e.g. staying revealed) between Login and Sign Up.
+  useEffect(() => {
+    setShowPassword(false);
+  }, [mode]);
 
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault();
@@ -198,24 +207,34 @@ export function LoginPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="trader@example.com"
                       required
-                      className="pl-9"
+                      className="!pl-9"
                     />
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-fg-dim" />
+                    <Mail className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-fg-dim" />
                   </div>
                 </FormField>
 
                 <FormField label="Password">
                   <div className="relative">
                     <Input
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
                       minLength={6}
                       required
-                      className="pl-9"
+                      autoComplete="new-password"
+                      className="!pl-9 !pr-10"
                     />
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-fg-dim" />
+                    <Lock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-fg-dim" />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-dim hover:text-fg transition-colors"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
                   </div>
                 </FormField>
 
@@ -240,23 +259,33 @@ export function LoginPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="trader@example.com"
                       required
-                      className="pl-9"
+                      className="!pl-9"
                     />
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-fg-dim" />
+                    <Mail className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-fg-dim" />
                   </div>
                 </FormField>
 
                 <FormField label="Password">
                   <div className="relative">
                     <Input
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
                       required
-                      className="pl-9"
+                      autoComplete="current-password"
+                      className="!pl-9 !pr-10"
                     />
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-fg-dim" />
+                    <Lock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-fg-dim" />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-fg-dim hover:text-fg transition-colors"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
                   </div>
                 </FormField>
 
