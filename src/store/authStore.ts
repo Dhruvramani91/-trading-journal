@@ -31,6 +31,7 @@ const STORAGE_USER_KEY = 'tj:auth:user';
 
 function getStoredUser(): UserProfile | null {
   if (typeof localStorage === 'undefined') return null;
+
   try {
     const raw = localStorage.getItem(STORAGE_USER_KEY);
     return raw ? (JSON.parse(raw) as UserProfile) : null;
@@ -41,6 +42,7 @@ function getStoredUser(): UserProfile | null {
 
 function setStoredUser(user: UserProfile | null): void {
   if (typeof localStorage === 'undefined') return;
+
   if (user) {
     localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(user));
   } else {
@@ -48,11 +50,19 @@ function setStoredUser(user: UserProfile | null): void {
   }
 }
 
-function profileFromSupabaseUser(u: { id: string; email?: string | null; user_metadata?: Record<string, unknown> }): UserProfile {
+function profileFromSupabaseUser(u: {
+  id: string;
+  email?: string | null;
+  user_metadata?: Record<string, unknown>;
+}): UserProfile {
   return {
     id: u.id,
     email: u.email || '',
-    name: (u.user_metadata?.full_name as string) || (u.user_metadata?.name as string) || u.email?.split('@')[0] || 'Trader',
+    name:
+      (u.user_metadata?.full_name as string) ||
+      (u.user_metadata?.name as string) ||
+      u.email?.split('@')[0] ||
+      'Trader',
     avatarUrl: u.user_metadata?.avatar_url as string | undefined,
   };
 }
@@ -65,43 +75,79 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initialized: false,
 
   clearError: () => set({ error: null }),
-  resetOtp: () => set({ otpSent: false, error: null }),
+
+  resetOtp: () => set({
+    otpSent: false,
+    error: null,
+  }),
 
   init: async () => {
     if (get().initialized) return;
 
     if (isSupabaseConfigured && supabase) {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
         if (session?.user) {
           const profile = profileFromSupabaseUser(session.user);
-          set({ user: profile, initialized: true });
+
+          set({
+            user: profile,
+            initialized: true,
+          });
+
           setStoredUser(profile);
         } else {
-          set({ user: getStoredUser(), initialized: true });
+          set({
+            user: getStoredUser(),
+            initialized: true,
+          });
         }
 
         supabase.auth.onAuthStateChange((_event, session) => {
           if (session?.user) {
             const profile = profileFromSupabaseUser(session.user);
-            set({ user: profile });
+
+            set({
+              user: profile,
+            });
+
             setStoredUser(profile);
           } else {
-            set({ user: null });
+            set({
+              user: null,
+            });
+
             setStoredUser(null);
           }
         });
       } catch (err) {
-        console.warn('Supabase auth init failed, fallback to local', err);
-        set({ user: getStoredUser(), initialized: true });
+        console.warn(
+          'Supabase auth init failed, fallback to local',
+          err
+        );
+
+        set({
+          user: getStoredUser(),
+          initialized: true,
+        });
       }
     } else {
-      set({ user: getStoredUser(), initialized: true });
+      set({
+        user: getStoredUser(),
+        initialized: true,
+      });
     }
   },
 
   sendOtp: async (email: string) => {
-    set({ loading: true, error: null });
+    set({
+      loading: true,
+      error: null,
+    });
+
     try {
       if (isSupabaseConfigured && supabase) {
         const { error } = await supabase.auth.signInWithOtp({
@@ -110,26 +156,51 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             shouldCreateUser: true,
           },
         });
+
         if (error) throw error;
-        set({ otpSent: true, loading: false });
+
+        set({
+          otpSent: true,
+          loading: false,
+        });
       } else {
         // Local-first fallback: auto-sign in
         const profile: UserProfile = {
-          id: 'user_' + email.trim().toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 10),
+          id:
+            'user_' +
+            email
+              .trim()
+              .toLowerCase()
+              .replace(/[^a-z0-9]/g, '')
+              .slice(0, 10),
           email: email.trim().toLowerCase(),
           name: email.split('@')[0],
         };
-        set({ user: profile, otpSent: false, loading: false });
+
+        set({
+          user: profile,
+          otpSent: false,
+          loading: false,
+        });
+
         setStoredUser(profile);
       }
     } catch (err) {
-      set({ error: (err as Error).message || 'Failed to send code', loading: false });
+      set({
+        error: (err as Error).message || 'Failed to send code',
+        loading: false,
+      });
+
       throw err;
     }
   },
 
   verifyOtp: async (email: string, token: string) => {
-    set({ loading: true, error: null });
+    set({
+      loading: true,
+      error: null,
+    });
+
     try {
       if (isSupabaseConfigured && supabase) {
         const { data, error } = await supabase.auth.verifyOtp({
@@ -137,84 +208,165 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           token: token.trim(),
           type: 'email',
         });
+
         if (error) throw error;
+
         if (data.user) {
           const profile = profileFromSupabaseUser(data.user);
-          set({ user: profile, loading: false, otpSent: false });
+
+          set({
+            user: profile,
+            loading: false,
+            otpSent: false,
+          });
+
           setStoredUser(profile);
         }
       } else {
-        throw new Error('Supabase is not configured. Enable it to use OTP verification.');
+        throw new Error(
+          'Supabase is not configured. Enable it to use OTP verification.'
+        );
       }
     } catch (err) {
-      set({ error: (err as Error).message || 'Invalid or expired code', loading: false });
+      set({
+        error: (err as Error).message || 'Invalid or expired code',
+        loading: false,
+      });
+
       throw err;
     }
   },
 
   signUp: async (email: string, password: string) => {
-    set({ loading: true, error: null });
+    set({
+      loading: true,
+      error: null,
+    });
+
     try {
       if (isSupabaseConfigured && supabase) {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email: email.trim().toLowerCase(),
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/login`,
+            emailRedirectTo: `${window.location.origin}/auth/confirmed`,
           },
         });
+
         if (error) throw error;
-        set({ loading: false });
+
+        // Supabase's signUp() does NOT return an error when the email is
+        // already registered and confirmed — it's an anti-enumeration
+        // measure. Instead it returns a user object with an empty
+        // `identities` array. That's the only reliable signal we get, so
+        // we turn it into a real error the UI can show.
+        if (
+          data.user &&
+          data.user.identities &&
+          data.user.identities.length === 0
+        ) {
+          throw new Error(
+            'An account with this email already exists. Please log in instead.'
+          );
+        }
+
+        set({
+          loading: false,
+        });
       } else {
         // Local-first fallback: auto-sign in
         const profile: UserProfile = {
-          id: 'user_' + email.trim().toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 10),
+          id:
+            'user_' +
+            email
+              .trim()
+              .toLowerCase()
+              .replace(/[^a-z0-9]/g, '')
+              .slice(0, 10),
           email: email.trim().toLowerCase(),
           name: email.split('@')[0],
         };
-        set({ user: profile, loading: false });
+
+        set({
+          user: profile,
+          loading: false,
+        });
+
         setStoredUser(profile);
       }
     } catch (err) {
-      set({ error: (err as Error).message || 'Sign-up failed', loading: false });
+      set({
+        error: (err as Error).message || 'Sign-up failed',
+        loading: false,
+      });
+
       throw err;
     }
   },
 
-  signInWithPassword: async (email: string, password: string) => {
-    set({ loading: true, error: null });
+  signInWithPassword: async (
+    email: string,
+    password: string
+  ) => {
+    set({
+      loading: true,
+      error: null,
+    });
+
     try {
       if (isSupabaseConfigured && supabase) {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: email.trim().toLowerCase(),
-          password,
-        });
+        const { data, error } =
+          await supabase.auth.signInWithPassword({
+            email: email.trim().toLowerCase(),
+            password,
+          });
+
         if (error) throw error;
+
         if (data.user) {
           const profile = profileFromSupabaseUser(data.user);
-          set({ user: profile, loading: false });
+
+          set({
+            user: profile,
+            loading: false,
+          });
+
           setStoredUser(profile);
         }
       } else {
         throw new Error('Supabase is not configured.');
       }
     } catch (err) {
-      set({ error: (err as Error).message || 'Invalid email or password', loading: false });
+      set({
+        error:
+          (err as Error).message ||
+          'Invalid email or password',
+        loading: false,
+      });
+
       throw err;
     }
   },
 
   signInWithGoogle: async () => {
-    set({ loading: true, error: null });
+    set({
+      loading: true,
+      error: null,
+    });
+
     try {
       if (isSupabaseConfigured && supabase) {
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: {
-            redirectTo: `${window.location.origin}/auth/callback`,
-          },
-        });
+        const { error } =
+          await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+              redirectTo:
+                `${window.location.origin}/auth/callback`,
+            },
+          });
+
         if (error) throw error;
+
         // Browser redirects, loading stays true
       } else {
         // Local-first fallback: demo Google user
@@ -224,11 +376,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           name: 'Google Trader',
           avatarUrl: undefined,
         };
-        set({ user: profile, loading: false });
+
+        set({
+          user: profile,
+          loading: false,
+        });
+
         setStoredUser(profile);
       }
     } catch (err) {
-      set({ error: (err as Error).message || 'Google sign-in failed', loading: false });
+      set({
+        error:
+          (err as Error).message ||
+          'Google sign-in failed',
+        loading: false,
+      });
+
       throw err;
     }
   },
@@ -240,16 +403,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       name: 'Guest Trader',
       isGuest: true,
     };
-    set({ user: guestUser });
+
+    set({
+      user: guestUser,
+    });
+
     setStoredUser(guestUser);
   },
 
   signOut: async () => {
-    set({ loading: true });
+    set({
+      loading: true,
+    });
+
     if (isSupabaseConfigured && supabase) {
       await supabase.auth.signOut();
     }
-    set({ user: null, loading: false, otpSent: false });
+
+    set({
+      user: null,
+      loading: false,
+      otpSent: false,
+    });
+
     setStoredUser(null);
   },
 }));
