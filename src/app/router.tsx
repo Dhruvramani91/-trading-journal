@@ -4,6 +4,7 @@ import { LandingPage } from '@/features/auth/LandingPage';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { AuthCallbackPage } from '@/features/auth/AuthCallbackPage';
 import { EmailConfirmedPage } from '@/features/auth/EmailConfirmedPage';
+import PasswordResetPage from '@/features/auth/PasswordResetPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { JournalPage } from '@/features/journal/JournalPage';
 import { TradeFormPage } from '@/features/journal/TradeFormPage';
@@ -17,6 +18,7 @@ export const router = createBrowserRouter([
   { path: '/', element: <LandingPage /> },
   { path: '/login', element: <LoginPage /> },
   { path: '/auth/confirmed', element: <EmailConfirmedPage /> },
+  { path: '/auth/reset-password', element: <PasswordResetPage /> },
   { path: '/auth/callback', element: <AuthCallbackPage /> },
 
   // App Workspace Routes

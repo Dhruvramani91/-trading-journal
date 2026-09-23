@@ -15,6 +15,7 @@ import {
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/store/authStore';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 const ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -29,6 +30,7 @@ export function MobileNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuthStore();
+  const [logoutOpen, setLogoutOpen] = useState(false);
 
   useEffect(() => {
     setOpen(false);
@@ -47,6 +49,11 @@ export function MobileNav() {
 
   async function handleSignOut() {
     setOpen(false);
+    setLogoutOpen(true);
+  }
+
+  async function confirmSignOut() {
+    setLogoutOpen(false);
     await signOut();
     navigate('/');
   }
@@ -141,6 +148,16 @@ export function MobileNav() {
           </nav>
         </div>
       )}
+
+      <ConfirmDialog
+        open={logoutOpen}
+        onOpenChange={setLogoutOpen}
+        title="Sign out?"
+        description="You’ll be returned to the homepage. Make sure your trades are saved."
+        confirmLabel="Sign Out"
+        cancelLabel="Cancel"
+        onConfirm={confirmSignOut}
+      />
     </div>
   );
 }

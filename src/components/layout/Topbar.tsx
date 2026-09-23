@@ -1,7 +1,9 @@
 import { Plus, PanelLeftOpen, LogOut, Home } from 'lucide-react';
+import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useSidebarStore } from '@/store/sidebarStore';
 import { useAuthStore } from '@/store/authStore';
 
@@ -19,8 +21,14 @@ export function Topbar() {
   const meta = TITLES[pathname] ?? { title: 'Trading Journal' };
   const { collapsed, toggleCollapse } = useSidebarStore();
   const { user, signOut } = useAuthStore();
+  const [logoutOpen, setLogoutOpen] = useState(false);
 
   async function handleSignOut() {
+    setLogoutOpen(true);
+  }
+
+  async function confirmSignOut() {
+    setLogoutOpen(false);
     await signOut();
     navigate('/');
   }
@@ -71,6 +79,16 @@ export function Topbar() {
           <Link to="/journal/new">New trade</Link>
         </Button>
       </div>
+
+      <ConfirmDialog
+        open={logoutOpen}
+        onOpenChange={setLogoutOpen}
+        title="Sign out?"
+        description="You’ll be returned to the homepage. Make sure your trades are saved."
+        confirmLabel="Sign Out"
+        cancelLabel="Cancel"
+        onConfirm={confirmSignOut}
+      />
     </div>
   );
 }

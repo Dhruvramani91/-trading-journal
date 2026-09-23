@@ -13,6 +13,7 @@ import {
   User,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useSidebarStore } from '@/store/sidebarStore';
 import { useAuthStore } from '@/store/authStore';
 
@@ -107,6 +108,7 @@ export function Sidebar() {
   const { collapsed, width, toggleCollapse, setCollapsed, setWidth } = useSidebarStore();
   const { user, signOut } = useAuthStore();
   const [isResizing, setIsResizing] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
 
   const startResizing = useCallback((e: React.MouseEvent) => {
@@ -152,6 +154,11 @@ export function Sidebar() {
   }, [isResizing, resize, stopResizing]);
 
   async function handleSignOut() {
+    setLogoutOpen(true);
+  }
+
+  async function confirmSignOut() {
+    setLogoutOpen(false);
     await signOut();
     navigate('/');
   }
@@ -307,6 +314,16 @@ export function Sidebar() {
           'absolute -right-1 top-0 bottom-0 w-2.5 cursor-col-resize hover:bg-accent/40 active:bg-accent transition-colors z-30',
           isResizing && 'bg-accent',
         )}
+      />
+
+      <ConfirmDialog
+        open={logoutOpen}
+        onOpenChange={setLogoutOpen}
+        title="Sign out?"
+        description="You’ll be returned to the homepage. Make sure your trades are saved."
+        confirmLabel="Sign Out"
+        cancelLabel="Cancel"
+        onConfirm={confirmSignOut}
       />
     </aside>
   );

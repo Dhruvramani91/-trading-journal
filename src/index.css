@@ -124,3 +124,21 @@
   .pill-accent { @apply pill text-accent border-accent/25 bg-accent/10; }
   .num { @apply tabular-nums; }
 }
+
+/* PrecisionJournal brand logo theme switching */
+.brand-logo-dark {
+  display: none;
+}
+
+.brand-logo-light {
+  display: block;
+}
+
+/* Dark theme */
+.dark .brand-logo-light {
+  display: none;
+}
+
+.dark .brand-logo-dark {
+  display: block;
+}

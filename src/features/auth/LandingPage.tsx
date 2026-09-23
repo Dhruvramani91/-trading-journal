@@ -193,13 +193,35 @@ try{var t=localStorage.getItem("theme");if(t==="dark"||t==="light")document.docu
     var series='';
     if(mode==='cum'){
       var pts=vals.map(function(v,i){ return [X(i),Y(v)]; });
-      series+= n>1?'<path class="ln" d="'+spline(pts)+'"/>':'';
+      var linePath=n>1?spline(pts):'';
+      if(n>1){
+        var baseY=H-B;
+        var areaPath=linePath+' L'+pts[n-1][0].toFixed(1)+','+baseY.toFixed(1)+' L'+pts[0][0].toFixed(1)+','+baseY.toFixed(1)+' Z';
+        series+='<defs>'+
+          '<linearGradient id="equityFill" x1="0" y1="0" x2="0" y2="1">'+
+            '<stop offset="0%" stop-color="var(--purple)" stop-opacity=".20"/>'+
+            '<stop offset="48%" stop-color="var(--purple)" stop-opacity=".08"/>'+
+            '<stop offset="100%" stop-color="var(--purple)" stop-opacity="0"/>'+
+          '</linearGradient>'+
+          '<filter id="equityGlow" x="-20%" y="-20%" width="140%" height="160%">'+
+            '<feGaussianBlur stdDeviation="6"/>'+
+          '</filter>'+
+          '<clipPath id="equityReveal" clipPathUnits="userSpaceOnUse">'+
+            '<rect class="equity-reveal-rect" x="'+L+'" y="'+T+'" width="'+iw.toFixed(1)+'" height="'+ih.toFixed(1)+'" style="--chart-reveal-width:'+iw.toFixed(1)+'px"/>'+
+          '</clipPath>'+
+        '</defs>';
+        series+='<path class="area-glow" d="'+areaPath+'" clip-path="url(#equityReveal)" filter="url(#equityGlow)"/>';
+        series+='<path class="area" d="'+areaPath+'" clip-path="url(#equityReveal)"/>';
+        series+='<path class="ln-glow" pathLength="1" d="'+linePath+'"/>';
+        series+='<path class="ln" pathLength="1" d="'+linePath+'"/>';
+      }
       pts.forEach(function(p){ series+='<circle class="dot" cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="4"/>'; });
     }else{
       var bw=Math.min(30,iw/n*0.6), y0=Y(0);
       vals.forEach(function(v,i){ var yy=Y(v), h=Math.max(2,Math.abs(yy-y0));
         series+='<rect class="bar '+(v>=0?'pos':'neg')+'" x="'+(X(i)-bw/2).toFixed(1)+'" y="'+(v>=0?y0-h:y0).toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="4"/>'; });
     }
+
     host.innerHTML='<svg width="'+W+'" height="'+H+'" aria-hidden="true">'+g+'<line class="guide" y1="'+T+'" y2="'+(H-B)+'" style="display:none"/>'+series+'</svg><div class="ap-tip" hidden></div>';
     var svg=host.firstChild, guide=svg.querySelector('.guide'), tip=host.querySelector('.ap-tip');
     var marks=svg.querySelectorAll(mode==='cum'?'.dot':'rect.bar'), cur=n-1;
@@ -261,6 +283,23 @@ try{var t=localStorage.getItem("theme");if(t==="dark"||t==="light")document.docu
   seed(); render();
 })();
 
+
+/* experimental cursor spotlight */
+(function(){
+  var targets=document.querySelectorAll('.cell,.plan,.contact-inner,.ap-card,.tile,.window,.shot');
+  targets.forEach(function(el){
+    el.addEventListener('pointermove',function(e){
+      var r=el.getBoundingClientRect();
+      el.style.setProperty('--mx',((e.clientX-r.left)/r.width*100)+'%');
+      el.style.setProperty('--my',((e.clientY-r.top)/r.height*100)+'%');
+    });
+    el.addEventListener('pointerleave',function(){
+      el.style.removeProperty('--mx');
+      el.style.removeProperty('--my');
+    });
+  });
+})();
+
 /* theme toggle */
 (function(){
   var root=document.documentElement, btn=document.getElementById('themeBtn'); if(!btn) return;
@@ -276,6 +315,58 @@ try{var t=localStorage.getItem("theme");if(t==="dark"||t==="light")document.docu
     try{ localStorage.setItem('theme',next); }catch(e){}
     label();
   });
+})();
+
+/* existing-element spotlight: follows the pointer without adding markup */
+(function(){
+  var items=document.querySelectorAll('.cell,.tile,.ap-card,.plan,.contact-inner,.cta');
+  items.forEach(function(el){
+    el.classList.add('pj-spotlight');
+    el.addEventListener('pointermove',function(e){
+      var r=el.getBoundingClientRect();
+      var x=((e.clientX-r.left)/r.width*100).toFixed(1)+'%';
+      var y=((e.clientY-r.top)/r.height*100).toFixed(1)+'%';
+      el.style.setProperty('--spot-x',x);
+      el.style.setProperty('--spot-y',y);
+    });
+    el.addEventListener('pointerleave',function(){
+      el.style.setProperty('--spot-x','50%');
+      el.style.setProperty('--spot-y','50%');
+    });
+  });
+})();
+
+/* scroll reveal: observes only elements that already exist on the page */
+(function(){
+  var reveal=document.querySelectorAll('main > section.stage,main > section.model,main > section.sec,main > section.cta,footer');
+  var stagger=document.querySelectorAll('.bento > .cell,.steps > .step,.plans > .plan,.faq details');
+
+  reveal.forEach(function(el,i){
+    el.classList.add('pj-scroll-reveal');
+    el.style.setProperty('--reveal-delay',Math.min(i*45,180)+'ms');
+  });
+
+  stagger.forEach(function(el,i){
+    el.classList.add('pj-stagger');
+    el.style.setProperty('--reveal-delay',Math.min(i*55,220)+'ms');
+  });
+
+  if(!('IntersectionObserver' in window)){
+    reveal.forEach(function(el){el.classList.add('pj-visible');});
+    stagger.forEach(function(el){el.classList.add('pj-visible');});
+    return;
+  }
+
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(!entry.isIntersecting) return;
+      entry.target.classList.add('pj-visible');
+      io.unobserve(entry.target);
+    });
+  },{threshold:.12,rootMargin:'0px 0px -7% 0px'});
+
+  reveal.forEach(function(el){io.observe(el);});
+  stagger.forEach(function(el){io.observe(el);});
 })();
     `);
     run();
@@ -552,7 +643,52 @@ h2 .g{color:var(--gray-word)}
 .ap-chart .gl{stroke:var(--line);stroke-dasharray:3 4}
 .ap-chart .gl.zero{stroke:var(--dot);stroke-dasharray:none}
 .ap-chart .ax{fill:var(--soft);font-size:10.5px}
-.ap-chart .ln{fill:none;stroke:var(--purple);stroke-width:2.2;stroke-linecap:round}
+/* Equity curve — progressive draw + soft fading glow beneath the line */
+.ap-chart .ln{
+  fill:none;
+  stroke:var(--purple);
+  stroke-width:2.2;
+  stroke-linecap:round;
+  stroke-dasharray:1;
+  stroke-dashoffset:1;
+  animation:pjDrawEquity 2s cubic-bezier(.65,0,.35,1) forwards;
+}
+.ap-chart .ln-glow{
+  fill:none;
+  stroke:var(--purple);
+  stroke-width:8;
+  stroke-linecap:round;
+  stroke-dasharray:1;
+  stroke-dashoffset:1;
+  opacity:.16;
+  filter:url(#equityGlow);
+  animation:pjDrawEquity 2s cubic-bezier(.65,0,.35,1) forwards;
+}
+.ap-chart .area{
+  fill:url(#equityFill);
+  opacity:0;
+  animation:pjEquityArea .9s ease .15s forwards;
+}
+.ap-chart .area-glow{
+  fill:var(--purple);
+  opacity:.10;
+}
+.ap-chart .equity-reveal-rect{
+  width:0;
+  animation:pjRevealEquity 2s cubic-bezier(.65,0,.35,1) forwards;
+}
+@keyframes pjDrawEquity{
+  from{stroke-dashoffset:1}
+  to{stroke-dashoffset:0}
+}
+@keyframes pjRevealEquity{
+  from{width:0}
+  to{width:var(--chart-reveal-width)}
+}
+@keyframes pjEquityArea{
+  from{opacity:0}
+  to{opacity:1}
+}
 .ap-chart .dot{fill:var(--purple);stroke:var(--card);stroke-width:2;transition:r .12s}
 .ap-chart .dot.on{stroke:var(--purple);fill:var(--card);stroke-width:2.5}
 .ap-chart .guide{stroke:var(--purple);stroke-opacity:.35;stroke-width:1}
@@ -622,6 +758,186 @@ h2 .g{color:var(--gray-word)}
 .faq details[open] summary::after{transform:rotate(45deg)}
 .faq p{margin:12px 0 0;color:var(--text);max-width:60ch}
 
+/* contact */
+.contact{
+  padding-top:72px;
+  padding-bottom:42px;
+  text-align:center;
+}
+.contact-inner{
+  max-width:680px;
+  margin:0 auto;
+  padding:34px 24px;
+  border:1px solid var(--line);
+  border-radius:24px;
+  background:var(--panel);
+  transition:transform .35s cubic-bezier(.22,1,.36,1),box-shadow .35s ease,border-color .25s ease;
+}
+.contact-inner:hover{
+  transform:translateY(-3px);
+  border-color:color-mix(in srgb,var(--purple) 22%,var(--line));
+  box-shadow:0 18px 45px rgba(20,30,60,.08);
+}
+.contact-eyebrow{
+  margin:0 0 10px;
+  font-size:10px;
+  letter-spacing:.2em;
+  color:var(--soft);
+  font-weight:600;
+}
+.contact h2{font-size:clamp(1.7rem,4vw,2.5rem)}
+.contact-link{
+  margin-top:16px;
+  font-size:14px;
+  color:var(--soft);
+  font-weight:500;
+}
+.contact-link:hover{color:var(--purple)}
+
+@media (max-width:860px){
+  .contact{padding-top:52px;padding-bottom:30px}
+  .contact-inner{padding:28px 18px}
+}
+
+
+/* Experimental staggered micro-interactions */
+.bento .cell,
+.steps .step,
+.plans .plan,
+.faq details{
+  transition:
+    transform .35s cubic-bezier(.22,1,.36,1),
+    box-shadow .35s ease,
+    border-color .25s ease;
+}
+
+.bento .cell:hover,
+.steps .step:hover,
+.plans .plan:hover{
+  transform:translateY(-5px);
+  box-shadow:0 18px 42px rgba(20,30,60,.10);
+}
+
+.faq details:hover{
+  padding-left:8px;
+  padding-right:8px;
+}
+
+.btn{
+  position:relative;
+  overflow:hidden;
+}
+
+.btn::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  width:45%;
+  transform:translateX(-150%) skewX(-18deg);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent);
+  transition:transform .65s ease;
+  pointer-events:none;
+}
+
+.btn:hover::after{
+  transform:translateX(320%) skewX(-18deg);
+}
+
+.theme:active,
+.btn:active,
+.seg button:active,
+.ap-act button:active{
+  transform:scale(.97);
+}
+
+@media (prefers-reduced-motion:reduce){
+  main > section{
+    animation:none!important;
+  }
+
+  .bento .cell:hover,
+  .steps .step:hover,
+  .plans .plan:hover{
+    transform:none!important;
+  }
+
+  .faq details:hover{
+    padding-left:0;
+    padding-right:0;
+  }
+
+  .btn::after{
+    display:none;
+  }
+}
+
+
+/* Experimental cursor spotlight CSS */
+.cell,
+.plan,
+.contact-inner,
+.ap-card,
+.tile,
+.window,
+.shot{
+  position:relative;
+  overflow:hidden;
+}
+
+.cell::before,
+.plan::before,
+.contact-inner::before,
+.ap-card::before,
+.tile::before,
+.window::before,
+.shot::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:0;
+  background:radial-gradient(
+    260px circle at var(--mx,50%) var(--my,50%),
+    color-mix(in srgb,var(--purple) 13%,transparent),
+    transparent 65%
+  );
+  transition:opacity .25s ease;
+  z-index:0;
+}
+
+.cell:hover::before,
+.plan:hover::before,
+.contact-inner:hover::before,
+.ap-card:hover::before,
+.tile:hover::before,
+.window:hover::before,
+.shot:hover::before{
+  opacity:1;
+}
+
+.cell > *,
+.plan > *,
+.contact-inner > *,
+.ap-card > *,
+.tile > *,
+.window > *,
+.shot > *{
+  position:relative;
+  z-index:1;
+}
+
+@media (prefers-reduced-motion:reduce){
+  .cell::before,
+  .plan::before,
+  .contact-inner::before,
+  .ap-card::before,
+  .tile::before,
+  .window::before,
+  .shot::before{
+    display:none;
+  }
+}
+
 /* cta + footer */
 .cta{margin:0 clamp(12px,3vw,40px);border-radius:32px;background:var(--ink);color:var(--ink-inv);text-align:center;padding:clamp(56px,9vw,104px) 24px}
 .cta h2{color:var(--ink-inv)}
@@ -651,6 +967,453 @@ footer a:hover{color:var(--ink)}
   *{transition:none!important;scroll-behavior:auto!important}
 }
 
+/* =========================================================
+   PRECISIONJOURNAL — REFERENCE-INSPIRED MOTION POLISH
+   Existing elements only. No new landing-page content.
+   ========================================================= */
+
+/* Smooth interactive transitions */
+.pill a,
+.logo,
+.theme,
+.acct a,
+.btn,
+.cell,
+.tile,
+.chip,
+.rule,
+.streak-dots span,
+.heat span,
+.step .n,
+.plan,
+.faq details,
+.faq summary,
+.nav-i,
+.ap-act button,
+.ap-btn,
+.ap-ghost,
+.ap-card,
+.duo .av,
+footer a,
+.contact-link {
+  transition:
+    transform .28s cubic-bezier(.22,1,.36,1),
+    background-color .25s ease,
+    color .25s ease,
+    border-color .25s ease,
+    box-shadow .28s ease,
+    opacity .25s ease;
+}
+
+/* Header/nav — soft active lift + animated underline */
+.pill a{position:relative}
+.pill a::after{
+  content:"";
+  position:absolute;
+  left:18px;
+  right:18px;
+  bottom:5px;
+  height:1px;
+  border-radius:99px;
+  background:currentColor;
+  transform:scaleX(0);
+  transform-origin:center;
+  transition:transform .28s cubic-bezier(.22,1,.36,1);
+  opacity:.7;
+}
+.pill a:hover::after,
+.pill a[aria-current="page"]::after{transform:scaleX(1)}
+.pill a:hover{transform:translateY(-1px)}
+
+.logo{will-change:transform}
+.logo:hover{transform:translateY(-1px);opacity:.9}
+
+.theme:active{transform:scale(.88) rotate(-8deg)}
+.theme:hover{transform:translateY(-1px)}
+
+.acct a:hover{transform:translateY(-1px)}
+.acct a.solid:hover{box-shadow:0 10px 26px rgba(10,10,20,.18)}
+
+/* Buttons — lift, glow and icon nudge */
+.btn{will-change:transform,box-shadow}
+.btn:hover{
+  transform:translateY(-3px);
+  box-shadow:0 18px 38px rgba(10,10,20,.20);
+}
+.btn:active{transform:translateY(-1px) scale(.985)}
+.btn svg{transition:transform .25s cubic-bezier(.22,1,.36,1)}
+.btn:hover svg{transform:translateX(4px)}
+
+.btn.ghost:hover{
+  background:var(--panel);
+  box-shadow:0 10px 28px rgba(20,30,60,.08);
+}
+
+/* Hero — subtle entrance */
+.hero .eyebrow,
+.hero h1,
+.hero .sub,
+.hero .proof,
+.hero .btn{
+  animation:pjFadeUp .75s cubic-bezier(.22,1,.36,1) both;
+}
+.hero h1{animation-delay:.08s}
+.hero .sub{animation-delay:.16s}
+.hero .btn{animation-delay:.24s}
+.hero .proof{animation-delay:.30s}
+
+/* Dashboard / main visual — soft float and depth */
+.shot,
+.window{
+  transition:
+    transform .55s cubic-bezier(.22,1,.36,1),
+    box-shadow .45s ease;
+}
+.shot:hover,
+.window:hover{
+  transform:translateY(-5px);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb,var(--purple) 12%,transparent),
+    0 24px 70px color-mix(in srgb,var(--purple) 10%,transparent),
+    0 34px 90px rgba(30,45,90,.18);
+}
+
+/* Existing live indicator */
+.live{
+  position:relative;
+  box-shadow:0 0 0 0 color-mix(in srgb,var(--gain) 45%,transparent);
+  animation:pjPulse 2s ease-out infinite;
+}
+
+/* Dashboard tiles */
+.tile:hover{
+  transform:translateY(-3px);
+  border-color:color-mix(in srgb,var(--purple) 20%,var(--line));
+  box-shadow:0 16px 38px rgba(20,30,60,.08);
+}
+
+/* Existing chips */
+.chip:not(.on):hover{
+  transform:translateY(-1px);
+  background:var(--purple-soft);
+  color:var(--purple);
+}
+
+/* Checklist rows */
+.rule:hover{
+  transform:translateX(3px);
+  background:color-mix(in srgb,var(--ink-inv) 12%,var(--ink));
+}
+.rule .bx{transition:background .2s ease,box-shadow .2s ease,transform .2s ease}
+.rule:hover .bx{transform:scale(1.05)}
+
+/* Streak / heatmap tactile hover */
+.streak-dots span.hit:hover{transform:translateY(-3px) scale(1.06)}
+.heat span:not(.fut):hover{
+  transform:scale(1.14);
+  box-shadow:0 5px 14px color-mix(in srgb,var(--purple) 18%,transparent);
+}
+
+/* Feature bento cards */
+.cell{
+  will-change:transform,box-shadow;
+}
+.cell:hover{
+  transform:translateY(-5px);
+  box-shadow:0 22px 50px rgba(20,30,60,.10);
+}
+.cell.dark:hover{
+  box-shadow:0 22px 50px rgba(0,0,0,.32);
+}
+.cell .mini .f{
+  transition:transform .25s ease,box-shadow .25s ease,background-color .25s ease;
+}
+.cell .mini .f:hover{
+  transform:translateY(-2px);
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--purple) 28%,var(--line));
+}
+
+/* Steps */
+.step .n{
+  transition:transform .3s cubic-bezier(.22,1,.36,1),box-shadow .3s ease;
+}
+.step:hover .n{
+  transform:scale(1.10);
+  box-shadow:0 10px 24px rgba(20,30,60,.16);
+}
+
+/* Model portraits */
+.duo .av{
+  transition:transform .35s cubic-bezier(.22,1,.36,1),box-shadow .35s ease;
+}
+.duo .av:hover{transform:translateY(-5px) scale(1.045)}
+.duo .g2:hover{box-shadow:0 0 0 3px color-mix(in srgb,var(--purple) 60%,#fff),0 0 58px color-mix(in srgb,var(--purple) 65%,transparent)}
+
+/* Interactive dashboard navigation */
+.nav-i:hover{
+  transform:translateX(4px);
+  background:var(--panel);
+}
+.nav-i[aria-current="page"]:hover{
+  transform:translateX(2px);
+  box-shadow:0 8px 20px rgba(0,0,0,.12);
+}
+
+/* Dashboard stat cards */
+.ap-stat:hover,
+.ap-set:hover{
+  transform:translateY(-3px);
+  border-color:color-mix(in srgb,var(--purple) 18%,var(--line));
+  box-shadow:0 16px 36px rgba(20,30,60,.08);
+}
+
+/* Dashboard action buttons */
+.ap-act button:hover,
+.ap-ghost:hover{transform:translateY(-1px)}
+.ap-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 10px 24px rgba(10,10,20,.16);
+}
+
+/* Existing chart points */
+.ap-chart .dot{transition:r .18s ease,fill .18s ease,stroke-width .18s ease}
+.ap-chart .dot:hover{r:6}
+.ap-chart rect.bar{transform-box:fill-box;transform-origin:center bottom}
+.ap-chart rect.bar:hover{opacity:.82}
+
+/* Existing pattern bars — animate their fill */
+.bar .fill{
+  transform-origin:left center;
+  animation:pjBarGrow .65s cubic-bezier(.22,1,.36,1) both;
+}
+
+/* Pricing cards */
+.plan{will-change:transform,box-shadow}
+.plan:hover{
+  transform:translateY(-6px);
+  box-shadow:0 24px 55px rgba(20,30,60,.12);
+}
+.plan.feat:hover{box-shadow:0 24px 55px rgba(0,0,0,.30)}
+.plan .btn:hover{transform:translateY(-2px)}
+
+/* FAQ — existing accordion only */
+.faq details{
+  transition:background-color .25s ease,border-color .25s ease,transform .25s ease;
+}
+.faq details:hover{transform:translateX(3px)}
+.faq summary::after{
+  transition:transform .3s cubic-bezier(.22,1,.36,1),color .2s ease;
+}
+.faq summary:hover{color:var(--ink)}
+.faq p{animation:pjFaqIn .3s ease both}
+
+/* Final CTA */
+.cta{
+  transition:box-shadow .4s ease,transform .4s cubic-bezier(.22,1,.36,1);
+}
+.cta:hover{
+  transform:translateY(-3px);
+  box-shadow:0 26px 65px rgba(0,0,0,.18);
+}
+.cta .btn:hover{
+  transform:translateY(-3px) scale(1.01);
+  box-shadow:0 14px 32px rgba(0,0,0,.20);
+}
+
+/* Contact/footer */
+footer a:hover{transform:translateY(-1px)}
+.contact-link{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+}
+.contact-link:hover{
+  color:var(--ink);
+  transform:translateY(-1px);
+}
+
+
+/* Experimental full-page entrance */
+main > section{
+  animation:pjFadeUp .7s cubic-bezier(.22,1,.36,1) both;
+}
+main > section:nth-child(2){animation-delay:.05s}
+main > section:nth-child(3){animation-delay:.10s}
+main > section:nth-child(4){animation-delay:.15s}
+main > section:nth-child(5){animation-delay:.20s}
+main > section:nth-child(6){animation-delay:.25s}
+main > section:nth-child(7){animation-delay:.30s}
+
+/* Keyframes */
+@keyframes pjFadeUp{
+  from{opacity:0;transform:translateY(18px)}
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes pjPulse{
+  0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--gain) 45%,transparent)}
+  70%{box-shadow:0 0 0 8px transparent}
+  100%{box-shadow:0 0 0 0 transparent}
+}
+@keyframes pjBarGrow{
+  from{transform:scaleX(0)}
+  to{transform:scaleX(1)}
+}
+@keyframes pjFaqIn{
+  from{opacity:0;transform:translateY(-5px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* =========================================================
+   PRECISIONJOURNAL — SCROLL REVEAL / SPOTLIGHT / SHINE
+   Existing elements only. No new page content.
+   ========================================================= */
+
+/* Scroll reveal: elements start slightly lower and fade into place
+   only when they enter the viewport. */
+.pj-scroll-reveal{
+  opacity:0;
+  transform:translateY(28px) scale(.985);
+  transition:
+    opacity .75s cubic-bezier(.22,1,.36,1),
+    transform .75s cubic-bezier(.22,1,.36,1);
+  transition-delay:var(--reveal-delay,0ms);
+  will-change:opacity,transform;
+}
+.pj-scroll-reveal.pj-visible{
+  opacity:1;
+  transform:none;
+}
+
+/* Small stagger for existing cards/items inside sections. */
+.pj-stagger{
+  opacity:0;
+  transform:translateY(18px);
+  transition:
+    opacity .65s cubic-bezier(.22,1,.36,1),
+    transform .65s cubic-bezier(.22,1,.36,1);
+  transition-delay:var(--reveal-delay,0ms);
+}
+.pj-stagger.pj-visible{
+  opacity:1;
+  transform:none;
+}
+
+/* Cursor-following soft spotlight. JS supplies --spot-x / --spot-y. */
+.pj-spotlight{
+  position:relative;
+  overflow:hidden;
+}
+.pj-spotlight::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:0;
+  background:radial-gradient(260px circle at var(--spot-x,50%) var(--spot-y,50%),color-mix(in srgb,var(--purple) 13%,transparent),transparent 68%);
+  opacity:0;
+  transition:opacity .35s ease;
+}
+.pj-spotlight:hover::before{opacity:1}
+.pj-spotlight > *{position:relative;z-index:1}
+
+/* Soft moving shine across existing buttons. */
+.btn,.ap-btn{
+  position:relative;
+  overflow:hidden;
+  isolation:isolate;
+}
+.btn::after,.ap-btn::after{
+  content:"";
+  position:absolute;
+  top:-40%;
+  left:-80%;
+  width:45%;
+  height:180%;
+  pointer-events:none;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.24),transparent);
+  transform:skewX(-18deg);
+  opacity:0;
+}
+.btn:hover::after,.ap-btn:hover::after{
+  opacity:1;
+  animation:pjButtonShine .75s cubic-bezier(.22,1,.36,1) forwards;
+}
+
+/* Extra depth on the existing contact panel. */
+.contact-inner::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+  opacity:.6;
+}
+.contact-inner{position:relative}
+
+/* Stronger chart glow: the line draws from its first point to its last
+   while the blurred stroke and fading area follow the same reveal. */
+.ap-chart .ln-glow{
+  stroke-width:10;
+  opacity:.20;
+  filter:url(#equityGlow);
+}
+.ap-chart .area{
+  opacity:0;
+  animation:pjEquityArea 1.2s ease .2s forwards;
+}
+.ap-chart .area-glow{
+  opacity:.13;
+  filter:url(#equityGlow);
+}
+
+@keyframes pjButtonShine{
+  from{left:-80%}
+  to{left:145%}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .hero .eyebrow,
+  .hero h1,
+  .hero .sub,
+  .hero .proof,
+  .hero .btn,
+  main > section,
+  .bar .fill{
+    animation:none!important;
+  }
+  .live{animation:none!important}
+  .ap-chart .ln,
+  .ap-chart .ln-glow,
+  .ap-chart .area,
+  .ap-chart .equity-reveal-rect{
+    animation:none!important;
+  }
+  .ap-chart .ln,
+  .ap-chart .ln-glow{
+    stroke-dashoffset:0!important;
+  }
+  .ap-chart .area{
+    opacity:1!important;
+  }
+  .ap-chart .equity-reveal-rect{
+    width:var(--chart-reveal-width)!important;
+  }
+  .shot:hover,.window:hover,.cell:hover,.plan:hover,.cta:hover{
+    transform:none!important;
+  }
+  .pj-scroll-reveal,
+  .pj-stagger{
+    opacity:1!important;
+    transform:none!important;
+    transition:none!important;
+  }
+  .btn::after,.ap-btn::after,.pj-spotlight::before{
+    animation:none!important;
+    opacity:0!important;
+  }
+}
+
       `}</style>
 
       <div className="shell">
@@ -675,8 +1438,7 @@ footer a:hover{color:var(--ink)}
               <Link className="solid" to="/dashboard">Open Journal</Link>
             ) : (
               <>
-                <Link className="plain" to="/login">Sign up</Link>
-                <Link className="solid" to="/login">Log in</Link>
+                <Link className="solid" to="/login?mode=signup">Get started</Link>
               </>
             )}
           </div>
@@ -833,12 +1595,31 @@ footer a:hover{color:var(--ink)}
             </div>
           </section>
 
+          
           {/* FINAL CTA */}
           <section className="cta">
             <h2>Trade calmer. <span className="g">Review honestly.</span></h2>
             <a className="btn" href="#pricing">Free while we test <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4"/></svg></a>
           </section>
         </main>
+
+        {/* CONTACT */}
+        <section className="contact sec" id="contact">
+          <div className="contact-inner">
+            <p className="contact-eyebrow">CONTACT</p>
+            <h2>Have a question? <span className="g">Get in touch.</span></h2>
+            <a
+              className="contact-link"
+              href="mailto:Dhruvcrypto87@gmail.com"
+              aria-label="Email Dhruv at Dhruvcrypto87@gmail.com"
+            >
+              Dhruvcrypto87@gmail.com
+              <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M3 8h10M9 4l4 4-4 4"/>
+              </svg>
+            </a>
+          </div>
+        </section>
 
         <footer className="pad">
           <a className="logo" href="#home" aria-label="PrecisionJournal home">
