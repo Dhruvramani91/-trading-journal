@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import type { Trade } from '@/domain/models/trade';
-import { tradeRepository } from '@/data/localStorageRepository';
+import { tradeRepository } from '@/data/supabaseTradeRepository';
 
 interface TradesState {
   trades: Trade[];
