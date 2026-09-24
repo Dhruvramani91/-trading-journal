@@ -7,18 +7,25 @@ interface TradesState {
   loaded: boolean;
   loading: boolean;
   error: string | null;
+
   load: () => Promise<void>;
   refresh: () => Promise<void>;
-  create: (input: Parameters<typeof tradeRepository.create>[0]) => Promise<Trade>;
-  update: (id: string, patch: Parameters<typeof tradeRepository.update>[1]) => Promise<Trade>;
+  clear: () => void;
+
+  create: (
+    input: Parameters<typeof tradeRepository.create>[0]
+  ) => Promise<Trade>;
+
+  update: (
+    id: string,
+    patch: Parameters<typeof tradeRepository.update>[1]
+  ) => Promise<Trade>;
+
   remove: (id: string) => Promise<void>;
 }
 
-/**
- * In-memory mirror of the repository. The repository remains the source of truth;
- * this store exists so multiple components (table, dashboard, calendar) can
- * subscribe to the same list without re-fetching.
- */
+let requestVersion = 0;
+
 export const useTradesStore = create<TradesState>((set, get) => ({
   trades: [],
   loaded: false,
@@ -27,18 +34,76 @@ export const useTradesStore = create<TradesState>((set, get) => ({
 
   async load() {
     if (get().loading) return;
-    set({ loading: true, error: null });
+
+    const version = ++requestVersion;
+
+    set({
+      loading: true,
+      error: null,
+    });
+
     try {
       const trades = await tradeRepository.list();
-      set({ trades, loaded: true, loading: false });
+
+      // Ignore results from an older user/session.
+      if (version !== requestVersion) return;
+
+      set({
+        trades,
+        loaded: true,
+        loading: false,
+        error: null,
+      });
     } catch (err) {
-      set({ error: (err as Error).message, loading: false });
+      if (version !== requestVersion) return;
+
+      set({
+        error:
+          err instanceof Error
+            ? err.message
+            : 'Failed to load trades.',
+        loading: false,
+      });
     }
   },
 
   async refresh() {
-    const trades = await tradeRepository.list();
-    set({ trades, loaded: true });
+    const version = ++requestVersion;
+
+    try {
+      const trades = await tradeRepository.list();
+
+      // Ignore stale requests.
+      if (version !== requestVersion) return;
+
+      set({
+        trades,
+        loaded: true,
+        loading: false,
+        error: null,
+      });
+    } catch (err) {
+      if (version !== requestVersion) return;
+
+      set({
+        error:
+          err instanceof Error
+            ? err.message
+            : 'Failed to refresh trades.',
+      });
+    }
+  },
+
+  clear() {
+    // Invalidate every request currently in flight.
+    requestVersion++;
+
+    set({
+      trades: [],
+      loaded: false,
+      loading: false,
+      error: null,
+    });
   },
 
   async create(input) {
@@ -59,15 +124,22 @@ export const useTradesStore = create<TradesState>((set, get) => ({
   },
 }));
 
-/** Boot the store once and re-sync on repo changes. Idempotent. */
 let booted = false;
+
 export function bootTradesStore(): void {
   if (booted) return;
   booted = true;
+
   void useTradesStore.getState().load();
-  if (typeof tradeRepository.subscribe === 'function') {
-    tradeRepository.subscribe(() => {
-      void useTradesStore.getState().refresh();
-    });
-  }
+}
+
+export async function reloadTradesForCurrentUser(): Promise<void> {
+  const store = useTradesStore.getState();
+
+  store.clear();
+  await store.load();
+}
+
+export function clearTradesForCurrentUser(): void {
+  useTradesStore.getState().clear();
 }
