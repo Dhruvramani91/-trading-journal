@@ -8,7 +8,7 @@ import { ResultPill } from '@/components/ui/ResultPill';
 import { DirectionPill } from '@/components/ui/DirectionPill';
 import { Stat } from '@/components/ui/Stat';
 import { useTradesStore, bootTradesStore } from '@/store/tradesStore';
-import { tradeRepository } from '@/data/localStorageRepository';
+import { tradeRepository } from '@/data/supabaseTradeRepository';
 import { readFieldLabel } from '@/domain/templates/resolve';
 import { formatDateLong, formatR, formatDuration } from '@/lib/format';
 import type { Trade } from '@/domain/models/trade';
