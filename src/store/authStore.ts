@@ -1,5 +1,9 @@
 import { create } from 'zustand';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import {
+  reloadTradesForCurrentUser,
+  clearTradesForCurrentUser,
+} from '@/store/tradesStore';
 
 export interface UserProfile {
   id: string;
@@ -202,6 +206,13 @@ export const useAuthStore = create<AuthState>((set) => ({
         });
 
         setStoredUser(profile);
+
+        /*
+         * Supabase auth state will also trigger reload,
+         * but loading here makes OTP login responsive
+         * even before the auth event finishes.
+         */
+        void reloadTradesForCurrentUser();
       } else {
         set({
           loading: false,
@@ -385,6 +396,12 @@ export const useAuthStore = create<AuthState>((set) => ({
         });
 
         setStoredUser(profile);
+
+        /*
+         * Immediately replace the previous user's
+         * in-memory trades with the new user's trades.
+         */
+        void reloadTradesForCurrentUser();
       } else {
         set({
           loading: false,
@@ -450,6 +467,13 @@ export const useAuthStore = create<AuthState>((set) => ({
   /* ------------------------------------------------ */
 
   signInAsGuest: async () => {
+    /*
+     * Guest mode doesn't use Supabase trades.
+     * Clear any previously authenticated user's
+     * trades before entering guest mode.
+     */
+    clearTradesForCurrentUser();
+
     const guestUser: UserProfile = {
       id: 'guest',
       email: 'guest@precisionjournal.local',
@@ -534,7 +558,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({
         error:
           (err as Error).message ||
-          'Failed to send reset email.',
+          'Failed to send password reset email.',
         loading: false,
       });
 
@@ -601,6 +625,16 @@ export const useAuthStore = create<AuthState>((set) => ({
   /* ------------------------------------------------ */
 
   signOut: async () => {
+    /*
+     * IMPORTANT:
+     * Clear the current user's trades BEFORE
+     * the sign-out request completes.
+     *
+     * This prevents User A's trades from remaining
+     * visible while User B is logging in.
+     */
+    clearTradesForCurrentUser();
+
     set({
       loading: true,
       error: null,
@@ -608,7 +642,12 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     try {
       if (isSupabaseConfigured && supabase) {
-        await supabase.auth.signOut();
+        const { error } =
+          await supabase.auth.signOut();
+
+        if (error) {
+          throw error;
+        }
       }
 
       localStorage.removeItem(STORAGE_KEY);
@@ -617,13 +656,14 @@ export const useAuthStore = create<AuthState>((set) => ({
         user: null,
         loading: false,
         otpSent: false,
+        error: null,
       });
     } catch (err) {
       set({
+        loading: false,
         error:
           (err as Error).message ||
           'Failed to sign out.',
-        loading: false,
       });
 
       throw err;
@@ -657,40 +697,84 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   init: async () => {
     if (!isSupabaseConfigured || !supabase) {
+      clearTradesForCurrentUser();
+
       set({
+        user: null,
         initialized: true,
       });
 
       return () => {};
     }
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    try {
+      /*
+       * Get the current Supabase session first.
+       */
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
 
-    if (session?.user) {
-      const profile = profileFromSupabaseUser(
-        session.user
-      );
+      if (error) {
+        throw error;
+      }
 
-      set({
-        user: profile,
-        initialized: true,
-      });
+      if (session?.user) {
+        const profile = profileFromSupabaseUser(
+          session.user
+        );
 
-      setStoredUser(profile);
-    } else {
-      set({
-        user: null,
-        initialized: true,
-      });
-    }
+        set({
+          user: profile,
+          initialized: true,
+        });
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session?.user) {
+        setStoredUser(profile);
+
+        /*
+         * Load the current user's trades.
+         */
+        await reloadTradesForCurrentUser();
+      } else {
+        /*
+         * No authenticated user means there must
+         * be no authenticated user's trades in memory.
+         */
+        clearTradesForCurrentUser();
+
+        set({
+          user: null,
+          initialized: true,
+        });
+
+        setStoredUser(null);
+      }
+
+      /*
+       * Listen for future authentication changes.
+       */
+      const {
+        data: { subscription },
+      } = supabase.auth.onAuthStateChange(
+        (_event, session) => {
+          if (!session?.user) {
+            /*
+             * User logged out.
+             * Immediately remove the previous user's
+             * trades from the in-memory store.
+             */
+            clearTradesForCurrentUser();
+
+            set({
+              user: null,
+            });
+
+            setStoredUser(null);
+
+            return;
+          }
+
           const profile =
             profileFromSupabaseUser(
               session.user
@@ -701,18 +785,41 @@ export const useAuthStore = create<AuthState>((set) => ({
           });
 
           setStoredUser(profile);
-        } else {
-          set({
-            user: null,
-          });
 
-          setStoredUser(null);
+          /*
+           * The Supabase auth callback should not
+           * perform another Supabase request directly.
+           *
+           * Defer the trade reload until after the
+           * auth callback has completed.
+           */
+          setTimeout(() => {
+            void reloadTradesForCurrentUser();
+          }, 0);
         }
-      }
-    );
+      );
 
-    return () => {
-      subscription.unsubscribe();
-    };
+      return () => {
+        subscription.unsubscribe();
+      };
+    } catch (err) {
+      /*
+       * If authentication initialization fails,
+       * don't leave another user's trades in memory.
+       */
+      clearTradesForCurrentUser();
+
+      set({
+        user: null,
+        initialized: true,
+        error:
+          (err as Error).message ||
+          'Failed to initialize authentication.',
+      });
+
+      setStoredUser(null);
+
+      return () => {};
+    }
   },
 }));
