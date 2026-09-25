@@ -50,6 +50,32 @@ function greetingFirstName(name?: string, email?: string): string {
   return 'Trader';
 }
 
+/**
+ * Best/worst are picked at the TRADE level (not averaged across a setup category),
+ * then displayed with that single trade's own setup label:
+ * - 0 trades -> not enough data.
+ * - Exactly 1 trade -> it can only fill one side: a winner is Best (Worst = not enough
+ *   data), a loser is Worst (Best = not enough data). A breakeven trade fills neither.
+ * - 2+ trades -> Best = the trade with the highest R, Worst = the trade with the lowest R,
+ *   regardless of sign (so two winners still split into a "better" and "weaker" one, and
+ *   two losers still split into a "less bad" and "worse" one).
+ */
+function pickBestTrade<T extends { r: number }>(trades: T[]): T | null {
+  if (trades.length === 0) return null;
+  if (trades.length === 1) {
+    return trades[0]!.r > 0 ? trades[0]! : null;
+  }
+  return trades.reduce((max, t) => (t.r > max.r ? t : max), trades[0]!);
+}
+
+function pickWorstTrade<T extends { r: number }>(trades: T[]): T | null {
+  if (trades.length === 0) return null;
+  if (trades.length === 1) {
+    return trades[0]!.r < 0 ? trades[0]! : null;
+  }
+  return trades.reduce((min, t) => (t.r < min.r ? t : min), trades[0]!);
+}
+
 export function DashboardPage() {
   const { loaded, load } = useTradesStore();
   const { filtered } = useFilteredTrades();
@@ -98,22 +124,22 @@ export function DashboardPage() {
     return [...tradesToUse].sort((a, b) => new Date(b.openedAt).getTime() - new Date(a.openedAt).getTime()).slice(0, 8);
   }, [loaded, tradesToUse]);
 
-  const worstSetup = useMemo(() => {
-    if (!loaded || tradesToUse.length === 0) return null;
-    const breakdowns = byCategory(tradesToUse, 'dailyCandle', ACTIVE_TEMPLATE_ID);
-    const nonEmpty = breakdowns.buckets.filter((b) => b.count > 0);
-    if (nonEmpty.length === 0) return null;
-    const seed = nonEmpty[0]!;
-    return nonEmpty.reduce((min, b) => (b.avgR < min.avgR ? b : min), seed);
-  }, [loaded, tradesToUse]);
-
+  // Best/worst are single trades; byCategory([trade], ...) just gives us that trade's
+  // own setup label + stats in the same bucket shape the card below already renders.
   const bestSetup = useMemo(() => {
     if (!loaded || tradesToUse.length === 0) return null;
-    const breakdowns = byCategory(tradesToUse, 'dailyCandle', ACTIVE_TEMPLATE_ID);
-    const nonEmpty = breakdowns.buckets.filter((b) => b.count > 0);
-    if (nonEmpty.length === 0) return null;
-    const seed = nonEmpty[0]!;
-    return nonEmpty.reduce((max, b) => (b.avgR > max.avgR ? b : max), seed);
+    const trade = pickBestTrade(tradesToUse);
+    if (!trade) return null;
+    const breakdown = byCategory([trade], 'dailyCandle', ACTIVE_TEMPLATE_ID);
+    return breakdown.buckets.find((b) => b.count > 0) ?? null;
+  }, [loaded, tradesToUse]);
+
+  const worstSetup = useMemo(() => {
+    if (!loaded || tradesToUse.length === 0) return null;
+    const trade = pickWorstTrade(tradesToUse);
+    if (!trade) return null;
+    const breakdown = byCategory([trade], 'dailyCandle', ACTIVE_TEMPLATE_ID);
+    return breakdown.buckets.find((b) => b.count > 0) ?? null;
   }, [loaded, tradesToUse]);
 
   const curveData = useMemo(() => curve.map((p) => ({ ...p, dateLabel: new Date(p.openedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) })), [curve]);
@@ -261,7 +287,12 @@ export function DashboardPage() {
                       {bestSetup.count} trades · {formatR(bestSetup.totalR)} total R · {bestSetup.winRate == null ? '—' : formatPct(bestSetup.winRate)} win rate
                     </div>
                   </>
-                ) : <div className="text-xs text-fg-dim">No data</div>}
+                ) : (
+                  <div className="text-xs text-fg-dim">
+                    <div className="text-xs text-fg-dim">Not enough data</div>
+                    <div className="mt-1 text-xs text-fg-dim">Journal more trades to compare setups.</div>
+                  </div>
+                )}
               </CardBody>
             </Card>
             <Card>
@@ -279,7 +310,12 @@ export function DashboardPage() {
                       {worstSetup.count} trades · {formatR(worstSetup.totalR)} total R · {worstSetup.winRate == null ? '—' : formatPct(worstSetup.winRate)} win rate
                     </div>
                   </>
-                ) : <div className="text-xs text-fg-dim">No data</div>}
+                ) : (
+                  <div className="text-xs text-fg-dim">
+                    <div className="text-xs text-fg-dim">Not enough data</div>
+                    <div className="mt-1 text-xs text-fg-dim">Journal more trades to compare setups.</div>
+                  </div>
+                )}
               </CardBody>
             </Card>
           </div>

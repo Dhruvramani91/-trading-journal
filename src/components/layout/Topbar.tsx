@@ -1,6 +1,6 @@
-import { Plus, PanelLeftOpen, LogOut, Home } from 'lucide-react';
+import { PanelLeftOpen, LogOut} from 'lucide-react';
 import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -55,13 +55,6 @@ export function Topbar() {
       <div className="flex items-center gap-2.5 shrink-0">
         <ThemeToggle />
 
-        <Button asChild variant="ghost" size="sm">
-          <Link to="/" title="Homepage" className="flex items-center gap-1.5 text-xs">
-            <Home className="h-3.5 w-3.5 text-fg-dim" />
-            <span>Home</span>
-          </Link>
-        </Button>
-
         {user && (
           <Button
             variant="ghost"
@@ -75,9 +68,6 @@ export function Topbar() {
           </Button>
         )}
 
-        <Button asChild leftIcon={<Plus className="h-4 w-4" />} variant="primary" size="sm">
-          <Link to="/journal/new">New trade</Link>
-        </Button>
       </div>
 
       <ConfirmDialog
