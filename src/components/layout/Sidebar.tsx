@@ -6,7 +6,6 @@ import {
   BarChart3,
   Calendar,
   AlertTriangle,
-  ChevronLeft,
   PanelLeftClose,
   PanelLeftOpen,
   LogOut,
@@ -153,7 +152,7 @@ export function Sidebar() {
     };
   }, [isResizing, resize, stopResizing]);
 
-  async function handleSignOut() {
+  function handleSignOut() {
     setLogoutOpen(true);
   }
 
@@ -172,7 +171,6 @@ export function Sidebar() {
         !isResizing && 'transition-[width] duration-200 ease-in-out',
       )}
     >
-      {/* Header / Logo */}
       {collapsed ? (
         <div className="flex flex-col items-center justify-center py-4 border-b border-line">
           <img
@@ -206,7 +204,6 @@ export function Sidebar() {
         </div>
       )}
 
-      {/* Navigation Links */}
       <nav className={cn('flex-1 overflow-y-auto px-2 py-4 space-y-4', collapsed && 'px-0 space-y-2')}>
         <div>
           {!collapsed ? (
@@ -237,8 +234,8 @@ export function Sidebar() {
         </div>
       </nav>
 
-      {/* Footer / User & Storage Info */}
-      <div className={cn('border-t border-line p-2 space-y-2', collapsed && 'p-2.5')}>
+      {/* Footer / User */}
+      <div className={cn('border-t border-line p-2', collapsed && 'p-2.5')}>
         {collapsed ? (
           <div className="space-y-1.5 flex flex-col items-center">
             <button
@@ -259,54 +256,33 @@ export function Sidebar() {
             </button>
           </div>
         ) : (
-          <>
-            {user && (
-              <div className="flex items-center justify-between gap-2 rounded-lg border border-line bg-bg-4 px-2.5 py-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="h-7 w-7 rounded-full bg-accent/15 text-accent flex items-center justify-center shrink-0">
-                    <User className="h-3.5 w-3.5" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-semibold text-fg truncate">
-                      {user.name || user.email}
-                    </p>
-                    <p className="text-[10px] text-fg-dim truncate">
-                      {user.isGuest ? 'Guest Session' : 'Synced Trader'}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleSignOut}
-                  title="Sign out"
-                  className="flex h-7 w-7 shrink-0 items-center justify-center rounded text-fg-dim hover:text-loss hover:bg-loss/10 transition-colors"
-                >
-                  <LogOut className="h-3.5 w-3.5" />
-                </button>
+          user && (
+            <button
+              type="button"
+              onClick={() => navigate('/profile')}
+              title="Open profile"
+              className="w-full text-left flex items-center gap-2 rounded-lg border border-line bg-bg-4 px-2.5 py-2 hover:bg-bg-3 transition-colors"
+            >
+              <div className="h-7 w-7 rounded-full bg-accent/15 text-accent flex items-center justify-center shrink-0 overflow-hidden">
+                {user.avatar ? (
+                  <img src={user.avatar} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  <User className="h-3.5 w-3.5" />
+                )}
               </div>
-            )}
-
-            <div className="flex items-center justify-between gap-2 rounded-lg border border-line bg-bg-3 px-3 py-1.5">
-              <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-fg-dim truncate">
-                  Storage
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold text-fg truncate">
+                  {user.name || user.email}
                 </p>
-                <p className="text-xs text-fg-muted truncate">Local & Cloud Ready</p>
+                <p className="text-[10px] text-fg-dim truncate">
+                  {user.isGuest ? 'Guest Session' : 'Synced Trader'}
+                </p>
               </div>
-              <button
-                type="button"
-                onClick={toggleCollapse}
-                title="Collapse sidebar"
-                className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-fg-dim hover:text-fg hover:bg-bg-4 transition-colors"
-              >
-                <ChevronLeft className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </>
+            </button>
+          )
         )}
       </div>
 
-      {/* Drag Resize Handle */}
       <div
         onMouseDown={startResizing}
         title={collapsed ? 'Drag right to expand sidebar' : 'Drag to resize sidebar'}

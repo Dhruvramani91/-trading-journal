@@ -12,6 +12,7 @@ import { TradeDetailsPage } from '@/features/journal/TradeDetailsPage';
 import { StatisticsPage } from '@/features/statistics/StatisticsPage';
 import { CalendarPage } from '@/features/calendar/CalendarPage';
 import { MistakesPage } from '@/features/mistakes/MistakesPage';
+import { ProfilePage } from '@/features/profile/ProfilePage';
 
 export const router = createBrowserRouter([
   // Public Routes
@@ -33,6 +34,7 @@ export const router = createBrowserRouter([
       { path: 'statistics', element: <StatisticsPage /> },
       { path: 'calendar', element: <CalendarPage /> },
       { path: 'mistakes', element: <MistakesPage /> },
+      { path: 'profile', element: <ProfilePage /> },
     ],
   },
 

@@ -19,9 +19,23 @@ function daysInMonth(year: number, month: number): number {
   return new Date(year, month + 1, 0).getDate();
 }
 
-function firstDayOffset(year: number, month: number): number {
-  const d = new Date(year, month, 1).getDay();
-  return d === 0 ? 6 : d - 1;
+function firstDayOffset(year: number, month: number, showWeekends: boolean): number {
+  const day = new Date(year, month, 1).getDay();
+
+  // Calendar starts on Monday.
+  const mondayBasedDay = day === 0 ? 7 : day;
+
+  if (showWeekends) {
+    return mondayBasedDay - 1;
+  }
+
+  // When weekends are hidden, a month beginning on Saturday/Sunday
+  // starts with the first visible weekday instead of leaving weekend gaps.
+  if (mondayBasedDay > 5) {
+    return 0;
+  }
+
+  return mondayBasedDay - 1;
 }
 
 function monthLabel(year: number, month: number): string {
@@ -58,20 +72,35 @@ export function CalendarPage() {
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
 
-  useEffect(() => { bootTradesStore(); }, []);
-  useEffect(() => { if (!loaded) void load(); }, [loaded, load]);
+  // ON by default so the existing calendar behavior is preserved.
+  const [showWeekends, setShowWeekends] = useState(true);
+
+  useEffect(() => {
+    bootTradesStore();
+  }, []);
+
+  useEffect(() => {
+    if (!loaded) void load();
+  }, [loaded, load]);
 
   const dayMap = useMemo(() => {
     if (!loaded) return new Map<string, DayPerformance>();
+
     const days = byDay(trades);
     const map = new Map<string, DayPerformance>();
-    for (const d of days) map.set(d.date, d);
+
+    for (const d of days) {
+      map.set(d.date, d);
+    }
+
     return map;
   }, [loaded, trades]);
 
   const monthTrades = useMemo(() => {
     if (!loaded) return [] as Trade[];
+
     const prefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+
     return trades.filter((t) => {
       const d = new Date(t.openedAt);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -85,16 +114,28 @@ export function CalendarPage() {
   }, [monthTrades]);
 
   const totalDays = daysInMonth(year, month);
-  const offset = firstDayOffset(year, month);
+  const offset = firstDayOffset(year, month, showWeekends);
+
+  const visibleWeekdays = showWeekends
+    ? WEEKDAY_LABELS
+    : WEEKDAY_LABELS.slice(0, 5);
 
   function goPrev() {
-    if (month === 0) { setYear(year - 1); setMonth(11); }
-    else setMonth(month - 1);
+    if (month === 0) {
+      setYear(year - 1);
+      setMonth(11);
+    } else {
+      setMonth(month - 1);
+    }
   }
 
   function goNext() {
-    if (month === 11) { setYear(year + 1); setMonth(0); }
-    else setMonth(month + 1);
+    if (month === 11) {
+      setYear(year + 1);
+      setMonth(0);
+    } else {
+      setMonth(month + 1);
+    }
   }
 
   function goToday() {
@@ -102,10 +143,15 @@ export function CalendarPage() {
     setMonth(now.getMonth());
   }
 
-  const isCurrentMonth = year === now.getFullYear() && month === now.getMonth();
+  const isCurrentMonth =
+    year === now.getFullYear() && month === now.getMonth();
 
   if (!loaded) {
-    return <div className="pt-20 text-center text-sm text-fg-muted">Loading calendar…</div>;
+    return (
+      <div className="pt-20 text-center text-sm text-fg-muted">
+        Loading calendar…
+      </div>
+    );
   }
 
   return (
@@ -115,28 +161,68 @@ export function CalendarPage() {
         description="A calendar view of your daily R, with each day colored by performance."
       />
 
-      {/* Month navigator & Calendar card */}
       <Card>
         <CardHeader className="flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
-            <Button variant="secondary" size="sm" onClick={goPrev} leftIcon={<ChevronLeft className="h-4 w-4" />}>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={goPrev}
+              leftIcon={<ChevronLeft className="h-4 w-4" />}
+            >
               Prev
             </Button>
+
             <h2 className="text-base sm:text-lg font-bold text-fg min-w-[9rem] sm:min-w-[11rem] text-center">
               {monthLabel(year, month)}
             </h2>
-            <Button variant="secondary" size="sm" onClick={goNext} leftIcon={<ChevronRight className="h-4 w-4" />}>
+
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={goNext}
+              leftIcon={<ChevronRight className="h-4 w-4" />}
+            >
               Next
             </Button>
           </div>
-          {!isCurrentMonth && (
-            <div className="flex justify-end">
+
+          <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto sm:ml-auto">
+            {/* Weekend visibility toggle */}
+            <button
+              type="button"
+              role="switch"
+              aria-checked={showWeekends}
+              aria-label="Show weekends"
+              onClick={() => setShowWeekends((current) => !current)}
+              className="inline-flex items-center gap-2 rounded-lg border border-line bg-bg-2 px-2.5 py-1.5 text-xs font-medium text-fg-muted transition-colors hover:bg-bg-3 hover:text-fg"
+            >
+              <span>Weekends</span>
+
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'relative block h-5 w-9 shrink-0 rounded-full p-0.5 transition-colors',
+                  showWeekends ? 'bg-accent' : 'bg-bg-4 border border-line',
+                )}
+              >
+                <span
+                  className={cn(
+                    'block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200',
+                    showWeekends ? 'translate-x-4' : 'translate-x-0',
+                  )}
+                />
+              </span>
+            </button>
+
+            {!isCurrentMonth && (
               <Button variant="outline" size="sm" onClick={goToday}>
                 Today
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </CardHeader>
+
         <CardBody className="p-2 sm:p-4 md:p-5">
           {trades.length === 0 ? (
             <EmptyState
@@ -147,8 +233,13 @@ export function CalendarPage() {
           ) : (
             <>
               {/* Weekday header */}
-              <div className="grid grid-cols-7 gap-1 sm:gap-1.5 mb-1 sm:mb-2">
-                {WEEKDAY_LABELS.map((label) => (
+              <div
+                className={cn(
+                  'grid gap-1 sm:gap-1.5 mb-1 sm:mb-2',
+                  showWeekends ? 'grid-cols-7' : 'grid-cols-5',
+                )}
+              >
+                {visibleWeekdays.map((label) => (
                   <div
                     key={label}
                     className="text-center text-[10px] sm:text-2xs uppercase tracking-wider text-fg-dim font-bold py-1"
@@ -159,15 +250,32 @@ export function CalendarPage() {
               </div>
 
               {/* Day cells grid */}
-              <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
+              <div
+                className={cn(
+                  'grid gap-1 sm:gap-1.5',
+                  showWeekends ? 'grid-cols-7' : 'grid-cols-5',
+                )}
+              >
                 {Array.from({ length: offset }, (_, i) => (
-                  <div key={`empty-${i}`} className="min-h-[44px] sm:min-h-[64px] rounded-lg bg-bg-3/30" />
+                  <div
+                    key={`empty-${i}`}
+                    className="min-h-[44px] sm:min-h-[64px] rounded-lg bg-bg-3/30"
+                  />
                 ))}
 
                 {Array.from({ length: totalDays }, (_, i) => {
                   const day = i + 1;
+                  const date = new Date(year, month, day);
+                  const weekday = date.getDay();
+
+                  // Hide Saturday and Sunday when the toggle is OFF.
+                  if (!showWeekends && (weekday === 0 || weekday === 6)) {
+                    return null;
+                  }
+
                   const key = dayKeyFromParts(year, month, day);
                   const perf = dayMap.get(key);
+
                   const isToday =
                     day === now.getDate() &&
                     month === now.getMonth() &&
@@ -200,9 +308,15 @@ export function CalendarPage() {
                       >
                         {day}
                       </span>
+
                       {perf && (
                         <div className="flex flex-col items-center w-full my-auto">
-                          <span className={cn('text-[11px] sm:text-xs md:text-sm font-bold tabular-nums', rTone(perf.totalR))}>
+                          <span
+                            className={cn(
+                              'text-[11px] sm:text-xs md:text-sm font-bold tabular-nums',
+                              rTone(perf.totalR),
+                            )}
+                          >
                             {formatR(perf.totalR, 1)}
                           </span>
                           <span className="hidden sm:inline text-[9px] sm:text-2xs text-fg-dim font-medium">
@@ -227,39 +341,45 @@ export function CalendarPage() {
               <Stat
                 label="Total R"
                 value={formatR(monthSummary.totalR)}
-                tone={monthSummary.totalR > 0 ? 'win' : monthSummary.totalR < 0 ? 'loss' : 'default'}
+                tone={
+                  monthSummary.totalR > 0
+                    ? 'win'
+                    : monthSummary.totalR < 0
+                      ? 'loss'
+                      : 'default'
+                }
               />
             </CardBody>
           </Card>
+
           <Card>
             <CardBody className="p-3.5 sm:p-4">
               <Stat label="Trades" value={String(monthSummary.count)} />
             </CardBody>
           </Card>
+
           <Card>
             <CardBody className="p-3.5 sm:p-4">
               <Stat
                 label="Win Rate"
-                value={monthSummary.winRate == null ? '—' : formatPct(monthSummary.winRate)}
+                value={
+                  monthSummary.winRate == null
+                    ? '—'
+                    : formatPct(monthSummary.winRate)
+                }
               />
             </CardBody>
           </Card>
+
           <Card>
             <CardBody className="p-3.5 sm:p-4">
-              <Stat
-                label="Best R"
-                value={formatR(monthSummary.bestR)}
-                tone="win"
-              />
+              <Stat label="Best R" value={formatR(monthSummary.bestR)} tone="win" />
             </CardBody>
           </Card>
+
           <Card className="col-span-2 sm:col-span-1">
             <CardBody className="p-3.5 sm:p-4">
-              <Stat
-                label="Worst R"
-                value={formatR(monthSummary.worstR)}
-                tone="loss"
-              />
+              <Stat label="Worst R" value={formatR(monthSummary.worstR)} tone="loss" />
             </CardBody>
           </Card>
         </div>
@@ -274,6 +394,7 @@ export function CalendarPage() {
               Daily breakdown
             </CardTitle>
           </CardHeader>
+
           <CardBody className="p-0">
             <div className="divide-y divide-line">
               {byDay(monthTrades).map((d) => (
@@ -283,20 +404,26 @@ export function CalendarPage() {
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-fg font-semibold text-xs font-mono w-24">
-                      {new Date(d.date + 'T00:00:00').toLocaleDateString('en-US', {
-                        weekday: 'short',
-                        month: 'short',
-                        day: 'numeric',
-                      })}
+                      {new Date(d.date + 'T00:00:00').toLocaleDateString(
+                        'en-US',
+                        {
+                          weekday: 'short',
+                          month: 'short',
+                          day: 'numeric',
+                        },
+                      )}
                     </span>
+
                     <span className="text-fg-dim text-xs">
                       {d.count} trade{d.count === 1 ? '' : 's'}
                     </span>
                   </div>
+
                   <div className="flex items-center justify-between sm:justify-end gap-4">
                     <span className="text-2xs text-fg-dim">
                       {d.wins}W / {d.losses}L / {d.bes}BE
                     </span>
+
                     <span className={cn('font-bold tabular-nums', rTone(d.totalR))}>
                       {formatR(d.totalR)}
                     </span>

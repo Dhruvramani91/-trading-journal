@@ -1,4 +1,4 @@
-import { PanelLeftOpen, LogOut} from 'lucide-react';
+import { PanelLeftOpen, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/Button';
@@ -13,6 +13,7 @@ const TITLES: Record<string, { title: string; subtitle?: string }> = {
   '/statistics': { title: 'Statistics', subtitle: 'Breakdowns across every category' },
   '/calendar': { title: 'Monthly Performance', subtitle: 'Daily R at a glance' },
   '/mistakes': { title: 'Mistakes & Filters', subtitle: 'What is costing you R' },
+  '/profile': { title: 'Profile', subtitle: 'Your account and plan details' },
 };
 
 export function Topbar() {
@@ -23,7 +24,7 @@ export function Topbar() {
   const { user, signOut } = useAuthStore();
   const [logoutOpen, setLogoutOpen] = useState(false);
 
-  async function handleSignOut() {
+  function handleSignOut() {
     setLogoutOpen(true);
   }
 
@@ -46,6 +47,7 @@ export function Topbar() {
             <PanelLeftOpen className="h-4 w-4" />
           </button>
         )}
+
         <div className="min-w-0">
           <h1 className="text-base font-bold text-fg tracking-tight truncate">{meta.title}</h1>
           {meta.subtitle && <p className="text-xs text-fg-muted truncate">{meta.subtitle}</p>}
@@ -67,7 +69,6 @@ export function Topbar() {
             <span>Sign Out</span>
           </Button>
         )}
-
       </div>
 
       <ConfirmDialog
