@@ -10,6 +10,8 @@ export interface UserProfile {
   email: string;
   name: string;
   avatar?: string;
+  avatarPath?: string;
+  traderLevel?: 'beginner' | 'intermediate' | 'advanced';
   isGuest?: boolean;
 }
 
@@ -39,6 +41,12 @@ interface AuthState {
   sendPasswordReset: (email: string) => Promise<void>;
 
   updatePassword: (password: string) => Promise<void>;
+
+  updateProfile: (
+    name: string,
+    avatarFile?: File | null,
+    traderLevel?: 'beginner' | 'intermediate' | 'advanced'
+  ) => Promise<void>;
 
   signOut: () => Promise<void>;
 
@@ -109,13 +117,74 @@ function profileFromSupabaseUser(
       ? metadata.avatar_url
       : undefined;
 
+  const avatarPath =
+    typeof metadata.avatar_path === 'string'
+      ? metadata.avatar_path
+      : undefined;
+
+  const traderLevel =
+    metadata.trader_level === 'intermediate' ||
+    metadata.trader_level === 'advanced'
+      ? metadata.trader_level
+      : 'beginner';
+
   return {
     id: user.id,
     email: user.email || '',
     name,
     avatar,
+    avatarPath,
+    traderLevel,
     isGuest: false,
   };
+}
+
+/* -------------------------------------------------- */
+/* AVATAR COMPRESSION                                  */
+/* -------------------------------------------------- */
+
+async function compressAvatarToBlob(file: File): Promise<Blob> {
+  if (!file.type.startsWith('image/')) {
+    throw new Error('Please choose an image file.');
+  }
+
+  const bitmap = await createImageBitmap(file);
+  const maxSize = 512;
+  const scale = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
+
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+  canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+
+  const context = canvas.getContext('2d');
+  if (!context) {
+    bitmap.close();
+    throw new Error('Could not process the image.');
+  }
+
+  context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close();
+
+  const blob = await new Promise<Blob | null>((resolve) =>
+    canvas.toBlob(resolve, 'image/webp', 0.82)
+  );
+
+  if (!blob) {
+    throw new Error('Could not compress the image.');
+  }
+
+  return blob;
+}
+
+async function compressAvatarToDataUrl(file: File): Promise<string> {
+  const blob = await compressAvatarToBlob(file);
+
+  return await new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error('Could not read the image.'));
+    reader.readAsDataURL(blob);
+  });
 }
 
 /* -------------------------------------------------- */
@@ -613,6 +682,123 @@ export const useAuthStore = create<AuthState>((set) => ({
         error:
           (err as Error).message ||
           'Failed to update password.',
+        loading: false,
+      });
+
+      throw err;
+    }
+  },
+
+  /* ------------------------------------------------ */
+  /* UPDATE PROFILE                                   */
+  /* ------------------------------------------------ */
+
+  updateProfile: async (
+    name: string,
+    avatarFile?: File | null,
+    traderLevel: 'beginner' | 'intermediate' | 'advanced' = 'beginner'
+  ) => {
+    set({
+      loading: true,
+      error: null,
+    });
+
+    try {
+      const cleanName = name.trim();
+
+      if (!cleanName) {
+        throw new Error('Please enter a name.');
+      }
+
+      const currentUser = useAuthStore.getState().user;
+
+      if (!currentUser) {
+        throw new Error('You must be signed in to update your profile.');
+      }
+
+      /*
+       * Guest profile:
+       * Keep the edit local. Guest mode does not use Supabase.
+       */
+      if (currentUser.isGuest || !isSupabaseConfigured || !supabase) {
+        const profile: UserProfile = {
+          ...currentUser,
+          name: cleanName,
+          traderLevel,
+        };
+
+        if (avatarFile) {
+          const dataUrl = await compressAvatarToDataUrl(avatarFile);
+          profile.avatar = dataUrl;
+          delete profile.avatarPath;
+        }
+
+        set({
+          user: profile,
+          loading: false,
+        });
+
+        setStoredUser(profile);
+        return;
+      }
+
+      let avatarUrl = currentUser.avatar;
+      let avatarPath = currentUser.avatarPath;
+
+      if (avatarFile) {
+        const blob = await compressAvatarToBlob(avatarFile);
+        const path = `${currentUser.id}/avatar.webp`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(path, blob, {
+            contentType: 'image/webp',
+            upsert: true,
+            cacheControl: '3600',
+          });
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(path);
+
+        avatarUrl = `${publicUrlData.publicUrl}?v=${Date.now()}`;
+        avatarPath = path;
+      }
+
+      const { data, error } = await supabase.auth.updateUser({
+        data: {
+          name: cleanName,
+          avatar_url: avatarUrl || null,
+          avatar_path: avatarPath || null,
+          trader_level: traderLevel,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (!data.user) {
+        throw new Error('Profile update failed.');
+      }
+
+      const profile = profileFromSupabaseUser(data.user);
+
+      set({
+        user: profile,
+        loading: false,
+      });
+
+      setStoredUser(profile);
+    } catch (err) {
+      set({
+        error:
+          (err as Error).message ||
+          'Failed to update profile.',
         loading: false,
       });
 

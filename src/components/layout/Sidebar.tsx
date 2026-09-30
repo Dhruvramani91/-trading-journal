@@ -101,6 +101,20 @@ function NavRow({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
   );
 }
 
+function getTraderLevelLabel(level?: string) {
+  switch (level) {
+    case 'beginner':
+      return 'Beginner Trader';
+    case 'intermediate':
+      return 'Intermediate Trader';
+    case 'advanced':
+      return 'Advanced Trader';
+    default:
+      return 'Beginner Trader';
+  }
+}
+
+
 export function Sidebar() {
   useLocation();
   const navigate = useNavigate();
@@ -275,7 +289,7 @@ export function Sidebar() {
                   {user.name || user.email}
                 </p>
                 <p className="text-[10px] text-fg-dim truncate">
-                  {user.isGuest ? 'Guest Session' : 'Synced Trader'}
+                  {getTraderLevelLabel(user?.traderLevel)}
                 </p>
               </div>
             </button>
