@@ -21,6 +21,11 @@ export interface AccountTradeStats {
 
   highestLosingTrade: number | null;
   lowestLosingTrade: number | null;
+
+  totalR: number;
+  averageR: number;
+  bestR: number | null;
+  worstR: number | null;
 }
 
 export interface AccountPerformance {
@@ -29,6 +34,8 @@ export interface AccountPerformance {
   currentBalance: number;
 
   totalPnl: number;
+
+  pnlPercentage: number | null;
 
   profitTarget: number | null;
 
@@ -70,6 +77,16 @@ function getPnls(
     );
 }
 
+function getRs(
+  attachments: AccountTradeAttachment[]
+): number[] {
+  return attachments
+    .map((attachment) => attachment.accountR)
+    .filter(
+      (r): r is number => r != null && Number.isFinite(r)
+    );
+}
+
 function calculateTradeStats(
   attachments: AccountTradeAttachment[]
 ): AccountTradeStats {
@@ -96,6 +113,9 @@ function calculateTradeStats(
     totalTrades > 0
       ? (winningTrades / totalTrades) * 100
       : 0;
+
+  const rs = getRs(attachments);
+  const totalR = rs.reduce((sum, r) => sum + r, 0);
 
   return {
     totalTrades,
@@ -142,6 +162,11 @@ function calculateTradeStats(
       losingPnls.length > 0
         ? Math.min(...losingPnls)
         : null,
+
+    totalR,
+    averageR: rs.length > 0 ? totalR / rs.length : 0,
+    bestR: rs.length > 0 ? Math.max(...rs) : null,
+    worstR: rs.length > 0 ? Math.min(...rs) : null,
   };
 }
 
@@ -155,8 +180,13 @@ function calculatePerformance(
 
   const startingBalance = account.accountSize;
 
-  const currentBalance =
-    startingBalance + totalPnl;
+   const currentBalance =
+     startingBalance + totalPnl;
+
+   const pnlPercentage =
+     startingBalance > 0
+       ? (totalPnl / startingBalance) * 100
+       : null;
 
   const profitTarget =
     account.profitTarget;
@@ -251,6 +281,8 @@ function calculatePerformance(
     currentBalance,
 
     totalPnl,
+
+    pnlPercentage,
 
     profitTarget,
 

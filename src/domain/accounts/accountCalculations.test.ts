@@ -264,4 +264,51 @@ describe('calculateAccountSummary', () => {
       summary.tradeStats.worstTradePnl
     ).toBeNull();
   });
+
+  it('calculates R statistics from account-specific R values', () => {
+    const account = createAccount();
+
+    const attachments = [
+      createAttachment(300, { accountR: 2 }),
+      createAttachment(-100, { accountR: -1 }),
+      createAttachment(200, { accountR: 1.5 }),
+    ];
+
+    const summary = calculateAccountSummary(account, attachments);
+
+    expect(summary.tradeStats.totalR).toBe(2.5);
+    expect(summary.tradeStats.averageR).toBeCloseTo(0.833, 2);
+    expect(summary.tradeStats.bestR).toBe(2);
+    expect(summary.tradeStats.worstR).toBe(-1);
+  });
+
+  it('ignores null accountR values when calculating R stats', () => {
+    const account = createAccount();
+
+    const attachments = [
+      createAttachment(300, { accountR: 2 }),
+      createAttachment(-100, { accountR: null }),
+      createAttachment(200, { accountR: 1.5 }),
+    ];
+
+    const summary = calculateAccountSummary(account, attachments);
+
+    expect(summary.tradeStats.totalR).toBe(3.5);
+    expect(summary.tradeStats.bestR).toBe(2);
+    expect(summary.tradeStats.worstR).toBe(1.5);
+  });
+
+  it('calculates P&L percentage', () => {
+    const account = createAccount({ accountSize: 25_000 });
+
+    const attachments = [
+      createAttachment(2_500),
+      createAttachment(-500),
+    ];
+
+    const summary = calculateAccountSummary(account, attachments);
+
+    expect(summary.performance.totalPnl).toBe(2_000);
+    expect(summary.performance.pnlPercentage).toBe(8);
+  });
 });

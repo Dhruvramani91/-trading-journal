@@ -3,7 +3,7 @@ import type {
   CreateAccountTradeAttachmentInput,
   UpdateAccountTradeAttachmentInput,
 } from '@/domain/models/accountTradeAttachment';
-
+import type { Trade } from '@/domain/models/trade';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 type SupabaseAttachmentRow = {
@@ -65,6 +65,36 @@ function toAttachment(
   };
 }
 
+type SupabaseAttachmentWithTradeRow = SupabaseAttachmentRow & {
+  trades: {
+    id: string;
+    instrument: string;
+    direction: string;
+    result: string;
+    opened_at: string;
+  } | null;
+};
+
+function toAttachmentWithTrade(row: SupabaseAttachmentWithTradeRow): {
+  attachment: AccountTradeAttachment;
+  trade: Pick<Trade, 'id' | 'instrument' | 'direction' | 'result' | 'openedAt'> | null;
+} {
+  const attachment = toAttachment(row);
+  const t = row.trades;
+  return {
+    attachment,
+    trade: t
+      ? {
+          id: t.id,
+          instrument: t.instrument,
+          direction: t.direction as Trade['direction'],
+          result: t.result as Trade['result'],
+          openedAt: t.opened_at,
+        }
+      : null,
+  };
+}
+
 export const accountTradeAttachmentRepository = {
   async listForAccount(
     accountId: string
@@ -88,6 +118,31 @@ export const accountTradeAttachmentRepository = {
 
     return (data ?? []).map((row) =>
       toAttachment(row as SupabaseAttachmentRow)
+    );
+  },
+
+  async listForAccountWithTrades(
+    accountId: string
+  ): Promise<{ attachment: AccountTradeAttachment; trade: Pick<Trade, 'id' | 'instrument' | 'direction' | 'result' | 'openedAt'> | null }[]> {
+    const userId = await getUserId();
+
+    const { data, error } = await supabase!
+      .from('account_trade_attachments')
+      .select(
+        '*, trades!left(id, instrument, direction, result, opened_at)'
+      )
+      .eq('account_id', accountId)
+      .eq('user_id', userId)
+      .order('attached_at', { ascending: false });
+
+    if (error) {
+      throw new Error(
+        `Supabase account attachments list with trades: ${error.message}`
+      );
+    }
+
+    return (data ?? []).map((row) =>
+      toAttachmentWithTrade(row as unknown as SupabaseAttachmentWithTradeRow)
     );
   },
 
