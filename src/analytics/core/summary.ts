@@ -46,10 +46,6 @@ export function summary(trades: readonly Trade[]): TradeSummary {
     if (t.r > bestR) bestR = t.r;
     if (t.r < worstR) worstR = t.r;
 
-    if (t.plannedRR != null && Number.isFinite(t.plannedRR)) {
-      rrSum += t.plannedRR;
-      rrCount++;
-    }
   }
 
   // Streaks — based on chronological order.

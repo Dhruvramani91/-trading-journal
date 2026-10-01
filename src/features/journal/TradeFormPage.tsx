@@ -31,8 +31,10 @@ interface FormState {
   instrument: string;
   direction: TradeDirection | '';
   result: TradeResult | '';
+  entry: string;
+  exit: string;
+  pnl: string;
   r: string;
-  plannedRR: string;
   durationMin: string;
   templateData: Record<string, string>;
   notes: string;
@@ -49,9 +51,11 @@ type FieldErrors = Partial<
     | 'instrument'
     | 'direction'
     | 'result'
+    | 'entry'
+    | 'exit'
+    | 'pnl'
     | 'r'
     | 'setup'
-    | 'plannedRR'
     | 'closedAt',
     string
   >
@@ -63,8 +67,10 @@ const DEFAULTS: FormState = {
   instrument: '',
   direction: '',
   result: '',
+  entry: '',
+  exit: '',
+  pnl: '',
   r: '',
-  plannedRR: '',
   durationMin: '',
   templateData: {},
   notes: '',
@@ -115,9 +121,10 @@ function tradeToForm(t: Trade): FormState {
     instrument: t.instrument,
     direction: t.direction,
     result: t.result,
+    entry: t.entry != null ? String(t.entry) : '',
+    exit: t.exit != null ? String(t.exit) : '',
+    pnl: t.pnl != null ? String(t.pnl) : '',
     r: String(t.r),
-    plannedRR:
-      t.plannedRR != null ? String(t.plannedRR) : '',
     durationMin: String(t.durationMin),
 
     templateData: Object.fromEntries(
@@ -447,14 +454,6 @@ export function TradeFormPage() {
     }
 
     if (
-      form.plannedRR &&
-      Number(form.plannedRR) <= 0
-    ) {
-      errors.plannedRR =
-        'Planned R:R must be greater than 0.';
-    }
-
-    if (
       form.closedAt &&
       form.openedAt &&
       form.closedAt < form.openedAt
@@ -520,11 +519,22 @@ export function TradeFormPage() {
 
         result,
 
-        r: Number(form.r),
+        entry:
+          form.entry === ''
+            ? undefined
+            : Number(form.entry),
 
-        plannedRR: form.plannedRR
-          ? Number(form.plannedRR)
-          : undefined,
+        exit:
+          form.exit === ''
+            ? undefined
+            : Number(form.exit),
+
+        pnl:
+          form.pnl === ''
+            ? undefined
+            : Number(form.pnl),
+
+        r: Number(form.r),
 
         durationMin:
           computeDurationMin(
@@ -957,28 +967,69 @@ export function TradeFormPage() {
                 </FormField>
 
                 <FormField
-                  label="Planned R:R"
-                  hint="R-multiple the trade was sized for."
+                  label="Entry"
+                  hint="Actual price at which the trade was opened."
+                  required
                 >
                   <Input
                     type="number"
-                    step="0.1"
-                    min="0"
-                    value={form.plannedRR}
+                    step="any"
+                    value={form.entry}
                     onChange={(e) =>
                       patch(
-                        'plannedRR',
+                        'entry',
                         e.target.value,
                       )
                     }
-                    placeholder="e.g. 2"
+                    placeholder="e.g. 1.2345"
                   />
 
-                  <FieldError
-                    message={
-                      fieldErrors.plannedRR
+                  <FieldError message={fieldErrors.entry} />
+
+                </FormField>
+
+                 <FormField
+                  label="Exit"
+                  hint="Actual price at which the trade was closed."
+                  required
+                >
+                  <Input
+                    type="number"
+                    step="any"
+                    value={form.exit}
+                    onChange={(e) =>
+                      patch(
+                        'exit',
+                        e.target.value,
+                      )
                     }
+                    placeholder="e.g. 1.2345"
                   />
+
+                  <FieldError message={fieldErrors.exit} />
+
+                </FormField>
+
+                <FormField
+                  label="P&L"
+                  hint="Profit or loss from the trade."
+                  required
+                >
+                  <Input
+                    type="number"
+                    step="any"
+                    value={form.pnl}
+                    onChange={(e) =>
+                      patch(
+                        'pnl',
+                        e.target.value,
+                      )
+                    }
+                    placeholder="e.g. 50$"
+                  />
+
+                  <FieldError message={fieldErrors.pnl} />
+
                 </FormField>
 
                 <FormField

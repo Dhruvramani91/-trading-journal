@@ -15,7 +15,6 @@ function makeTrade(overrides: Partial<Trade> & { openedAt: string; r: number; re
     direction: overrides.direction ?? 'long',
     result: overrides.result,
     r: overrides.r,
-    plannedRR: overrides.plannedRR,
     durationMin: overrides.durationMin ?? 30,
     templateData: overrides.templateData ?? {},
     notes: overrides.notes,
@@ -80,11 +79,7 @@ describe('summary', () => {
     expect(s.maxDrawdownR).toBe(1);
   });
 
-  it('averages plannedRR over trades that have one', () => {
-    // Seed: plannedRR 3, 2, 2, 3, 2 → sum 12 / 5 = 2.4
-    const s = summary(SEED_TRADES);
-    expect(s.avgRR).toBeCloseTo(2.4);
-  });
+  
 
   it('handles a hand-built fixture with deep streaks and big drawdown', () => {
     const trades: Trade[] = [

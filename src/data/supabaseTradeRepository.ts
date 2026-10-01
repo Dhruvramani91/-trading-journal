@@ -12,12 +12,27 @@ type SupabaseTradeRow = {
   instrument: string;
   direction: string;
   result: string;
+
+  entry: number | null;
+  exit: number | null;
+  pnl: number | null;
+
   r: number;
-  planned_rr: number | null;
   duration_min: number;
-  template_data: Record<string, string | number | boolean | null | undefined>;
+
+  template_data: Record<
+    string,
+    string | number | boolean | null | undefined
+  >;
+
   notes: string | null;
-  photos: { htf?: string; itf?: string; ltf?: string } | null;
+
+  photos: {
+    htf?: string;
+    itf?: string;
+    ltf?: string;
+  } | null;
+
   created_at: string;
   updated_at: string;
 };
@@ -35,7 +50,9 @@ async function getUserId(): Promise<string> {
 
   const { data, error } = await supabase!.auth.getUser();
 
-  if (error) throw new Error(`Supabase auth: ${error.message}`);
+  if (error) {
+    throw new Error(`Supabase auth: ${error.message}`);
+  }
 
   if (!data.user) {
     throw new Error('No authenticated user.');
@@ -47,21 +64,46 @@ async function getUserId(): Promise<string> {
 function toTrade(row: SupabaseTradeRow): Trade {
   return {
     id: row.id,
+
     templateId: row.template_id,
+
     number: row.number ?? undefined,
+
     openedAt: row.opened_at,
+
     closedAt: row.closed_at ?? undefined,
+
     instrument: row.instrument,
+
     direction: row.direction as Trade['direction'],
+
     result: row.result as Trade['result'],
+
+    /*
+     * Entry, Exit and P&L are all entered by the user.
+     * No calculation is performed here.
+     */
+    entry: row.entry == null ? undefined : Number(row.entry),
+
+    exit: row.exit == null ? undefined : Number(row.exit),
+
+    pnl: row.pnl == null ? undefined : Number(row.pnl),
+
+    /*
+     * Existing R value remains untouched for now.
+     */
     r: Number(row.r),
-    plannedRR:
-      row.planned_rr == null ? undefined : Number(row.planned_rr),
+
     durationMin: Number(row.duration_min ?? 0),
+
     templateData: row.template_data ?? {},
+
     notes: row.notes ?? undefined,
+
     photos: row.photos ?? undefined,
+
     createdAt: row.created_at,
+
     updatedAt: row.updated_at,
   };
 }
@@ -71,17 +113,39 @@ function toRow(
 ) {
   return {
     template_id: input.templateId,
+
     number: input.number ?? null,
+
     opened_at: input.openedAt,
+
     closed_at: input.closedAt ?? null,
+
     instrument: input.instrument,
+
     direction: input.direction,
+
     result: input.result,
+
+    /*
+     * User-entered trade values.
+     */
+    entry: input.entry ?? null,
+
+    exit: input.exit ?? null,
+
+    pnl: input.pnl ?? null,
+
+    /*
+     * Existing R value.
+     */
     r: input.r,
-    planned_rr: input.plannedRR ?? null,
+
     duration_min: input.durationMin ?? 0,
+
     template_data: input.templateData ?? {},
+
     notes: input.notes ?? null,
+
     photos: input.photos ?? null,
   };
 }
@@ -96,7 +160,9 @@ export const tradeRepository: TradeRepository = {
       .eq('user_id', userId)
       .order('opened_at', { ascending: false });
 
-    if (error) throw new Error(`Supabase list: ${error.message}`);
+    if (error) {
+      throw new Error(`Supabase list: ${error.message}`);
+    }
 
     return (data ?? []).map((row) =>
       toTrade(row as SupabaseTradeRow)
@@ -113,9 +179,13 @@ export const tradeRepository: TradeRepository = {
       .eq('user_id', userId)
       .maybeSingle();
 
-    if (error) throw new Error(`Supabase get: ${error.message}`);
+    if (error) {
+      throw new Error(`Supabase get: ${error.message}`);
+    }
 
-    return data ? toTrade(data as SupabaseTradeRow) : null;
+    return data
+      ? toTrade(data as SupabaseTradeRow)
+      : null;
   },
 
   async create(
@@ -123,7 +193,6 @@ export const tradeRepository: TradeRepository = {
   ): Promise<Trade> {
     const userId = await getUserId();
 
-    // PostgreSQL generates the UUID, created_at and updated_at.
     const { data, error } = await supabase!
       .from('trades')
       .insert({
@@ -133,7 +202,9 @@ export const tradeRepository: TradeRepository = {
       .select('*')
       .single();
 
-    if (error) throw new Error(`Supabase create: ${error.message}`);
+    if (error) {
+      throw new Error(`Supabase create: ${error.message}`);
+    }
 
     return toTrade(data as SupabaseTradeRow);
   },
@@ -159,18 +230,35 @@ export const tradeRepository: TradeRepository = {
       .from('trades')
       .update({
         template_id: merged.templateId,
+
         number: merged.number ?? null,
+
         opened_at: merged.openedAt,
+
         closed_at: merged.closedAt ?? null,
+
         instrument: merged.instrument,
+
         direction: merged.direction,
+
         result: merged.result,
+
+        entry: merged.entry ?? null,
+
+        exit: merged.exit ?? null,
+
+        pnl: merged.pnl ?? null,
+
         r: merged.r,
-        planned_rr: merged.plannedRR ?? null,
+
         duration_min: merged.durationMin ?? 0,
+
         template_data: merged.templateData ?? {},
+
         notes: merged.notes ?? null,
+
         photos: merged.photos ?? null,
+
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
@@ -178,7 +266,9 @@ export const tradeRepository: TradeRepository = {
       .select('*')
       .single();
 
-    if (error) throw new Error(`Supabase update: ${error.message}`);
+    if (error) {
+      throw new Error(`Supabase update: ${error.message}`);
+    }
 
     return toTrade(data as SupabaseTradeRow);
   },
@@ -192,7 +282,9 @@ export const tradeRepository: TradeRepository = {
       .eq('id', id)
       .eq('user_id', userId);
 
-    if (error) throw new Error(`Supabase remove: ${error.message}`);
+    if (error) {
+      throw new Error(`Supabase remove: ${error.message}`);
+    }
   },
 
   async replaceAll(trades: Trade[]): Promise<void> {
@@ -209,25 +301,47 @@ export const tradeRepository: TradeRepository = {
       );
     }
 
-    if (trades.length === 0) return;
+    if (trades.length === 0) {
+      return;
+    }
 
     const rows = trades.map((trade) => ({
       id: trade.id,
+
       user_id: userId,
+
       template_id: trade.templateId,
+
       number: trade.number ?? null,
+
       opened_at: trade.openedAt,
+
       closed_at: trade.closedAt ?? null,
+
       instrument: trade.instrument,
+
       direction: trade.direction,
+
       result: trade.result,
+
+      entry: trade.entry ?? null,
+
+      exit: trade.exit ?? null,
+
+      pnl: trade.pnl ?? null,
+
       r: trade.r,
-      planned_rr: trade.plannedRR ?? null,
+
       duration_min: trade.durationMin ?? 0,
+
       template_data: trade.templateData ?? {},
+
       notes: trade.notes ?? null,
+
       photos: trade.photos ?? null,
+
       created_at: trade.createdAt,
+
       updated_at: trade.updatedAt,
     }));
 

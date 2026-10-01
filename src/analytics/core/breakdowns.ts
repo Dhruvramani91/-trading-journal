@@ -31,10 +31,6 @@ function buildBucket(group: Trade[]): CategoryBucket {
     else if (t.result === 'loss') losses++;
     else bes++;
     totalR += t.r;
-    if (t.plannedRR != null && Number.isFinite(t.plannedRR)) {
-      rrSum += t.plannedRR;
-      rrCount++;
-    }
   }
   return {
     key: '',
