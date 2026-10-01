@@ -79,19 +79,12 @@ function toTrade(row: SupabaseTradeRow): Trade {
 
     result: row.result as Trade['result'],
 
-    /*
-     * Entry, Exit and P&L are all entered by the user.
-     * No calculation is performed here.
-     */
     entry: row.entry == null ? undefined : Number(row.entry),
 
     exit: row.exit == null ? undefined : Number(row.exit),
 
     pnl: row.pnl == null ? undefined : Number(row.pnl),
 
-    /*
-     * Existing R value remains untouched for now.
-     */
     r: Number(row.r),
 
     durationMin: Number(row.duration_min ?? 0),
@@ -126,18 +119,12 @@ function toRow(
 
     result: input.result,
 
-    /*
-     * User-entered trade values.
-     */
     entry: input.entry ?? null,
 
     exit: input.exit ?? null,
 
     pnl: input.pnl ?? null,
 
-    /*
-     * Existing R value.
-     */
     r: input.r,
 
     duration_min: input.durationMin ?? 0,
