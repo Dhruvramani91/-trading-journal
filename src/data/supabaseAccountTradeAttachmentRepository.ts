@@ -3,7 +3,6 @@ import type {
   CreateAccountTradeAttachmentInput,
   UpdateAccountTradeAttachmentInput,
 } from '@/domain/models/accountTradeAttachment';
-import type { Trade } from '@/domain/models/trade';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 type SupabaseAttachmentRow = {
@@ -65,35 +64,10 @@ function toAttachment(
   };
 }
 
-type SupabaseAttachmentWithTradeRow = SupabaseAttachmentRow & {
-  trades: {
-    id: string;
-    instrument: string;
-    direction: string;
-    result: string;
-    opened_at: string;
-  } | null;
-};
-
-function toAttachmentWithTrade(row: SupabaseAttachmentWithTradeRow): {
-  attachment: AccountTradeAttachment;
-  trade: Pick<Trade, 'id' | 'instrument' | 'direction' | 'result' | 'openedAt'> | null;
-} {
-  const attachment = toAttachment(row);
-  const t = row.trades;
-  return {
-    attachment,
-    trade: t
-      ? {
-          id: t.id,
-          instrument: t.instrument,
-          direction: t.direction as Trade['direction'],
-          result: t.result as Trade['result'],
-          openedAt: t.opened_at,
-        }
-      : null,
-  };
-}
+// NOTE: This repository deals only with attachments. It intentionally does NOT
+// define or duplicate a Trade mapper. Full Trade domain objects always come
+// from supabaseTradeRepository (the canonical source for Trade.pnl), and the
+// account summary page joins attachments to those canonical trades by tradeId.
 
 export const accountTradeAttachmentRepository = {
   async listForAccount(
@@ -118,31 +92,6 @@ export const accountTradeAttachmentRepository = {
 
     return (data ?? []).map((row) =>
       toAttachment(row as SupabaseAttachmentRow)
-    );
-  },
-
-  async listForAccountWithTrades(
-    accountId: string
-  ): Promise<{ attachment: AccountTradeAttachment; trade: Pick<Trade, 'id' | 'instrument' | 'direction' | 'result' | 'openedAt'> | null }[]> {
-    const userId = await getUserId();
-
-    const { data, error } = await supabase!
-      .from('account_trade_attachments')
-      .select(
-        '*, trades!left(id, instrument, direction, result, opened_at)'
-      )
-      .eq('account_id', accountId)
-      .eq('user_id', userId)
-      .order('attached_at', { ascending: false });
-
-    if (error) {
-      throw new Error(
-        `Supabase account attachments list with trades: ${error.message}`
-      );
-    }
-
-    return (data ?? []).map((row) =>
-      toAttachmentWithTrade(row as unknown as SupabaseAttachmentWithTradeRow)
     );
   },
 

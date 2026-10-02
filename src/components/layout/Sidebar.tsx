@@ -10,6 +10,7 @@ import {
   PanelLeftOpen,
   LogOut,
   User,
+  Wallet,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -26,6 +27,7 @@ interface NavItem {
 const NAV: NavItem[] = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, group: 'core' },
   { to: '/journal', label: 'Journal', icon: ScrollText, group: 'core' },
+  { to: '/accounts', label: 'Accounts', icon: Wallet, group: 'core' },
   { to: '/statistics', label: 'Statistics', icon: BarChart3, group: 'analytics' },
   { to: '/calendar', label: 'Monthly Performance', icon: Calendar, group: 'analytics' },
   { to: '/mistakes', label: 'Mistakes & Filters', icon: AlertTriangle, group: 'analytics' },

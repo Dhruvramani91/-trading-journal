@@ -462,6 +462,7 @@ export interface SegmentedProps<T extends string> {
   size?: 'sm' | 'md';
   className?: string;
   fullWidth?: boolean;
+  disabled?: boolean;
 }
 
 export function Segmented<T extends string>({
@@ -471,6 +472,7 @@ export function Segmented<T extends string>({
   size = 'md',
   className,
   fullWidth,
+  disabled,
 }: SegmentedProps<T>) {
   return (
     <div
@@ -478,6 +480,7 @@ export function Segmented<T extends string>({
         'inline-flex items-center rounded-lg border border-line bg-bg-3 p-0.5',
         size === 'sm' ? 'h-7' : 'h-9',
         fullWidth && 'w-full',
+        disabled && 'opacity-50',
         className,
       )}
       role="radiogroup"
@@ -497,6 +500,7 @@ export function Segmented<T extends string>({
             type="button"
             role="radio"
             aria-checked={isActive}
+            disabled={disabled}
             onClick={() => onChange(opt.value)}
             className={cn(
               'flex-1 inline-flex items-center justify-center gap-1 rounded-md text-xs transition-all',

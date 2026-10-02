@@ -14,6 +14,7 @@ import { CalendarPage } from '@/features/calendar/CalendarPage';
 import { MistakesPage } from '@/features/mistakes/MistakesPage';
 import { ProfilePage } from '@/features/profile/ProfilePage';
 import { AccountSummaryPage } from '@/features/accounts/AccountSummaryPage';
+import { AccountsPage } from '@/features/accounts/AccountsPage';
 
 export const router = createBrowserRouter([
   // Public Routes
@@ -36,6 +37,7 @@ export const router = createBrowserRouter([
       { path: 'calendar', element: <CalendarPage /> },
       { path: 'mistakes', element: <MistakesPage /> },
       { path: 'profile', element: <ProfilePage /> },
+      { path: 'accounts', element: <AccountsPage /> },
       { path: 'accounts/:id', element: <AccountSummaryPage /> },
     ],
   },

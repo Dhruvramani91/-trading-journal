@@ -12,6 +12,14 @@ export type AccountType = 'futures' | 'cfd';
 
 export type AccountRuleMode = 'standard' | 'custom';
 
+export type FuturesPhase = 'evaluation' | 'funded';
+
+export type CfdPhase = 'phase1' | 'phase2' | 'funded';
+
+export type AccountPhase = FuturesPhase | CfdPhase;
+
+export type AccountResult = 'active' | 'passed' | 'failed';
+
 export interface Account {
   /** Supabase account UUID */
   id: string;
@@ -25,6 +33,12 @@ export interface Account {
   /** Futures or CFD */
   accountType: AccountType;
 
+  /** Account phase in prop-firm lifecycle */
+  phase: AccountPhase;
+
+  /** Account result/outcome */
+  result: AccountResult;
+
   /** Account size, e.g. 25000, 50000, 5000 */
   accountSize: number;
 
@@ -36,9 +50,6 @@ export interface Account {
 
   /** Maximum allowed drawdown in account currency */
   maxDrawdown: number | null;
-
-  /** Maximum allowed consistency percentage */
-  consistencyLimit: number | null;
 
   /** Account creation timestamp */
   createdAt: string;
@@ -55,12 +66,13 @@ export interface Account {
 export interface CreateAccountInput {
   name: string;
   accountType: AccountType;
+  phase: AccountPhase;
+  result?: AccountResult;
   accountSize: number;
   ruleMode: AccountRuleMode;
 
   profitTarget?: number | null;
   maxDrawdown?: number | null;
-  consistencyLimit?: number | null;
 }
 
 /**
@@ -68,10 +80,12 @@ export interface CreateAccountInput {
  */
 export interface UpdateAccountInput {
   name?: string;
+  accountType?: AccountType;
   accountSize?: number;
+  phase?: AccountPhase;
+  result?: AccountResult;
   ruleMode?: AccountRuleMode;
 
   profitTarget?: number | null;
   maxDrawdown?: number | null;
-  consistencyLimit?: number | null;
 }

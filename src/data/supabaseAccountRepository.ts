@@ -1,4 +1,5 @@
-import type { Account, CreateAccountInput, UpdateAccountInput } from '@/domain/models/account';
+import type { Account, AccountRuleMode, CreateAccountInput, UpdateAccountInput, AccountResult } from '@/domain/models/account';
+import { isValidAccountPhase, resolveAccountRules } from '@/domain/accounts/accountCalculations';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
 type SupabaseAccountRow = {
@@ -6,11 +7,12 @@ type SupabaseAccountRow = {
   user_id: string;
   name: string;
   account_type: string;
+  phase: string | null;
+  result: string;
   account_size: number;
   rule_mode: string;
   profit_target: number | null;
   max_drawdown: number | null;
-  consistency_limit: number | null;
   created_at: string;
   updated_at: string;
 };
@@ -39,31 +41,78 @@ async function getUserId(): Promise<string> {
   return data.user.id;
 }
 
+function resolvePhase(row: SupabaseAccountRow): Account['phase'] {
+  const raw = row.phase;
+  const accountType = row.account_type as Account['accountType'];
+  // Old accounts created before the phase feature have phase = NULL.
+  // Fall back to a valid default per account type so they keep loading.
+  if (raw == null) {
+    return accountType === 'cfd' ? 'phase1' : 'evaluation';
+  }
+  // Defensive: coerce any unexpected DB value to a valid phase for its type.
+  if (accountType === 'futures') {
+    return raw === 'funded' ? 'funded' : 'evaluation';
+  }
+  if (raw === 'phase1' || raw === 'phase2' || raw === 'funded') {
+    return raw;
+  }
+  return 'phase1';
+}
+
 function toAccount(row: SupabaseAccountRow): Account {
+  const accountType = row.account_type as Account['accountType'];
+  const phase = resolvePhase(row);
+  const accountSize = Number(row.account_size);
+  const ruleMode = row.rule_mode as AccountRuleMode;
+
+  const storedProfitTarget =
+    row.profit_target == null ? null : Number(row.profit_target);
+  const storedMaxDrawdown =
+    row.max_drawdown == null ? null : Number(row.max_drawdown);
+
+  // Standard accounts fall back to the configured domain defaults when the
+  // stored rule columns are NULL (e.g. legacy rows created before the defaults
+  // were persisted). Custom accounts keep exactly what was stored — existing
+  // custom rules are never overwritten by this read-time resolution.
+  const rules = resolveAccountRules(
+    accountType,
+    accountSize,
+    phase,
+    ruleMode,
+    storedProfitTarget,
+    storedMaxDrawdown
+  );
+
   return {
     id: row.id,
     userId: row.user_id,
     name: row.name,
-    accountType: row.account_type as Account['accountType'],
-    accountSize: Number(row.account_size),
-    ruleMode: row.rule_mode as Account['ruleMode'],
-    profitTarget: row.profit_target == null ? null : Number(row.profit_target),
-    maxDrawdown: row.max_drawdown == null ? null : Number(row.max_drawdown),
-    consistencyLimit: row.consistency_limit == null ? null : Number(row.consistency_limit),
+    accountType,
+    phase,
+    result: row.result as AccountResult,
+    accountSize,
+    ruleMode,
+    profitTarget: rules.profitTarget,
+    maxDrawdown: rules.maxDrawdown,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
 }
 
 function toRow(input: CreateAccountInput | UpdateAccountInput): Record<string, unknown> {
-  const row: Record<string, unknown> = {
-    name: input.name ?? undefined,
-    profit_target: input.profitTarget ?? null,
-    max_drawdown: input.maxDrawdown ?? null,
-    consistency_limit: input.consistencyLimit ?? null,
-  };
+  const row: Record<string, unknown> = {};
+
+  if (input.name !== undefined) row.name = input.name;
+
+  // Only write rule columns when the caller explicitly supplied them, so a
+  // partial update (e.g. renaming an account) never nulls out saved rules.
+  if ('profitTarget' in input) row.profit_target = input.profitTarget ?? null;
+  if ('maxDrawdown' in input) row.max_drawdown = input.maxDrawdown ?? null;
+
   const createInput = input as CreateAccountInput;
   if (createInput.accountType !== undefined) row.account_type = createInput.accountType;
+  if (createInput.phase !== undefined) row.phase = createInput.phase;
+  if (createInput.result !== undefined) row.result = createInput.result;
   if (createInput.accountSize !== undefined) row.account_size = createInput.accountSize;
   if (createInput.ruleMode !== undefined) row.rule_mode = createInput.ruleMode;
   return row;
@@ -106,6 +155,11 @@ export const accountRepository = {
   async create(input: CreateAccountInput): Promise<Account> {
     const userId = await getUserId();
 
+    // Domain validation: futures=evaluation|funded, cfd=phase1|phase2|funded.
+    if (!isValidAccountPhase(input.accountType, input.phase)) {
+      throw new Error(`Invalid phase "${input.phase}" for account type "${input.accountType}".`);
+    }
+
     const { data, error } = await supabase!
       .from('accounts')
       .insert({
@@ -124,6 +178,15 @@ export const accountRepository = {
 
   async update(id: string, patch: UpdateAccountInput): Promise<Account> {
     const userId = await getUserId();
+
+    // Validate phase combinations when both type and phase are being changed.
+    // Full cross-check against the stored type happens in the form layer,
+    // which always sends accountType + phase together on edit.
+    if (patch.accountType !== undefined && patch.phase !== undefined) {
+      if (!isValidAccountPhase(patch.accountType, patch.phase)) {
+        throw new Error(`Invalid phase "${patch.phase}" for account type "${patch.accountType}".`);
+      }
+    }
 
     const { data, error } = await supabase!
       .from('accounts')

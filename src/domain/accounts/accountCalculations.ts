@@ -1,5 +1,196 @@
-import type { Account } from '@/domain/models/account';
+import type { Account, AccountType, AccountPhase, AccountResult, AccountRuleMode, FuturesPhase, CfdPhase } from '@/domain/models/account';
 import type { AccountTradeAttachment } from '@/domain/models/accountTradeAttachment';
+
+/* -------------------------------------------------------------------------- */
+/* Default account rules (standards)                                          */
+/* -------------------------------------------------------------------------- */
+
+export interface DefaultAccountRules {
+  profitTarget: number | null;
+  maxDrawdown: number | null;
+}
+
+export function getFuturesPhaseOptions(): { value: AccountPhase; label: string }[] {
+  return [
+    { value: 'evaluation', label: 'Evaluation' },
+    { value: 'funded', label: 'Funded' },
+  ];
+}
+
+export function getCfdPhaseOptions(): { value: AccountPhase; label: string }[] {
+  return [
+    { value: 'phase1', label: 'Phase 1' },
+    { value: 'phase2', label: 'Phase 2' },
+    { value: 'funded', label: 'Funded' },
+  ];
+}
+
+export function getPhaseOptions(accountType: AccountType): { value: AccountPhase; label: string }[] {
+  return accountType === 'futures' ? getFuturesPhaseOptions() : getCfdPhaseOptions();
+}
+
+export function isValidAccountPhase(accountType: AccountType, phase: AccountPhase): boolean {
+  if (accountType === 'futures') {
+    return phase === 'evaluation' || phase === 'funded';
+  }
+  return phase === 'phase1' || phase === 'phase2' || phase === 'funded';
+}
+
+export function assertValidAccountPhase(accountType: AccountType, phase: AccountPhase): void {
+  if (!isValidAccountPhase(accountType, phase)) {
+    throw new Error(`Invalid phase "${phase}" for account type "${accountType}".`);
+  }
+}
+
+export function getAccountResultOptions(): { value: AccountResult; label: string }[] {
+  return [
+    { value: 'active', label: 'Active' },
+    { value: 'passed', label: 'Passed' },
+    { value: 'failed', label: 'Failed' },
+  ];
+}
+
+export function getFuturesSizes(): { value: number; label: string }[] {
+  return [
+    { value: 25_000, label: '$25,000' },
+    { value: 50_000, label: '$50,000' },
+    { value: 100_000, label: '$100,000' },
+  ];
+}
+
+export function getCfdSizes(): { value: number; label: string }[] {
+  return [
+    { value: 5_000, label: '$5,000' },
+    { value: 10_000, label: '$10,000' },
+    { value: 25_000, label: '$25,000' },
+    { value: 50_000, label: '$50,000' },
+    { value: 100_000, label: '$100,000' },
+  ];
+}
+
+export function getAccountSizes(accountType: AccountType): { value: number; label: string }[] {
+  return accountType === 'futures' ? getFuturesSizes() : getCfdSizes();
+}
+
+export function getDefaultFuturesRules(size: number, phase: FuturesPhase): DefaultAccountRules {
+  if (phase === 'evaluation') {
+    // Futures Evaluation rules
+    if (size === 25_000) {
+      return { profitTarget: 1_500, maxDrawdown: 1_000 };
+    }
+    if (size === 50_000) {
+      return { profitTarget: 3_000, maxDrawdown: 2_000 };
+    }
+    if (size === 100_000) {
+      return { profitTarget: 6_000, maxDrawdown: 3_000 };
+    }
+    // Fallback for any other size (e.g., existing 150K records)
+    return {
+      profitTarget: Math.round(size * 0.06),
+      maxDrawdown: Math.round(size * 0.04),
+    };
+  }
+  // Futures Funded - no evaluation profit target, keep existing or null
+  return { profitTarget: null, maxDrawdown: null };
+}
+
+export function getDefaultCfdRules(size: number, phase: CfdPhase): DefaultAccountRules {
+  if (phase === 'phase1') {
+    return {
+      profitTarget: Math.round(size * 0.08),
+      maxDrawdown: Math.round(size * 0.10),
+    };
+  }
+  if (phase === 'phase2') {
+    return {
+      profitTarget: Math.round(size * 0.04),
+      maxDrawdown: Math.round(size * 0.06),
+    };
+  }
+  // CFD Funded - no profit target
+  return { profitTarget: null, maxDrawdown: null };
+}
+
+export function getDefaultAccountRules(
+  accountType: AccountType,
+  size: number,
+  phase: AccountPhase
+): DefaultAccountRules {
+  if (accountType === 'futures') {
+    return getDefaultFuturesRules(size, phase as FuturesPhase);
+  }
+  return getDefaultCfdRules(size, phase as CfdPhase);
+}
+
+/**
+ * Resolves the effective profit target / max drawdown for an account.
+ *
+ * The account's SAVED rule values are authoritative:
+ * - `custom` accounts keep exactly what was stored (never overwritten).
+ * - `standard` accounts use stored values when present, otherwise fall back to
+ *   the configured standard defaults for the account type/size/phase.
+ *
+ * This is the single source of truth used by the repository when loading an
+ * account, so pages never fabricate rule values themselves.
+ */
+export function resolveAccountRules(
+  accountType: AccountType,
+  size: number,
+  phase: AccountPhase,
+  ruleMode: AccountRuleMode,
+  storedProfitTarget: number | null,
+  storedMaxDrawdown: number | null
+): DefaultAccountRules {
+  if (ruleMode === 'custom') {
+    return {
+      profitTarget: storedProfitTarget,
+      maxDrawdown: storedMaxDrawdown,
+    };
+  }
+
+  const defaults = getDefaultAccountRules(accountType, size, phase);
+
+  return {
+    profitTarget: storedProfitTarget ?? defaults.profitTarget,
+    maxDrawdown: storedMaxDrawdown ?? defaults.maxDrawdown,
+  };
+}
+
+export function getPhaseLabel(phase: AccountPhase | null | undefined): string {
+  if (phase == null) return '—';
+  const labels: Record<AccountPhase, string> = {
+    evaluation: 'Evaluation',
+    funded: 'Funded',
+    phase1: 'Phase 1',
+    phase2: 'Phase 2',
+  };
+  return labels[phase] ?? phase;
+}
+
+export function getResultLabel(result: AccountResult): string {
+  const labels: Record<AccountResult, string> = {
+    active: 'Active',
+    passed: 'Passed',
+    failed: 'Failed',
+  };
+  return labels[result] ?? result;
+}
+
+export function getPhaseTone(phase: AccountPhase | null | undefined): 'accent' | 'win' | 'neutral' {
+  if (phase === 'funded') return 'win';
+  if (phase === 'evaluation' || phase === 'phase1' || phase === 'phase2') return 'accent';
+  return 'neutral';
+}
+
+export function getResultTone(result: AccountResult): 'win' | 'loss' | 'neutral' {
+  if (result === 'passed') return 'win';
+  if (result === 'failed') return 'loss';
+  return 'neutral';
+}
+
+/* -------------------------------------------------------------------------- */
+/* Account calculations                                                       */
+/* -------------------------------------------------------------------------- */
 
 export interface AccountTradeStats {
   totalTrades: number;
@@ -26,6 +217,23 @@ export interface AccountTradeStats {
   averageR: number;
   bestR: number | null;
   worstR: number | null;
+
+  profitFactor: number | null;
+  averageWinner: number | null;
+  averageLoser: number | null;
+  expectancy: number | null;
+
+  // Consistency statistic (calculated from attached trades)
+  consistencyPercentage: number | null;
+  bestTradingDayProfit: number | null;
+  totalPositiveProfit: number | null;
+}
+
+export interface EquityPoint {
+  date: string;
+  dateLabel: string;
+  cumulativePnl: number;
+  tradeCount: number;
 }
 
 export interface AccountPerformance {
@@ -48,14 +256,6 @@ export interface AccountPerformance {
   currentDrawdown: number;
 
   remainingDrawdown: number | null;
-
-  consistencyLimit: number | null;
-
-  consistencyPercentage: number | null;
-
-  consistencyRemaining: number | null;
-
-  consistencyPassed: boolean | null;
 }
 
 export interface AccountSummary {
@@ -64,6 +264,8 @@ export interface AccountSummary {
   performance: AccountPerformance;
 
   tradeStats: AccountTradeStats;
+
+  equityCurve: EquityPoint[];
 }
 
 function getPnls(
@@ -87,6 +289,55 @@ function getRs(
     );
 }
 
+/**
+ * Canonical P&L resolution order (read-only fallback, no DB writes):
+ * 1. attachment.accountPnl (account-specific override)
+ * 2. linked journal trade's numeric pnl (canonical Trade.pnl from trades.pnl)
+ * 3. null = "no realized P&L available" (never coerced to $0 in stats).
+ */
+export function resolveAttachmentPnl(
+  attachment: AccountTradeAttachment,
+  tradePnl?: number | null
+): number | null {
+  if (attachment.accountPnl != null && Number.isFinite(attachment.accountPnl)) {
+    return attachment.accountPnl;
+  }
+  if (tradePnl != null && Number.isFinite(tradePnl)) {
+    return tradePnl;
+  }
+  return null;
+}
+
+/**
+ * Attachments enriched with their journal trade's canonical pnl, so legacy
+ * attachments created with account_pnl = NULL still compute from trades.pnl
+ * without requiring detach/reattach. Does not mutate inputs.
+ */
+export type AttachmentWithTradePnl = {
+  attachment: AccountTradeAttachment;
+  tradePnl?: number | null;
+};
+
+export function enrichAttachmentsWithTradePnl(
+  attachments: AccountTradeAttachment[],
+  tradesById: Map<string, number | null | undefined> | Record<string, number | null | undefined>
+): AccountTradeAttachment[] {
+  const lookup =
+    tradesById instanceof Map
+      ? (id: string) => tradesById.get(id)
+      : (id: string) => tradesById[id];
+  return attachments.map((attachment) => {
+    if (attachment.accountPnl != null && Number.isFinite(attachment.accountPnl)) {
+      return attachment;
+    }
+    const tradePnl = lookup(attachment.tradeId);
+    if (tradePnl != null && Number.isFinite(tradePnl)) {
+      return { ...attachment, accountPnl: tradePnl };
+    }
+    return attachment;
+  });
+}
+
 function calculateTradeStats(
   attachments: AccountTradeAttachment[]
 ): AccountTradeStats {
@@ -104,18 +355,64 @@ function calculateTradeStats(
     0
   );
 
+  // Trades with no realized P&L are excluded from counts/rates entirely.
+  // totalTrades stays as attached count for display, but win rate uses only
+  // decided trades (wins + losses).
   const totalTrades = attachments.length;
 
   const winningTrades = winningPnls.length;
   const losingTrades = losingPnls.length;
 
+  const decidedTrades = winningTrades + losingTrades;
+
   const winRate =
-    totalTrades > 0
-      ? (winningTrades / totalTrades) * 100
+    decidedTrades > 0
+      ? (winningTrades / decidedTrades) * 100
       : 0;
 
   const rs = getRs(attachments);
   const totalR = rs.reduce((sum, r) => sum + r, 0);
+
+  const grossWinners = pnls.filter((pnl) => pnl > 0);
+  const grossLosers = pnls.filter((pnl) => pnl < 0);
+
+  const sumWinners = grossWinners.reduce(
+    (sum, pnl) => sum + pnl,
+    0
+  );
+  const sumLosers = grossLosers.reduce(
+    (sum, pnl) => sum + pnl,
+    0
+  );
+  const sumLosersAbs = Math.abs(sumLosers);
+
+  // Profit factor: gross wins / |gross losses|.
+  // All wins (no losses) => Infinity; no wins and no losses => null (—).
+  const profitFactor =
+    sumLosersAbs > 0
+      ? sumWinners / sumLosersAbs
+      : sumWinners > 0
+        ? Number.POSITIVE_INFINITY
+        : null;
+
+  const averageWinner =
+    grossWinners.length > 0
+      ? sumWinners / grossWinners.length
+      : null;
+
+  // Signed average of losing trades (negative), i.e. gross losing P&L / count.
+  const averageLoser =
+    grossLosers.length > 0
+      ? sumLosers / grossLosers.length
+      : null;
+
+  const expectancy =
+    rs.length > 0
+      ? totalR / rs.length
+      : null;
+
+  // Consistency calculation: group by trading day, find best day, divide by total positive profit
+  const consistencyData = calculateConsistency(attachments);
 
   return {
     totalTrades,
@@ -167,7 +464,68 @@ function calculateTradeStats(
     averageR: rs.length > 0 ? totalR / rs.length : 0,
     bestR: rs.length > 0 ? Math.max(...rs) : null,
     worstR: rs.length > 0 ? Math.min(...rs) : null,
+
+    profitFactor,
+    averageWinner,
+    averageLoser,
+    expectancy,
+
+    // Consistency statistic
+    consistencyPercentage: consistencyData.percentage,
+    bestTradingDayProfit: consistencyData.bestTradingDayProfit,
+    totalPositiveProfit: consistencyData.totalPositiveProfit,
   };
+}
+
+export interface ConsistencyData {
+  percentage: number | null;
+  bestTradingDayProfit: number;
+  totalPositiveProfit: number;
+}
+
+function calculateConsistency(attachments: AccountTradeAttachment[]): ConsistencyData {
+  if (attachments.length === 0) {
+    return { percentage: null, bestTradingDayProfit: 0, totalPositiveProfit: 0 };
+  }
+
+  // Group trades by trading day (using attachedAt date)
+  const dailyPnlMap = new Map<string, number>();
+
+  attachments.forEach((attachment) => {
+    // Null/undefined P&L = "no realized P&L available": skip entirely.
+    // Never coerce to $0 (would corrupt best-day / totals).
+    const raw = attachment.accountPnl;
+    if (raw == null || !Number.isFinite(raw)) return;
+    const pnl: number = raw;
+    const attachedAt: string = attachment.attachedAt ?? '';
+    if (!attachedAt) return;
+    const parsed = new Date(attachedAt);
+    if (Number.isNaN(parsed.getTime())) return;
+    const date: string = parsed.toISOString().split('T')[0] ?? attachedAt; // YYYY-MM-DD
+    const existing: number = dailyPnlMap.get(date) ?? 0;
+    dailyPnlMap.set(date, existing + pnl);
+  });
+
+  // Find best trading day (only positive days)
+  let bestTradingDayProfit = 0;
+  for (const dailyPnl of dailyPnlMap.values()) {
+    if (dailyPnl > bestTradingDayProfit) {
+      bestTradingDayProfit = dailyPnl;
+    }
+  }
+
+  // Calculate total positive profit
+  const totalPositiveProfit = Array.from(dailyPnlMap.values())
+    .filter((pnl) => pnl > 0)
+    .reduce((sum, pnl) => sum + pnl, 0);
+
+  // Calculate consistency percentage
+  const percentage =
+    totalPositiveProfit > 0 && bestTradingDayProfit > 0
+      ? (bestTradingDayProfit / totalPositiveProfit) * 100
+      : null;
+
+  return { percentage, bestTradingDayProfit, totalPositiveProfit };
 }
 
 function calculatePerformance(
@@ -230,51 +588,6 @@ function calculatePerformance(
         )
       : null;
 
-  /*
-   * Consistency is measured as the largest
-   * winning trade's contribution to total
-   * positive P&L.
-   *
-   * Example:
-   *
-   * Total positive P&L = $1,000
-   * Best winning trade = $300
-   *
-   * Consistency = 30%
-   */
-  const positivePnl = getPnls(attachments)
-    .filter((pnl) => pnl > 0)
-    .reduce((sum, pnl) => sum + pnl, 0);
-
-  const bestWinningTrade =
-    tradeStats.highestWinningTrade;
-
-  const consistencyPercentage =
-    positivePnl > 0 &&
-    bestWinningTrade != null
-      ? (bestWinningTrade / positivePnl) * 100
-      : null;
-
-  const consistencyLimit =
-    account.consistencyLimit;
-
-  const consistencyRemaining =
-    consistencyLimit != null &&
-    consistencyPercentage != null
-      ? Math.max(
-          0,
-          consistencyLimit -
-            consistencyPercentage
-        )
-      : null;
-
-  const consistencyPassed =
-    consistencyLimit != null &&
-    consistencyPercentage != null
-      ? consistencyPercentage <=
-        consistencyLimit
-      : null;
-
   return {
     startingBalance,
 
@@ -295,15 +608,53 @@ function calculatePerformance(
     currentDrawdown,
 
     remainingDrawdown,
-
-    consistencyLimit,
-
-    consistencyPercentage,
-
-    consistencyRemaining,
-
-    consistencyPassed,
   };
+}
+
+/* -------------------------------------------------------------------------- */
+/* Equity curve                                                               */
+/* -------------------------------------------------------------------------- */
+
+export function calculateEquityCurve(
+  attachments: AccountTradeAttachment[]
+): EquityPoint[] {
+  if (attachments.length === 0) return [];
+
+  const ordered = [...attachments].sort(
+    (a, b) =>
+      new Date(a.attachedAt).getTime() -
+      new Date(b.attachedAt).getTime()
+  );
+
+  const points: EquityPoint[] = [];
+
+  // Start at $0 cumulative; skip trades with missing P&L entirely
+  // (never coerce null to $0, never emit a flat point for them).
+  let cumulative = 0;
+  let tradeCount = 0;
+
+  for (const attachment of ordered) {
+    const raw = attachment.accountPnl;
+    if (raw == null || !Number.isFinite(raw)) continue;
+
+    cumulative += raw;
+    tradeCount += 1;
+
+    const d = new Date(attachment.attachedAt);
+    const dateLabel = d.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
+
+    points.push({
+      date: attachment.attachedAt,
+      dateLabel,
+      cumulativePnl: cumulative,
+      tradeCount,
+    });
+  }
+
+  return points;
 }
 
 export function calculateAccountSummary(
@@ -319,9 +670,13 @@ export function calculateAccountSummary(
       attachments
     );
 
+  const equityCurve =
+    calculateEquityCurve(attachments);
+
   return {
     account,
     performance,
     tradeStats,
+    equityCurve,
   };
 }
