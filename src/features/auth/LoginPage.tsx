@@ -251,8 +251,8 @@ export function LoginPage() {
     try {
       await signInWithPassword(email, password);
       navigate('/dashboard');
-    } catch (err) {
-      setLocalError((err as Error).message || 'Invalid email or password.');
+    } catch {
+      setLocalError('Invalid email or password.');
     }
   }
 
@@ -494,9 +494,7 @@ export function LoginPage() {
                   <div className="space-y-1.5">
                     <h2 className="text-xl font-semibold text-fg">Reset email sent</h2>
                     <p className="text-sm text-fg-muted">
-                      We sent a password reset link to{' '}
-                      <span className="font-medium text-fg">{email}</span>.
-                      Check your inbox to create a new password.
+                      If an account exists for this email, you'll receive a reset link shortly.
                     </p>
                   </div>
 

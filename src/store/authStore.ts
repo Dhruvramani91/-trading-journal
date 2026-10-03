@@ -26,8 +26,6 @@ interface AuthState {
 
   signUp: (email: string, password: string) => Promise<void>;
 
-  checkEmailExists: (email: string) => Promise<boolean>;
-
   signInWithPassword: (
     email: string,
     password: string
@@ -389,39 +387,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   /* ------------------------------------------------ */
-  /* CHECK EMAIL EXISTS                               */
-  /* ------------------------------------------------ */
-
-  checkEmailExists: async (
-    email: string
-  ) => {
-    if (!isSupabaseConfigured || !supabase) {
-      throw new Error(
-        'Supabase is not configured.'
-      );
-    }
-
-    const normalizedEmail =
-      email.trim().toLowerCase();
-
-    const { data, error } =
-      await supabase.functions.invoke(
-        'check-email-exists',
-        {
-          body: {
-            email: normalizedEmail,
-          },
-        }
-      );
-
-    if (error) {
-      throw error;
-    }
-
-    return Boolean(data?.exists);
-  },
-
-  /* ------------------------------------------------ */
   /* LOGIN WITH PASSWORD                              */
   /* ------------------------------------------------ */
 
@@ -442,32 +407,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       const normalizedEmail =
         email.trim().toLowerCase();
 
-      /*
-       * First check whether the email exists.
-       */
-      const { data: emailCheck, error: checkError } =
-        await supabase.functions.invoke(
-          'check-email-exists',
-          {
-            body: {
-              email: normalizedEmail,
-            },
-          }
-        );
-
-      if (checkError) {
-        throw checkError;
-      }
-
-      if (!emailCheck?.exists) {
-        throw new Error(
-          'Email does not exist. Please sign up first.'
-        );
-      }
-
-      /*
-       * Email exists, so now check the password.
-       */
       const { data, error } =
         await supabase.auth.signInWithPassword({
           email: normalizedEmail,
@@ -501,14 +440,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         });
       }
     } catch (err) {
-      set({
-        error:
-          (err as Error).message ||
-          'Invalid email or password.',
-        loading: false,
-      });
-
-      throw err;
+      const message = 'Invalid email or password.';
+      set({ error: message, loading: false });
+      throw new Error(message, { cause: err });
     }
   },
 
@@ -575,34 +509,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       const normalizedEmail =
         email.trim().toLowerCase();
 
-      /*
-       * Check whether the email exists before
-       * sending the reset email.
-       */
-      const { data: emailCheck, error: checkError } =
-        await supabase.functions.invoke(
-          'check-email-exists',
-          {
-            body: {
-              email: normalizedEmail,
-            },
-          }
-        );
-
-      if (checkError) {
-        throw checkError;
-      }
-
-      if (!emailCheck?.exists) {
-        throw new Error(
-          'Email does not exist. Please sign up first.'
-        );
-      }
-
-      /*
-       * Existing account → send normal Supabase
-       * password reset email.
-       */
       const { error } =
         await supabase.auth.resetPasswordForEmail(
           normalizedEmail,
@@ -613,6 +519,14 @@ export const useAuthStore = create<AuthState>((set) => ({
         );
 
       if (error) {
+        if (
+          typeof error === 'object' &&
+          'code' in error &&
+          error.code === 'user_not_found'
+        ) {
+          set({ loading: false, error: null });
+          return;
+        }
         throw error;
       }
 
