@@ -343,7 +343,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       const normalizedEmail =
         email.trim().toLowerCase();
 
-      const { data, error } =
+      const { error } =
         await supabase.auth.signUp({
           email: normalizedEmail,
           password,
@@ -355,20 +355,6 @@ export const useAuthStore = create<AuthState>((set) => ({
 
       if (error) {
         throw error;
-      }
-
-      /*
-       * Supabase can return a user with an empty
-       * identities array when the email already exists.
-       */
-      if (
-        data.user &&
-        data.user.identities &&
-        data.user.identities.length === 0
-      ) {
-        throw new Error(
-          'An account with this email already exists. Please log in instead.'
-        );
       }
 
       set({

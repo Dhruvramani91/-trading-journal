@@ -409,11 +409,9 @@ export function LoginPage() {
               </div>
 
               <div className="space-y-1.5">
-                <h2 className="text-xl font-semibold text-fg">Check your inbox</h2>
+                <h2 className="text-xl font-semibold text-fg">Check your email to continue</h2>
                 <p className="text-sm text-fg-muted">
-                  We sent a confirmation link to{' '}
-                  <span className="font-medium text-fg">{email}</span>. Confirm
-                  your email, then come back and log in.
+                  If an account can be created for this email, we'll send the next step shortly.
                 </p>
               </div>
 
