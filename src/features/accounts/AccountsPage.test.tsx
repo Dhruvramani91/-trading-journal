@@ -6,13 +6,30 @@ const mockCreate = vi.hoisted(() => vi.fn());
 const mockUpdate = vi.hoisted(() => vi.fn());
 const mockRemove = vi.hoisted(() => vi.fn());
 const mockList = vi.hoisted(() => vi.fn());
+const mockListForUser = vi.hoisted(() => vi.fn());
 
 const mockListForAccount = vi.hoisted(() => vi.fn());
-const mockListTrades = vi.hoisted(() => vi.fn());
+const mockListForAccounts = vi.hoisted(() => vi.fn());
+const mockListTradeSummaries = vi.hoisted(() => vi.fn());
+const mockTradesStore = vi.hoisted(() => ({
+  state: {} as {
+    trades: unknown[];
+    ownerId: string | null;
+    loaded: boolean;
+    loading: boolean;
+    error: string | null;
+    load: (ownerId?: string) => Promise<void>;
+  },
+  getState: vi.fn(),
+}));
+const mockAuthState = vi.hoisted(() => ({
+  user: { id: 'user-1', name: 'Test User', email: 'test@test.com' },
+}));
 
 vi.mock('@/data/supabaseAccountRepository', () => ({
   accountRepository: {
     list: mockList,
+    listForUser: mockListForUser,
     create: mockCreate,
     update: mockUpdate,
     remove: mockRemove,
@@ -22,13 +39,18 @@ vi.mock('@/data/supabaseAccountRepository', () => ({
 vi.mock('@/data/supabaseAccountTradeAttachmentRepository', () => ({
   accountTradeAttachmentRepository: {
     listForAccount: mockListForAccount,
+    listForAccounts: mockListForAccounts,
   },
 }));
 
-vi.mock('@/data/supabaseTradeRepository', () => ({
-  tradeRepository: {
-    list: mockListTrades,
+vi.mock('@/data/supabaseAccountTradeSummaryRepository', () => ({
+  accountTradeSummaryRepository: {
+    listForAccountSummaries: mockListTradeSummaries,
   },
+}));
+
+vi.mock('@/store/tradesStore', () => ({
+  useTradesStore: { getState: mockTradesStore.getState },
 }));
 
 vi.mock('@/lib/supabase', () => ({
@@ -48,9 +70,7 @@ vi.mock('@/lib/supabase', () => ({
 }));
 
 vi.mock('@/store/authStore', () => ({
-  useAuthStore: () => ({
-    user: { id: 'user-1', name: 'Test User', email: 'test@test.com' },
-  }),
+  useAuthStore: () => mockAuthState,
 }));
 
 vi.mock('@/store/sidebarStore', () => ({
@@ -93,9 +113,10 @@ async function renderWithAccounts(
   attachments: unknown[] = [],
   trades: unknown[] = [],
 ) {
-  mockList.mockResolvedValue(initialAccounts);
+  mockListForUser.mockResolvedValue(initialAccounts);
   mockListForAccount.mockResolvedValue(attachments);
-  mockListTrades.mockResolvedValue(trades);
+  mockListForAccounts.mockResolvedValue(attachments);
+  mockListTradeSummaries.mockResolvedValue(trades);
   mockCreate.mockResolvedValue({ ...(initialAccounts[0] ?? {}), name: 'New Account' });
   mockUpdate.mockResolvedValue({ ...(initialAccounts[0] ?? {}), name: 'Updated Account' });
 
@@ -108,7 +129,7 @@ async function renderWithAccounts(
   );
 
   await waitFor(() => {
-    expect(mockList).toHaveBeenCalled();
+    expect(mockListForUser).toHaveBeenCalled();
   });
 
   return utils;
@@ -117,6 +138,16 @@ async function renderWithAccounts(
 describe('AccountsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockAuthState.user = { id: 'user-1', name: 'Test User', email: 'test@test.com' };
+    mockTradesStore.state = {
+      trades: [],
+      ownerId: null,
+      loaded: false,
+      loading: false,
+      error: null,
+      load: vi.fn().mockResolvedValue(undefined),
+    };
+    mockTradesStore.getState.mockImplementation(() => mockTradesStore.state);
   });
 
   afterEach(() => {
@@ -137,7 +168,16 @@ describe('AccountsPage', () => {
   });
 
   it('renders account cards when accounts exist', async () => {
-    await renderWithAccounts(mockAccounts);
+    await renderWithAccounts(mockAccounts, [{
+      id: 'attachment-1',
+      accountId: 'acc-1',
+      tradeId: 'trade-1',
+      userId: 'user-1',
+      accountPnl: null,
+      accountR: 1.5,
+      quantity: null,
+      attachedAt: '2026-01-02T00:00:00.000Z',
+    }]);
 
     const accountCard = screen.getByText('Trading Account').closest('article');
     expect(accountCard).not.toBeNull();
@@ -169,6 +209,281 @@ describe('AccountsPage', () => {
     );
 
     expect(await screen.findAllByText('+$1,250.00')).toHaveLength(2);
+  });
+
+  it('reuses loaded current-user trades without the duplicate trade-summary request', async () => {
+    mockListForAccounts.mockResolvedValue([{
+      id: 'attachment-1',
+      accountId: 'acc-1',
+      tradeId: 'trade-1',
+      userId: 'user-1',
+      accountPnl: null,
+      accountR: 1.5,
+      quantity: null,
+      attachedAt: '2026-01-02T00:00:00.000Z',
+    }]);
+    mockTradesStore.state = {
+      trades: [{
+        id: 'trade-1',
+        pnl: 1250,
+        openedAt: '2026-01-02T12:00:00.000Z',
+      }],
+      ownerId: 'user-1',
+      loaded: true,
+      loading: false,
+      error: null,
+      load: vi.fn().mockResolvedValue(undefined),
+    };
+
+    await renderWithAccounts(mockAccounts, [{
+      id: 'attachment-1',
+      accountId: 'acc-1',
+      tradeId: 'trade-1',
+      userId: 'user-1',
+      accountPnl: null,
+      accountR: null,
+      quantity: null,
+      attachedAt: '2026-01-02T00:00:00.000Z',
+    }]);
+
+    expect(mockListForUser).toHaveBeenCalledWith('user-1');
+    expect(mockListForAccounts).toHaveBeenCalledWith(['acc-1'], 'user-1');
+    expect(mockListTradeSummaries).not.toHaveBeenCalled();
+    expect(await screen.findAllByText('+$1,250.00')).toHaveLength(2);
+  });
+
+  it('renders identical account P&L from cached trades and the summary-query fallback', async () => {
+    const attachments = [{
+      id: 'attachment-1',
+      accountId: 'acc-1',
+      tradeId: 'trade-1',
+      userId: 'user-1',
+      accountPnl: null,
+      accountR: 1.5,
+      quantity: null,
+      attachedAt: '2026-01-02T00:00:00.000Z',
+    }];
+    const tradeSummary = {
+      id: 'trade-1',
+      pnl: 1250,
+      openedAt: '2026-01-02T12:00:00.000Z',
+    };
+
+    const fallback = await renderWithAccounts(mockAccounts, attachments, [tradeSummary]);
+    expect(await screen.findAllByText('+$1,250.00')).toHaveLength(2);
+    const fallbackCardText = fallback.container.querySelector('article')?.textContent;
+    fallback.unmount();
+    mockListTradeSummaries.mockClear();
+
+    mockTradesStore.state = {
+      trades: [tradeSummary],
+      ownerId: 'user-1',
+      loaded: true,
+      loading: false,
+      error: null,
+      load: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const cached = await renderWithAccounts(mockAccounts, attachments, []);
+    expect(await screen.findAllByText('+$1,250.00')).toHaveLength(2);
+    expect(cached.container.querySelector('article')?.textContent).toBe(fallbackCardText);
+    expect(mockListTradeSummaries).not.toHaveBeenCalled();
+  });
+
+  it('waits for an in-flight trades-store load before using its trades', async () => {
+    let finishLoad!: () => void;
+    const inFlight = new Promise<void>((resolve) => {
+      finishLoad = resolve;
+    });
+    const pendingStoreState = {
+      trades: [] as unknown[],
+      ownerId: null as string | null,
+      loaded: false,
+      loading: true,
+      error: null as string | null,
+      load: vi.fn(async (ownerId?: string) => {
+        await inFlight;
+        Object.assign(pendingStoreState, {
+          trades: [{ id: 'trade-1', pnl: 1250, openedAt: '2026-01-02T12:00:00.000Z' }],
+          ownerId,
+          loaded: true,
+          loading: false,
+        });
+      }),
+    };
+    mockTradesStore.state = pendingStoreState;
+    mockListForAccounts.mockResolvedValue([{
+      id: 'attachment-1',
+      accountId: 'acc-1',
+      tradeId: 'trade-1',
+      userId: 'user-1',
+      accountPnl: null,
+      accountR: null,
+      quantity: null,
+      attachedAt: '2026-01-02T00:00:00.000Z',
+    }]);
+
+    await renderWithAccounts(mockAccounts, [{
+      id: 'attachment-1',
+      accountId: 'acc-1',
+      tradeId: 'trade-1',
+      userId: 'user-1',
+      accountPnl: null,
+      accountR: null,
+      quantity: null,
+      attachedAt: '2026-01-02T00:00:00.000Z',
+    }], [{
+      id: 'trade-1',
+      pnl: 1250,
+      openedAt: '2026-01-02T12:00:00.000Z',
+    }]);
+    await waitFor(() => expect(pendingStoreState.load).toHaveBeenCalledWith('user-1'));
+    expect(mockListTradeSummaries).not.toHaveBeenCalled();
+
+    finishLoad();
+
+    expect(await screen.findAllByText('+$1,250.00')).toHaveLength(2);
+    expect(mockListTradeSummaries).not.toHaveBeenCalled();
+  });
+
+  it('falls back to trade summaries when the in-flight store load fails', async () => {
+    const failedStoreState = {
+      trades: [] as unknown[],
+      ownerId: null as string | null,
+      loaded: false,
+      loading: true,
+      error: null as string | null,
+      load: vi.fn(async () => {
+        failedStoreState.loading = false;
+        failedStoreState.error = 'Trade load failed';
+      }),
+    };
+    mockTradesStore.state = failedStoreState;
+    mockListForAccounts.mockResolvedValue([{
+      id: 'attachment-1',
+      accountId: 'acc-1',
+      tradeId: 'trade-1',
+      userId: 'user-1',
+      accountPnl: null,
+      accountR: null,
+      quantity: null,
+      attachedAt: '2026-01-02T00:00:00.000Z',
+    }]);
+    mockListTradeSummaries.mockResolvedValue([{
+      id: 'trade-1',
+      pnl: 1250,
+      openedAt: '2026-01-02T12:00:00.000Z',
+    }]);
+
+    await renderWithAccounts(mockAccounts, [{
+      id: 'attachment-1',
+      accountId: 'acc-1',
+      tradeId: 'trade-1',
+      userId: 'user-1',
+      accountPnl: null,
+      accountR: null,
+      quantity: null,
+      attachedAt: '2026-01-02T00:00:00.000Z',
+    }], [{
+      id: 'trade-1',
+      pnl: 1250,
+      openedAt: '2026-01-02T12:00:00.000Z',
+    }]);
+
+    expect(failedStoreState.load).toHaveBeenCalledWith('user-1');
+    expect(mockListTradeSummaries).toHaveBeenCalledWith('user-1');
+    expect(await screen.findAllByText('+$1,250.00')).toHaveLength(2);
+  });
+
+  it('does not use trades cached for a previous authenticated user', async () => {
+    mockAuthState.user = { id: 'user-2', name: 'Other User', email: 'other@test.com' };
+    const userTwoAccounts = mockAccounts.map((account) => ({ ...account, userId: 'user-2' }));
+    mockListForUser.mockResolvedValue(userTwoAccounts);
+    mockListForAccounts.mockResolvedValue([{
+      id: 'attachment-2',
+      accountId: 'acc-1',
+      tradeId: 'trade-1',
+      userId: 'user-2',
+      accountPnl: null,
+      accountR: null,
+      quantity: null,
+      attachedAt: '2026-01-02T00:00:00.000Z',
+    }]);
+    mockListTradeSummaries.mockResolvedValue([{
+      id: 'trade-1',
+      pnl: 250,
+      openedAt: '2026-01-02T12:00:00.000Z',
+    }]);
+    mockTradesStore.state = {
+      trades: [{ id: 'trade-1', pnl: 9999, openedAt: '2026-01-02T12:00:00.000Z' }],
+      ownerId: 'user-1',
+      loaded: true,
+      loading: false,
+      error: null,
+      load: vi.fn().mockResolvedValue(undefined),
+    };
+
+    await renderWithAccounts(userTwoAccounts, [{
+      id: 'attachment-2',
+      accountId: 'acc-1',
+      tradeId: 'trade-1',
+      userId: 'user-2',
+      accountPnl: null,
+      accountR: null,
+      quantity: null,
+      attachedAt: '2026-01-02T00:00:00.000Z',
+    }], [{
+      id: 'trade-1',
+      pnl: 250,
+      openedAt: '2026-01-02T12:00:00.000Z',
+    }]);
+
+    expect(mockListForUser).toHaveBeenCalledWith('user-2');
+    expect(mockListForAccounts).toHaveBeenCalledWith(['acc-1'], 'user-2');
+    expect(mockListTradeSummaries).toHaveBeenCalledWith('user-2');
+    expect(await screen.findAllByText('+$250.00')).toHaveLength(2);
+    expect(screen.queryByText('+$9,999.00')).not.toBeInTheDocument();
+  });
+
+  it('starts attachment and trade-summary requests together after accounts load', async () => {
+    let resolveAccounts!: (accounts: typeof mockAccounts) => void;
+    const accountsPromise = new Promise<typeof mockAccounts>((resolve) => {
+      resolveAccounts = resolve;
+    });
+    let resolveAttachments!: (attachments: unknown[]) => void;
+    const attachmentsPromise = new Promise<unknown[]>((resolve) => {
+      resolveAttachments = resolve;
+    });
+    let resolveTradeSummaries!: (trades: unknown[]) => void;
+    const tradeSummariesPromise = new Promise<unknown[]>((resolve) => {
+      resolveTradeSummaries = resolve;
+    });
+
+    mockListForUser.mockReturnValue(accountsPromise);
+    mockListForAccounts.mockReturnValue(attachmentsPromise);
+    mockListTradeSummaries.mockReturnValue(tradeSummariesPromise);
+
+    const { AccountsPage } = await import('./AccountsPage');
+    render(
+      <BrowserRouter>
+        <AccountsPage />
+      </BrowserRouter>,
+    );
+
+    expect(mockListForAccounts).not.toHaveBeenCalled();
+    expect(mockListTradeSummaries).not.toHaveBeenCalled();
+
+    resolveAccounts(mockAccounts);
+
+    await waitFor(() => {
+      expect(mockListForAccounts).toHaveBeenCalledWith(['acc-1'], 'user-1');
+      expect(mockListTradeSummaries).toHaveBeenCalledTimes(1);
+    });
+
+    resolveAttachments([]);
+    resolveTradeSummaries([]);
+
+    expect(await screen.findByText('Trading Account')).toBeInTheDocument();
   });
 
   it('opens the create account form when "Add Account" is clicked', async () => {
@@ -294,8 +609,8 @@ describe('AccountsPage', () => {
     vi.useFakeTimers();
 
     try {
-      mockList.mockResolvedValue(mockAccounts);
-      mockListForAccount.mockResolvedValue([]);
+      mockListForUser.mockResolvedValue(mockAccounts);
+      mockListForAccounts.mockResolvedValue([]);
       mockRemove.mockResolvedValue(undefined);
 
       const { AccountsPage } = await import('./AccountsPage');
@@ -344,8 +659,8 @@ describe('AccountsPage', () => {
   });
 
   it('surfaces attachment load failures instead of converting them to an empty list', async () => {
-    mockList.mockResolvedValue(mockAccounts);
-    mockListForAccount.mockRejectedValue(
+    mockListForUser.mockResolvedValue(mockAccounts);
+    mockListForAccounts.mockRejectedValue(
       new Error('Supabase account attachments list: network down')
     );
 
@@ -357,6 +672,26 @@ describe('AccountsPage', () => {
     );
 
     // The failure must be visible — a DB/network error is not "no attachments".
+    const alerts = await screen.findAllByRole('alert');
+    expect(
+      alerts.some((el) => (el.textContent ?? '').includes('network down'))
+    ).toBe(true);
+  });
+
+  it('surfaces trade-summary load failures instead of treating them as empty trades', async () => {
+    mockListForUser.mockResolvedValue(mockAccounts);
+    mockListForAccounts.mockResolvedValue([]);
+    mockListTradeSummaries.mockRejectedValue(
+      new Error('Supabase account trade summaries list: network down')
+    );
+
+    const { AccountsPage } = await import('./AccountsPage');
+    render(
+      <BrowserRouter>
+        <AccountsPage />
+      </BrowserRouter>,
+    );
+
     const alerts = await screen.findAllByRole('alert');
     expect(
       alerts.some((el) => (el.textContent ?? '').includes('network down'))

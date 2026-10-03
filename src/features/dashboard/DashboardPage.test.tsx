@@ -115,6 +115,30 @@ describe('DashboardPage — P&L support', () => {
     expect(screen.getByText('+4.00R')).toBeInTheDocument(); // R total unchanged
   });
 
+  it('shows average realized R independently of planned R:R values', async () => {
+    const trades = [
+      makeTrade({ openedAt: '2026-01-01T10:00:00Z', r: 5, result: 'win' }),
+      makeTrade({ openedAt: '2026-01-02T10:00:00Z', r: 1, result: 'win' }),
+      makeTrade({ openedAt: '2026-01-03T10:00:00Z', r: -2, result: 'loss' }),
+      makeTrade({ openedAt: '2026-01-04T10:00:00Z', r: 0, result: 'be' }),
+      makeTrade({ openedAt: '2026-01-05T10:00:00Z', r: 4, result: 'win' }),
+    ];
+    h.useFilteredTrades.mockImplementation(() => ({
+      filtered: trades,
+      filters: FILTERS,
+      activeCount: 0,
+    }));
+
+    renderDashboard();
+    await screen.findByText('Performance — R');
+
+    expect(screen.getByText('Total R')).toBeInTheDocument();
+    expect(screen.getByText('+8.00R')).toBeInTheDocument();
+    expect(screen.getByText('Avg R')).toBeInTheDocument();
+    expect(screen.getByText('+1.60R')).toBeInTheDocument();
+    expect(screen.queryByText('Avg R:R')).not.toBeInTheDocument();
+  });
+
   it('totals and averages Journal Trade P&L (not account values)', async () => {
     renderDashboard();
     await screen.findByText('Performance — P&L');

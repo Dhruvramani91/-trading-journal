@@ -4,11 +4,12 @@ import { tradeRepository } from '@/data/supabaseTradeRepository';
 
 interface TradesState {
   trades: Trade[];
+  ownerId: string | null;
   loaded: boolean;
   loading: boolean;
   error: string | null;
 
-  load: () => Promise<void>;
+  load: (ownerId?: string) => Promise<void>;
   refresh: () => Promise<void>;
   clear: () => void;
 
@@ -25,15 +26,17 @@ interface TradesState {
 }
 
 let requestVersion = 0;
+let inFlightLoad: Promise<void> | null = null;
 
 export const useTradesStore = create<TradesState>((set, get) => ({
   trades: [],
+  ownerId: null,
   loaded: false,
   loading: false,
   error: null,
 
-  async load() {
-    if (get().loading) return;
+  load(ownerId) {
+    if (get().loading && inFlightLoad) return inFlightLoad;
 
     const version = ++requestVersion;
 
@@ -42,29 +45,38 @@ export const useTradesStore = create<TradesState>((set, get) => ({
       error: null,
     });
 
-    try {
-      const trades = await tradeRepository.list();
+    const request = (async () => {
+      try {
+        const trades = await tradeRepository.list();
 
-      // Ignore results from an older user/session.
-      if (version !== requestVersion) return;
+        // Ignore results from an older user/session.
+        if (version !== requestVersion) return;
 
-      set({
-        trades,
-        loaded: true,
-        loading: false,
-        error: null,
-      });
-    } catch (err) {
-      if (version !== requestVersion) return;
+        set({
+          trades,
+          ownerId: ownerId ?? null,
+          loaded: true,
+          loading: false,
+          error: null,
+        });
+      } catch (err) {
+        if (version !== requestVersion) return;
 
-      set({
-        error:
-          err instanceof Error
-            ? err.message
-            : 'Failed to load trades.',
-        loading: false,
-      });
-    }
+        set({
+          error:
+            err instanceof Error
+              ? err.message
+              : 'Failed to load trades.',
+          loading: false,
+        });
+      }
+    })();
+
+    inFlightLoad = request;
+    void request.finally(() => {
+      if (inFlightLoad === request) inFlightLoad = null;
+    });
+    return request;
   },
 
   async refresh() {
@@ -78,6 +90,7 @@ export const useTradesStore = create<TradesState>((set, get) => ({
 
       set({
         trades,
+        ownerId: get().ownerId,
         loaded: true,
         loading: false,
         error: null,
@@ -100,6 +113,7 @@ export const useTradesStore = create<TradesState>((set, get) => ({
 
     set({
       trades: [],
+      ownerId: null,
       loaded: false,
       loading: false,
       error: null,
@@ -133,11 +147,11 @@ export function bootTradesStore(): void {
   void useTradesStore.getState().load();
 }
 
-export async function reloadTradesForCurrentUser(): Promise<void> {
+export async function reloadTradesForCurrentUser(userId?: string): Promise<void> {
   const store = useTradesStore.getState();
 
   store.clear();
-  await store.load();
+  await store.load(userId);
 }
 
 export function clearTradesForCurrentUser(): void {

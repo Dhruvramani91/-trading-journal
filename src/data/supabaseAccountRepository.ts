@@ -118,21 +118,32 @@ function toRow(input: CreateAccountInput | UpdateAccountInput): Record<string, u
   return row;
 }
 
+async function listForUserId(userId: string): Promise<Account[]> {
+  const { data, error } = await supabase!
+    .from('accounts')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    throw new Error(`Supabase account list: ${error.message}`);
+  }
+
+  return (data ?? []).map((row) => toAccount(row as SupabaseAccountRow));
+}
+
 export const accountRepository = {
   async list(): Promise<Account[]> {
     const userId = await getUserId();
+    return listForUserId(userId);
+  },
 
-    const { data, error } = await supabase!
-      .from('accounts')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      throw new Error(`Supabase account list: ${error.message}`);
-    }
-
-    return (data ?? []).map((row) => toAccount(row as SupabaseAccountRow));
+  // The supplied ID is an additional query filter from the authenticated app
+  // state. Supabase RLS remains the authorization boundary for this read.
+  async listForUser(userId: string): Promise<Account[]> {
+    assertConfigured();
+    if (!userId) throw new Error('No authenticated user.');
+    return listForUserId(userId);
   },
 
   async get(id: string): Promise<Account | null> {

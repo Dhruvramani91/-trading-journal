@@ -204,7 +204,7 @@ async function compressAvatarToDataUrl(file: File): Promise<string> {
 /* STORE                                              */
 /* -------------------------------------------------- */
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set, get) => ({
   /*
    * NEVER hydrate the authenticated user from localStorage. localStorage is a
    * cache only — the Supabase session is the single source of truth for
@@ -299,7 +299,7 @@ export const useAuthStore = create<AuthState>((set) => ({
          * but loading here makes OTP login responsive
          * even before the auth event finishes.
          */
-        void reloadTradesForCurrentUser();
+        void reloadTradesForCurrentUser(profile.id);
       } else {
         set({
           loading: false,
@@ -419,7 +419,7 @@ export const useAuthStore = create<AuthState>((set) => ({
          * Immediately replace the previous user's
          * in-memory trades with the new user's trades.
          */
-        void reloadTradesForCurrentUser();
+        void reloadTradesForCurrentUser(profile.id);
       } else {
         set({
           loading: false,
@@ -828,7 +828,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         /*
          * Load the current user's trades.
          */
-        await reloadTradesForCurrentUser();
+        await reloadTradesForCurrentUser(profile.id);
       } else {
         /*
          * No authenticated user means there must
@@ -873,6 +873,10 @@ export const useAuthStore = create<AuthState>((set) => ({
               session.user
             );
 
+          if (get().user?.id !== profile.id) {
+            clearTradesForCurrentUser();
+          }
+
           set({
             user: profile,
           });
@@ -887,7 +891,7 @@ export const useAuthStore = create<AuthState>((set) => ({
            * auth callback has completed.
            */
           setTimeout(() => {
-            void reloadTradesForCurrentUser();
+            void reloadTradesForCurrentUser(profile.id);
           }, 0);
         }
       );

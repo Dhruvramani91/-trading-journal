@@ -19,7 +19,9 @@ import {
 
 import { accountRepository } from '@/data/supabaseAccountRepository';
 import { accountTradeAttachmentRepository } from '@/data/supabaseAccountTradeAttachmentRepository';
-import { tradeRepository } from '@/data/supabaseTradeRepository';
+import { accountTradeSummaryRepository } from '@/data/supabaseAccountTradeSummaryRepository';
+import { useTradesStore } from '@/store/tradesStore';
+import { useAuthStore } from '@/store/authStore';
 import {
   calculateAccountSummary,
   enrichAttachmentsWithTradePnl,
@@ -42,6 +44,34 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Segmented } from '@/components/ui/Select';
 
 type AccountId = Account['id'];
+
+function tradesFromStore(userId: string) {
+  const store = useTradesStore.getState();
+  if (!store.loaded || store.ownerId !== userId) return null;
+
+  return store.trades.map((trade) => ({
+    id: trade.id,
+    pnl: trade.pnl ?? null,
+    openedAt: trade.openedAt,
+  }));
+}
+
+async function loadAccountTradeSummaries(userId: string) {
+  let store = useTradesStore.getState();
+  const cached = tradesFromStore(userId);
+  if (cached) return cached;
+
+  if (store.loading) {
+    // Concurrent callers share this promise. If the in-flight store request is
+    // for another user, its result is rejected below and the scoped query runs.
+    await store.load(userId);
+    store = useTradesStore.getState();
+    const loaded = tradesFromStore(userId);
+    if (loaded) return loaded;
+  }
+
+  return accountTradeSummaryRepository.listForAccountSummaries(userId);
+}
 
 const TYPE_LABEL: Record<AccountType, string> = {
   futures: 'Futures',
@@ -465,6 +495,8 @@ function EmptyAccounts({
 }
 
 export function AccountsPage() {
+  const { user } = useAuthStore();
+  const userId = user?.id;
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [attachmentsMap, setAttachmentsMap] = useState<Record<AccountId, AccountTradeAttachment[]>>({});
   const [attachmentsLoadFailed, setAttachmentsLoadFailed] = useState(false);
@@ -486,7 +518,9 @@ export function AccountsPage() {
 
   const loadAccounts = useCallback(async () => {
     try {
-      const data = await accountRepository.list();
+      if (!userId) throw new Error('No authenticated user.');
+
+      const data = await accountRepository.listForUser(userId);
       setAccounts(data);
       setLoadError(null);
 
@@ -495,12 +529,16 @@ export function AccountsPage() {
       let attachmentError: unknown = null;
       try {
         const accountIds = data.map((account) => account.id);
-        const attachments = typeof accountTradeAttachmentRepository.listForAccounts === 'function'
-          ? await accountTradeAttachmentRepository.listForAccounts(accountIds)
-          : (await Promise.all(
+        const attachmentsPromise = typeof accountTradeAttachmentRepository.listForAccounts === 'function'
+          ? accountTradeAttachmentRepository.listForAccounts(accountIds, userId)
+          : Promise.all(
               data.map((account) => accountTradeAttachmentRepository.listForAccount(account.id))
-            )).flat();
-        const trades = await tradeRepository.list();
+            ).then((results) => results.flat());
+        const tradesPromise = loadAccountTradeSummaries(userId);
+        const [attachments, trades] = await Promise.all([
+          attachmentsPromise,
+          tradesPromise,
+        ]);
         const tradeById = Object.fromEntries(
           trades.map((trade) => [trade.id, {
             pnl: trade.pnl,
@@ -531,7 +569,7 @@ export function AccountsPage() {
     } finally {
       setInitialLoading(false);
     }
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     void loadAccounts();

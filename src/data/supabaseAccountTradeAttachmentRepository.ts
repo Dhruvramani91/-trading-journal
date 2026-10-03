@@ -71,11 +71,14 @@ function toAttachment(
 
 export const accountTradeAttachmentRepository = {
   async listForAccounts(
-    accountIds: string[]
+    accountIds: string[],
+    authenticatedUserId?: string,
   ): Promise<AccountTradeAttachment[]> {
     if (accountIds.length === 0) return [];
 
-    const userId = await getUserId();
+    if (authenticatedUserId !== undefined) assertConfigured();
+    const userId = authenticatedUserId ?? await getUserId();
+    if (!userId) throw new Error('No authenticated user.');
     const { data, error } = await supabase!
       .from('account_trade_attachments')
       .select('*')

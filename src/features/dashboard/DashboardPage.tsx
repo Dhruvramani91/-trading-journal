@@ -204,7 +204,7 @@ export function DashboardPage() {
               </Card>
               <Card>
                 <CardBody>
-                  <Stat label="Avg R:R" value={s?.avgRR == null ? '—' : s.avgRR.toFixed(2)} />
+                  <Stat label="Avg R" value={s ? formatR(s.avgR) : '—'} />
                 </CardBody>
               </Card>
               <Card>
