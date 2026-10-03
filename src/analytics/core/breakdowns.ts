@@ -1,5 +1,6 @@
 import type { Trade } from '@/domain/models/trade';
 import type { CategoryBreakdown, CategoryBucket } from './types';
+import type { DashboardMetric } from './metrics';
 import { getTemplate } from '@/domain/templates/registry';
 import { ACTIVE_TEMPLATE_ID } from '@/domain/templates/registry';
 
@@ -24,6 +25,7 @@ function buildBucket(group: Trade[]): CategoryBucket {
   let losses = 0;
   let bes = 0;
   let totalR = 0;
+  let totalPnl = 0;
   let rrSum = 0;
   let rrCount = 0;
   for (const t of group) {
@@ -31,6 +33,16 @@ function buildBucket(group: Trade[]): CategoryBucket {
     else if (t.result === 'loss') losses++;
     else bes++;
     totalR += t.r;
+
+    // Missing / invalid P&L is skipped entirely — never counted as $0.
+    if (typeof t.pnl === 'number' && Number.isFinite(t.pnl)) {
+      totalPnl += t.pnl;
+    }
+
+    if (t.plannedRR != null && Number.isFinite(t.plannedRR)) {
+      rrSum += t.plannedRR;
+      rrCount++;
+    }
   }
   return {
     key: '',
@@ -43,17 +55,22 @@ function buildBucket(group: Trade[]): CategoryBucket {
     avgR: count > 0 ? totalR / count : 0,
     avgRR: rrCount > 0 ? rrSum / rrCount : null,
     totalR,
+    totalPnl,
   };
 }
 
 /**
  * Group trades by a template field and return a CategoryBreakdown.
- * Buckets are sorted by totalR desc, with ties broken by count desc.
+ *
+ * Buckets are sorted by the selected metric desc (R by default — unchanged for
+ * existing Statistics / Mistakes callers), ties broken by count desc. Pass
+ * `metric: 'pnl'` (the Dashboard's P&L mode) to rank by Journal Trade P&L.
  */
 export function byCategory(
   trades: readonly Trade[],
   fieldKey: string,
   templateId: string = ACTIVE_TEMPLATE_ID,
+  metric: DashboardMetric = 'r',
 ): CategoryBreakdown {
   const tpl = getTemplate(templateId);
   const field = tpl.fields.find((f) => f.key === fieldKey);
@@ -78,8 +95,14 @@ export function byCategory(
     b.label = bucketLabel(k);
     buckets.push(b);
   }
+  // Metric-aware ordering: R (default) keeps existing behaviour byte-for-byte;
+  // P&L ranks by Journal Trade P&L (never account attachment values).
+  const sortValue = (b: CategoryBucket): number =>
+    metric === 'pnl' ? b.totalPnl : b.totalR;
+
   buckets.sort((a, b) => {
-    if (b.totalR !== a.totalR) return b.totalR - a.totalR;
+    const diff = sortValue(b) - sortValue(a);
+    if (diff !== 0) return diff;
     return b.count - a.count;
   });
 

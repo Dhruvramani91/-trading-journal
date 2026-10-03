@@ -15,6 +15,7 @@ function makeTrade(overrides: Partial<Trade> & { openedAt: string; r: number; re
     direction: overrides.direction ?? 'long',
     result: overrides.result,
     r: overrides.r,
+    plannedRR: overrides.plannedRR,
     durationMin: overrides.durationMin ?? 30,
     templateData: overrides.templateData ?? {},
     notes: overrides.notes,
@@ -80,6 +81,75 @@ describe('summary', () => {
   });
 
   
+
+  it('averages plannedRR across trades that carry a valid value', () => {
+    const trades = [
+      makeTrade({ openedAt: '2026-01-01T10:00:00Z', r: 2, result: 'win', plannedRR: 3 }),
+      makeTrade({ openedAt: '2026-01-02T10:00:00Z', r: -1, result: 'loss', plannedRR: 2 }),
+      makeTrade({ openedAt: '2026-01-03T10:00:00Z', r: 1, result: 'win', plannedRR: 4 }),
+    ];
+    // (3 + 2 + 4) / 3 = 3
+    expect(summary(trades).avgRR).toBeCloseTo(3);
+  });
+
+  it('ignores missing / invalid plannedRR rather than treating them as 0', () => {
+    const trades = [
+      makeTrade({ openedAt: '2026-01-01T10:00:00Z', r: 2, result: 'win', plannedRR: 4 }),
+      // No plannedRR at all (undefined).
+      makeTrade({ openedAt: '2026-01-02T10:00:00Z', r: 1, result: 'win' }),
+      // Explicit null.
+      makeTrade({
+        openedAt: '2026-01-03T10:00:00Z',
+        r: -1,
+        result: 'loss',
+        plannedRR: null as unknown as number,
+      }),
+      // Non-finite / invalid.
+      makeTrade({
+        openedAt: '2026-01-04T10:00:00Z',
+        r: 0,
+        result: 'be',
+        plannedRR: Number.POSITIVE_INFINITY,
+      }),
+    ];
+    const s = summary(trades);
+    // Only the valid 4 contributes: 4 / 1 = 4 — NOT (4+0+0+0)/4 = 1.
+    expect(s.avgRR).toBeCloseTo(4);
+    expect(s.count).toBe(4);
+  });
+
+  it('returns null when no trade carries a valid plannedRR', () => {
+    const trades = [
+      makeTrade({ openedAt: '2026-01-01T10:00:00Z', r: 2, result: 'win' }),
+      makeTrade({ openedAt: '2026-01-02T10:00:00Z', r: -1, result: 'loss' }),
+    ];
+    expect(summary(trades).avgRR).toBeNull();
+  });
+
+  it('leaves the existing R / win-loss-BE calculations unchanged', () => {
+    const trades = [
+      makeTrade({ openedAt: '2026-01-01T10:00:00Z', r: 2, result: 'win', plannedRR: 3 }),
+      makeTrade({ openedAt: '2026-01-02T10:00:00Z', r: -1, result: 'loss', plannedRR: 2 }),
+      makeTrade({ openedAt: '2026-01-03T10:00:00Z', r: 0, result: 'be' }),
+    ];
+    const s = summary(trades);
+    expect(s.count).toBe(3);
+    expect(s.wins).toBe(1);
+    expect(s.losses).toBe(1);
+    expect(s.bes).toBe(1);
+    expect(s.totalR).toBe(1);
+    expect(s.avgR).toBeCloseTo(1 / 3);
+    expect(s.winRate).toBeCloseTo(1 / 3);
+    expect(s.expectancy).toBeCloseTo(1 / 3);
+    expect(s.bestR).toBe(2);
+    expect(s.worstR).toBe(-1);
+    // avgRR is computed independently of the R metrics.
+    expect(s.avgRR).toBeCloseTo(2.5);
+  });
+
+  it('averages plannedRR over the seed trades (3, 2, 2, 3, 2 → 2.4)', () => {
+    expect(summary(SEED_TRADES).avgRR).toBeCloseTo(2.4);
+  });
 
   it('handles a hand-built fixture with deep streaks and big drawdown', () => {
     const trades: Trade[] = [

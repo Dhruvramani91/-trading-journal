@@ -308,6 +308,26 @@ describe('AccountsPage', () => {
     expect(screen.queryByPlaceholderText('e.g. My 50K account')).not.toBeInTheDocument();
   });
 
+  it('surfaces attachment load failures instead of converting them to an empty list', async () => {
+    mockList.mockResolvedValue(mockAccounts);
+    mockListForAccount.mockRejectedValue(
+      new Error('Supabase account attachments list: network down')
+    );
+
+    const { AccountsPage } = await import('./AccountsPage');
+    render(
+      <BrowserRouter>
+        <AccountsPage />
+      </BrowserRouter>,
+    );
+
+    // The failure must be visible — a DB/network error is not "no attachments".
+    const alerts = await screen.findAllByRole('alert');
+    expect(
+      alerts.some((el) => (el.textContent ?? '').includes('network down'))
+    ).toBe(true);
+  });
+
   it('shows validation error for empty account name', async () => {
     await renderWithAccounts([]);
 

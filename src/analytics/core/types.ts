@@ -54,6 +54,11 @@ export interface CategoryBucket {
   avgRR: number | null;
   /** Sum of realized R. */
   totalR: number;
+  /**
+   * Sum of Journal Trade P&L across the bucket. Trades without a valid
+   * recorded P&L are skipped entirely — never coerced to $0.
+   */
+  totalPnl: number;
 }
 
 /** A single point on the equity curve, in chronological order. */

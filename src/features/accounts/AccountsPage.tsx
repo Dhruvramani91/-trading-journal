@@ -240,11 +240,13 @@ function CardMenu({
 function AccountCard({
   account,
   stats,
+  statsAvailable,
   onEdit,
   onDelete,
 }: {
   account: Account;
   stats: ReturnType<typeof calculateAccountSummary>;
+  statsAvailable: boolean;
   onEdit: () => void;
   onDelete: () => void;
 }) {
@@ -325,7 +327,7 @@ function AccountCard({
         />
       </div>
 
-      <div className="mt-5 space-y-4">
+      {statsAvailable ? <div className="mt-5 space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
             <div className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
@@ -398,15 +400,19 @@ function AccountCard({
             </div>
           </div>
         </div>
-      </div>
+      </div> : (
+        <p className="mt-5 text-sm text-fg-dim" role="status">
+          Attachment statistics are unavailable until account trades load.
+        </p>
+      )}
 
       <div className="mt-4 flex items-center justify-between gap-3 border-t border-line pt-3">
         <div className="flex items-center gap-3 text-xs">
-          <Badge tone="neutral">
+          {statsAvailable ? <Badge tone="neutral">
             {tradeStats.totalTrades} trade{tradeStats.totalTrades !== 1 ? 's' : ''}
-          </Badge>
+          </Badge> : null}
 
-          {tradeStats.totalTrades > 0 && (
+          {statsAvailable && tradeStats.totalTrades > 0 && (
             <Badge tone={tradeStats.winRate > 0 ? 'win' : 'loss'}>
               {Math.round(tradeStats.winRate)}% win
             </Badge>
@@ -457,6 +463,7 @@ function EmptyAccounts({
 export function AccountsPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [attachmentsMap, setAttachmentsMap] = useState<Record<AccountId, AccountTradeAttachment[]>>({});
+  const [attachmentsLoadFailed, setAttachmentsLoadFailed] = useState(false);
 
   const [activeTab, setActiveTab] = useState<AccountType>('futures');
 
@@ -480,17 +487,30 @@ export function AccountsPage() {
       setLoadError(null);
 
       const map: Record<AccountId, AccountTradeAttachment[]> = {};
-      await Promise.all(
-        data.map(async (account) => {
-          try {
-            const atts = await accountTradeAttachmentRepository.listForAccount(account.id);
-            map[account.id] = atts;
-          } catch {
-            map[account.id] = [];
-          }
-        })
-      );
+
+      let attachmentError: unknown = null;
+      try {
+        const accountIds = data.map((account) => account.id);
+        const attachments = typeof accountTradeAttachmentRepository.listForAccounts === 'function'
+          ? await accountTradeAttachmentRepository.listForAccounts(accountIds)
+          : (await Promise.all(
+              data.map((account) => accountTradeAttachmentRepository.listForAccount(account.id))
+            )).flat();
+        for (const account of data) map[account.id] = [];
+        for (const attachment of attachments) {
+          (map[attachment.accountId] ??= []).push(attachment);
+        }
+      } catch (err) {
+        attachmentError = err;
+      }
       setAttachmentsMap(map);
+      setAttachmentsLoadFailed(Boolean(attachmentError));
+
+      if (attachmentError) {
+        setLoadError(
+          errorMessage(attachmentError, 'Unable to load account attachments.')
+        );
+      }
     } catch (err) {
       setLoadError(errorMessage(err, 'Couldn’t load your accounts.'));
     } finally {
@@ -631,7 +651,7 @@ export function AccountsPage() {
 
   const heroStats = useMemo(() => {
     const allAttachments = summaries.flatMap((s) => s.attachments);
-    if (allAttachments.length === 0) return null;
+    if (attachmentsLoadFailed || allAttachments.length === 0) return null;
 
     const totalPnl = allAttachments.reduce(
       (sum, a) => sum + (a.accountPnl ?? 0),
@@ -646,7 +666,7 @@ export function AccountsPage() {
     const winRate = totalTrades > 0 ? (wins / totalTrades) * 100 : 0;
 
     return { totalPnl, totalR, winRate, totalTrades };
-  }, [summaries]);
+  }, [summaries, attachmentsLoadFailed]);
 
   if (initialLoading) {
     return (
@@ -803,6 +823,7 @@ export function AccountsPage() {
                 key={account.id}
                 account={account}
                 stats={summary}
+                statsAvailable={!attachmentsLoadFailed}
                 onEdit={() => openEdit(account)}
                 onDelete={() => requestDelete(account)}
               />

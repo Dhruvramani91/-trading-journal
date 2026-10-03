@@ -1,6 +1,7 @@
 import type { Trade } from '@/domain/models/trade';
 import { byCategory } from './breakdowns';
 import { byChronologicalOrder } from './date';
+import { ACTIVE_TEMPLATE_ID } from '@/domain/templates/registry';
 
 /**
  * The dashboard's two performance metrics.
@@ -196,7 +197,7 @@ export function extremeSetup(
 
   // Reuse the existing setup grouping to obtain the highlighted trade's label
   // and stats in the same bucket shape the dashboard cards already render.
-  const breakdown = byCategory([trade], fieldKey);
+  const breakdown = byCategory([trade], fieldKey, ACTIVE_TEMPLATE_ID, metric);
   const bucket = breakdown.buckets.find((b) => b.count > 0) ?? null;
 
   return {

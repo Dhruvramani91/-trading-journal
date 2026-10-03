@@ -48,6 +48,7 @@ interface WeekdayRow {
   count: number;
   totalR: number;
   totalPnl: number;
+  pnlCount: number;
   winRate: number | null;
 }
 
@@ -97,10 +98,13 @@ export function DashboardPage() {
     for (const t of tradesToUse) {
       const key = new Date(t.openedAt).toLocaleDateString('en-US', { weekday: 'long' });
       let row = map.get(key);
-      if (!row) { row = { label: labels[key] ?? key, count: 0, totalR: 0, totalPnl: 0, winRate: null }; map.set(key, row); }
+      if (!row) { row = { label: labels[key] ?? key, count: 0, totalR: 0, totalPnl: 0, pnlCount: 0, winRate: null }; map.set(key, row); }
       row.count++;
       row.totalR += t.r;
-      if (typeof t.pnl === 'number' && Number.isFinite(t.pnl)) row.totalPnl += t.pnl;
+      if (typeof t.pnl === 'number' && Number.isFinite(t.pnl)) {
+        row.totalPnl += t.pnl;
+        row.pnlCount++;
+      }
     }
     const out: WeekdayRow[] = [];
     for (const k of ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']) {
@@ -347,12 +351,14 @@ export function DashboardPage() {
                     <div key={row.label} className="flex items-center justify-between gap-3 px-5 py-3 text-sm">
                       <span className="font-medium text-fg">{row.label}</span>
                       <div className="flex items-center gap-3">
-                        <span className="text-xs text-fg-muted num">{row.count} trades</span>
+                        <span className="text-xs text-fg-muted num">
+                          {row.count} trades · {row.pnlCount} with P&amp;L
+                        </span>
                         <span className={cn('num font-bold text-sm', row.totalR > 0 ? 'text-win' : row.totalR < 0 ? 'text-loss' : 'text-be')}>
                           {formatR(row.totalR)}
                         </span>
                         <span className={cn('num text-xs font-semibold', row.totalPnl > 0 ? 'text-win' : row.totalPnl < 0 ? 'text-loss' : 'text-be')}>
-                          {formatSignedMoney(row.totalPnl)}
+                          {row.pnlCount > 0 ? formatSignedMoney(row.totalPnl) : '—'}
                         </span>
                       </div>
                     </div>

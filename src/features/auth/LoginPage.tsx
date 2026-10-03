@@ -14,7 +14,7 @@ import { BrandLogo } from '@/components/layout/Brand';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { FormField } from '@/components/ui/Select';
-import { useAuthStore } from '@/store/authStore';
+import { MIN_PASSWORD_LENGTH, useAuthStore } from '@/store/authStore';
 import { isSupabaseConfigured } from '@/lib/supabase';
 
 type AuthMode = 'login' | 'signup';
@@ -203,8 +203,8 @@ export function LoginPage() {
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!email.trim() || password.length < 6) {
-      setLocalError('Enter a valid email and a password with at least 6 characters.');
+    if (!email.trim() || password.length < MIN_PASSWORD_LENGTH) {
+      setLocalError(`Enter a valid email and a password with at least ${MIN_PASSWORD_LENGTH} characters.`);
       return;
     }
 

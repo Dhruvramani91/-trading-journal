@@ -113,6 +113,14 @@ export interface Trade {
    */
   r: number;
 
+  /**
+   * Planned R:R at entry (optional, used for "Avg R:R").
+   *
+   * Only trades carrying a finite value contribute to avgRR —
+   * missing / invalid values are skipped, never treated as 0.
+   */
+  plannedRR?: number;
+
   /** Trade duration in minutes. */
   durationMin: number;
 
@@ -156,5 +164,6 @@ export type TradeCoreKey =
   | 'exit'
   | 'pnl'
   | 'r'
+  | 'plannedRR'
   | 'durationMin'
   | 'notes';

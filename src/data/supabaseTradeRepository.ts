@@ -18,6 +18,7 @@ type SupabaseTradeRow = {
   pnl: number | null;
 
   r: number;
+  planned_rr: number | null;
   duration_min: number;
 
   template_data: Record<
@@ -87,6 +88,9 @@ function toTrade(row: SupabaseTradeRow): Trade {
 
     r: Number(row.r),
 
+    plannedRR:
+      row.planned_rr == null ? undefined : Number(row.planned_rr),
+
     durationMin: Number(row.duration_min ?? 0),
 
     templateData: row.template_data ?? {},
@@ -126,6 +130,8 @@ function toRow(
     pnl: input.pnl ?? null,
 
     r: input.r,
+
+    planned_rr: input.plannedRR ?? null,
 
     duration_min: input.durationMin ?? 0,
 
@@ -238,6 +244,8 @@ export const tradeRepository: TradeRepository = {
 
         r: merged.r,
 
+        planned_rr: merged.plannedRR ?? null,
+
         duration_min: merged.durationMin ?? 0,
 
         template_data: merged.templateData ?? {},
@@ -274,72 +282,23 @@ export const tradeRepository: TradeRepository = {
     }
   },
 
-  async replaceAll(trades: Trade[]): Promise<void> {
-    const userId = await getUserId();
-
-    const { error: deleteError } = await supabase!
-      .from('trades')
-      .delete()
-      .eq('user_id', userId);
-
-    if (deleteError) {
-      throw new Error(
-        `Supabase replaceAll delete: ${deleteError.message}`
-      );
-    }
-
-    if (trades.length === 0) {
-      return;
-    }
-
-    const rows = trades.map((trade) => ({
-      id: trade.id,
-
-      user_id: userId,
-
-      template_id: trade.templateId,
-
-      number: trade.number ?? null,
-
-      opened_at: trade.openedAt,
-
-      closed_at: trade.closedAt ?? null,
-
-      instrument: trade.instrument,
-
-      direction: trade.direction,
-
-      result: trade.result,
-
-      entry: trade.entry ?? null,
-
-      exit: trade.exit ?? null,
-
-      pnl: trade.pnl ?? null,
-
-      r: trade.r,
-
-      duration_min: trade.durationMin ?? 0,
-
-      template_data: trade.templateData ?? {},
-
-      notes: trade.notes ?? null,
-
-      photos: trade.photos ?? null,
-
-      created_at: trade.createdAt,
-
-      updated_at: trade.updatedAt,
-    }));
-
-    const { error } = await supabase!
-      .from('trades')
-      .insert(rows);
-
-    if (error) {
-      throw new Error(
-        `Supabase replaceAll insert: ${error.message}`
-      );
-    }
+  /**
+   * @deprecated Deliberately neutralized.
+   *
+   * The previous implementation deleted EVERY one of the user's trades and then
+   * re-inserted them. The Supabase JS client cannot run a multi-statement
+   * transaction, so any failure during the re-insert would have silently left
+   * the user's journal wiped out.
+   *
+   * Nothing in the app calls `replaceAll`, so the destructive path has been
+   * removed rather than kept as dangerous dead functionality. Calling it now
+   * fails fast, before any database request is made.
+   *
+   * RLS / user-ownership protections on the `trades` table are untouched.
+   */
+  async replaceAll(_trades: Trade[]): Promise<void> {
+    throw new Error(
+      'replaceAll() is not supported: it cannot run atomically and would risk wiping the journal.'
+    );
   },
 };

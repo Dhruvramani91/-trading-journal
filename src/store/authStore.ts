@@ -59,6 +59,7 @@ interface AuthState {
 /* -------------------------------------------------- */
 
 const STORAGE_KEY = 'precisionjournal:user';
+export const MIN_PASSWORD_LENGTH = 12;
 
 function getStoredUser(): UserProfile | null {
   try {
@@ -206,7 +207,12 @@ async function compressAvatarToDataUrl(file: File): Promise<string> {
 /* -------------------------------------------------- */
 
 export const useAuthStore = create<AuthState>((set) => ({
-  user: getStoredUser(),
+  /*
+   * NEVER hydrate the authenticated user from localStorage. localStorage is a
+   * cache only — the Supabase session is the single source of truth for
+   * authentication, and `init()` validates it before `user` is ever set.
+   */
+  user: null,
   loading: false,
   error: null,
   otpSent: false,
@@ -322,6 +328,10 @@ export const useAuthStore = create<AuthState>((set) => ({
     email: string,
     password: string
   ) => {
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      throw new Error(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
+    }
+
     set({
       loading: true,
       error: null,
@@ -628,6 +638,10 @@ export const useAuthStore = create<AuthState>((set) => ({
   updatePassword: async (
     password: string
   ) => {
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      throw new Error(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
+    }
+
     set({
       loading: true,
       error: null,
@@ -892,6 +906,17 @@ export const useAuthStore = create<AuthState>((set) => ({
         const profile = profileFromSupabaseUser(
           session.user
         );
+
+        /*
+         * localStorage may only be consulted AFTER a real Supabase session
+         * exists, and only when the cached profile belongs to this exact
+         * authenticated user. A stale cache left behind by any other user is
+         * discarded so it can never surface after an account switch.
+         */
+        const cached = getStoredUser();
+        if (cached && cached.id !== profile.id) {
+          setStoredUser(null);
+        }
 
         set({
           user: profile,

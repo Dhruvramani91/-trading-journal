@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { SEED_TRADES } from '@/data/seed';
 import { byCategory, allBreakdowns } from './breakdowns';
+import { ACTIVE_TEMPLATE_ID } from '@/domain/templates/registry';
+import type { Trade } from '@/domain/models/trade';
 
 describe('byCategory', () => {
   it('groups seed by dailyCandle with the right counts and totals', () => {
@@ -47,6 +49,70 @@ describe('byCategory', () => {
     const out = byCategory([], 'dailyCandle');
     expect(out.buckets).toEqual([]);
     expect(out.fieldLabel).toBe('Daily Candle');
+  });
+});
+
+// Fixture where R-ranking and P&L-ranking disagree, so the metric-aware sort
+// is observable. Journal Trade P&L only — never account attachment values.
+function makeBucketTrade(o: {
+  id: string;
+  openedAt: string;
+  r: number;
+  pnl?: number;
+  candle: string;
+}): Trade {
+  return {
+    id: o.id,
+    templateId: ACTIVE_TEMPLATE_ID,
+    openedAt: o.openedAt,
+    instrument: 'ES',
+    direction: 'long',
+    result: 'win',
+    pnl: o.pnl,
+    r: o.r,
+    durationMin: 30,
+    templateData: { dailyCandle: o.candle },
+    createdAt: o.openedAt,
+    updatedAt: o.openedAt,
+  };
+}
+
+const SORT_TRADES: Trade[] = [
+  makeBucketTrade({ id: 's1', openedAt: '2026-01-01T10:00:00Z', r: 5, pnl: 100, candle: 'Reversal [C2]' }),
+  makeBucketTrade({ id: 's2', openedAt: '2026-01-02T10:00:00Z', r: 1, pnl: 900, candle: 'Continuation [C3]' }),
+];
+
+describe('byCategory metric-aware sorting', () => {
+  it('sorts by totalR desc by default (existing R behaviour unchanged)', () => {
+    const out = byCategory(SORT_TRADES, 'dailyCandle');
+    expect(out.buckets.map((b) => b.key)).toEqual([
+      'Reversal [C2]',
+      'Continuation [C3]',
+    ]);
+    expect(out.buckets[0]!.totalR).toBe(5);
+    expect(out.buckets[1]!.totalR).toBe(1);
+  });
+
+  it('sorts by totalPnl desc when the Dashboard requests P&L', () => {
+    const out = byCategory(SORT_TRADES, 'dailyCandle', ACTIVE_TEMPLATE_ID, 'pnl');
+    expect(out.buckets.map((b) => b.key)).toEqual([
+      'Continuation [C3]',
+      'Reversal [C2]',
+    ]);
+    expect(out.buckets[0]!.totalPnl).toBe(900);
+    expect(out.buckets[1]!.totalPnl).toBe(100);
+  });
+
+  it('never counts a missing P&L as $0 in totalPnl', () => {
+    const trades = [
+      makeBucketTrade({ id: 'm1', openedAt: '2026-01-01T10:00:00Z', r: 2, candle: 'Reversal [C2]' }),
+      makeBucketTrade({ id: 'm2', openedAt: '2026-01-02T10:00:00Z', r: 1, pnl: 250, candle: 'Reversal [C2]' }),
+    ];
+    const out = byCategory(trades, 'dailyCandle');
+    const bucket = out.buckets[0]!;
+    // The missing P&L is skipped; only the recorded 250 contributes.
+    expect(bucket.totalPnl).toBe(250);
+    expect(bucket.count).toBe(2);
   });
 });
 

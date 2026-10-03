@@ -70,6 +70,28 @@ function toAttachment(
 // account summary page joins attachments to those canonical trades by tradeId.
 
 export const accountTradeAttachmentRepository = {
+  async listForAccounts(
+    accountIds: string[]
+  ): Promise<AccountTradeAttachment[]> {
+    if (accountIds.length === 0) return [];
+
+    const userId = await getUserId();
+    const { data, error } = await supabase!
+      .from('account_trade_attachments')
+      .select('*')
+      .in('account_id', accountIds)
+      .eq('user_id', userId)
+      .order('attached_at', { ascending: false });
+
+    if (error) {
+      throw new Error(`Supabase account attachments list: ${error.message}`);
+    }
+
+    return (data ?? []).map((row) =>
+      toAttachment(row as SupabaseAttachmentRow)
+    );
+  },
+
   async listForAccount(
     accountId: string
   ): Promise<AccountTradeAttachment[]> {

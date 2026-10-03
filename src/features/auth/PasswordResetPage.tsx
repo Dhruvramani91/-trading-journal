@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2, LockKeyhole } from 'lucide-react';
 
-import { useAuthStore } from '../../store/authStore';
+import { MIN_PASSWORD_LENGTH, useAuthStore } from '../../store/authStore';
 
 export default function PasswordResetPage() {
   const navigate = useNavigate();
@@ -37,8 +37,8 @@ export default function PasswordResetPage() {
       return;
     }
 
-    if (password.length < 6) {
-      setLocalError('Password must be at least 6 characters.');
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setLocalError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
       return;
     }
 

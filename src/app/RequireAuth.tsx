@@ -5,16 +5,18 @@ import { isSupabaseConfigured } from '@/lib/supabase';
 /**
  * Guards every workspace route (everything rendered under AppShell).
  *
- * - When Supabase is not configured there is no auth backend at all,
- *   so no redirect is enforced and local/dev access is unchanged.
+ * - A missing / misconfigured Supabase setup must NEVER grant access. There is
+ *   no auth backend, so no session can exist and nobody is authenticated —
+ *   visitors are sent to /login instead of being let through.
  * - When Supabase is configured, wait for the session restore to
  *   finish (`initialized`) and send unauthenticated visitors to /login.
  */
 export function RequireAuth() {
   const { user, initialized } = useAuthStore();
 
+  // Fail CLOSED: a missing auth backend is never a reason to bypass auth.
   if (!isSupabaseConfigured) {
-    return <Outlet />;
+    return <Navigate to="/login" replace />;
   }
 
   if (!initialized) {
