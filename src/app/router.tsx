@@ -15,6 +15,7 @@ import { MistakesPage } from '@/features/mistakes/MistakesPage';
 import { ProfilePage } from '@/features/profile/ProfilePage';
 import { AccountSummaryPage } from '@/features/accounts/AccountSummaryPage';
 import { AccountsPage } from '@/features/accounts/AccountsPage';
+import { RequireAuth } from './RequireAuth';
 
 export const router = createBrowserRouter([
   // Public Routes
@@ -24,21 +25,26 @@ export const router = createBrowserRouter([
   { path: '/auth/reset-password', element: <PasswordResetPage /> },
   { path: '/auth/callback', element: <AuthCallbackPage /> },
 
-  // App Workspace Routes
+  // App Workspace Routes (auth required)
   {
-    element: <AppShell />,
+    element: <RequireAuth />,
     children: [
-      { path: 'dashboard', element: <DashboardPage /> },
-      { path: 'journal', element: <JournalPage /> },
-      { path: 'journal/new', element: <TradeFormPage /> },
-      { path: 'journal/:id', element: <TradeDetailsPage /> },
-      { path: 'journal/:id/edit', element: <TradeFormPage /> },
-      { path: 'statistics', element: <StatisticsPage /> },
-      { path: 'calendar', element: <CalendarPage /> },
-      { path: 'mistakes', element: <MistakesPage /> },
-      { path: 'profile', element: <ProfilePage /> },
-      { path: 'accounts', element: <AccountsPage /> },
-      { path: 'accounts/:id', element: <AccountSummaryPage /> },
+      {
+        element: <AppShell />,
+        children: [
+          { path: 'dashboard', element: <DashboardPage /> },
+          { path: 'journal', element: <JournalPage /> },
+          { path: 'journal/new', element: <TradeFormPage /> },
+          { path: 'journal/:id', element: <TradeDetailsPage /> },
+          { path: 'journal/:id/edit', element: <TradeFormPage /> },
+          { path: 'statistics', element: <StatisticsPage /> },
+          { path: 'calendar', element: <CalendarPage /> },
+          { path: 'mistakes', element: <MistakesPage /> },
+          { path: 'profile', element: <ProfilePage /> },
+          { path: 'accounts', element: <AccountsPage /> },
+          { path: 'accounts/:id', element: <AccountSummaryPage /> },
+        ],
+      },
     ],
   },
 

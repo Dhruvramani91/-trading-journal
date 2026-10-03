@@ -12,7 +12,6 @@ export interface UserProfile {
   avatar?: string;
   avatarPath?: string;
   traderLevel?: 'beginner' | 'intermediate' | 'advanced';
-  isGuest?: boolean;
 }
 
 interface AuthState {
@@ -35,8 +34,6 @@ interface AuthState {
   ) => Promise<void>;
 
   signInWithGoogle: () => Promise<void>;
-
-  signInAsGuest: () => Promise<void>;
 
   sendPasswordReset: (email: string) => Promise<void>;
 
@@ -71,7 +68,25 @@ function getStoredUser(): UserProfile | null {
       return null;
     }
 
-    return JSON.parse(stored) as UserProfile;
+    const parsed = JSON.parse(stored) as UserProfile & {
+      isGuest?: boolean;
+    };
+
+    /*
+     * Guest Mode has been removed. Never restore a legacy
+     * guest profile persisted by an older version — drop it
+     * so a stale guest session cannot act as a signed-in user.
+     */
+    if (
+      parsed.isGuest === true ||
+      parsed.id === 'guest' ||
+      parsed.email === 'guest@precisionjournal.local'
+    ) {
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+
+    return parsed;
   } catch {
     return null;
   }
@@ -135,7 +150,6 @@ function profileFromSupabaseUser(
     avatar,
     avatarPath,
     traderLevel,
-    isGuest: false,
   };
 }
 
@@ -532,34 +546,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   /* ------------------------------------------------ */
-  /* GUEST LOGIN                                      */
-  /* ------------------------------------------------ */
-
-  signInAsGuest: async () => {
-    /*
-     * Guest mode doesn't use Supabase trades.
-     * Clear any previously authenticated user's
-     * trades before entering guest mode.
-     */
-    clearTradesForCurrentUser();
-
-    const guestUser: UserProfile = {
-      id: 'guest',
-      email: 'guest@precisionjournal.local',
-      name: 'Guest Trader',
-      isGuest: true,
-    };
-
-    set({
-      user: guestUser,
-      loading: false,
-      error: null,
-    });
-
-    setStoredUser(guestUser);
-  },
-
-  /* ------------------------------------------------ */
   /* PASSWORD RESET — EMAIL LINK ONLY                 */
   /* ------------------------------------------------ */
 
@@ -716,11 +702,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         throw new Error('You must be signed in to update your profile.');
       }
 
-      /*
-       * Guest profile:
-       * Keep the edit local. Guest mode does not use Supabase.
-       */
-      if (currentUser.isGuest || !isSupabaseConfigured || !supabase) {
+      if (!isSupabaseConfigured || !supabase) {
         const profile: UserProfile = {
           ...currentUser,
           name: cleanName,

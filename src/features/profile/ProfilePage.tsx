@@ -94,8 +94,6 @@ export function ProfilePage() {
         ? 'Intermediate Trader'
         : 'Beginner Trader';
 
-  const accountType = currentUser.isGuest ? 'Guest account' : traderLevelLabel;
-
   function openEditor() {
     clearError();
     setName(currentUser.name || '');
@@ -176,16 +174,14 @@ export function ProfilePage() {
                   {displayName}
                 </h2>
 
-                {!currentUser.isGuest && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-win/10 px-2 py-1 text-2xs font-semibold text-win">
-                    <ShieldCheck className="h-3 w-3" />
-                    Verified account
-                  </span>
-                )}
+                <span className="inline-flex items-center gap-1 rounded-full bg-win/10 px-2 py-1 text-2xs font-semibold text-win">
+                  <ShieldCheck className="h-3 w-3" />
+                  Verified account
+                </span>
               </div>
 
               <p className="mt-1 text-sm text-fg-muted break-all">{currentUser.email}</p>
-              <p className="mt-2 text-xs text-fg-dim">{accountType}</p>
+              <p className="mt-2 text-xs text-fg-dim">{traderLevelLabel}</p>
             </div>
 
             <Button
@@ -225,7 +221,7 @@ export function ProfilePage() {
                 <ShieldCheck className="h-4 w-4 text-fg-dim shrink-0" />
                 <span className="text-sm text-fg-muted">Account type</span>
               </div>
-              <span className="text-sm font-medium text-fg">{accountType}</span>
+              <span className="text-sm font-medium text-fg">{traderLevelLabel}</span>
             </div>
 
             <div className="flex items-center justify-between gap-4 py-3">

@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import {
   Mail,
   AlertCircle,
-  Sparkles,
   Lock,
   CheckCircle2,
   Eye,
@@ -85,7 +84,6 @@ export function LoginPage() {
     signUp,
     signInWithPassword,
     signInWithGoogle,
-    signInAsGuest,
     sendPasswordReset,
     signOut,
     loading,
@@ -297,7 +295,7 @@ export function LoginPage() {
   }
 
   // --------------------------------------------------
-  // GOOGLE / GUEST
+  // GOOGLE
   // --------------------------------------------------
 
   async function handleGoogleSignIn() {
@@ -313,14 +311,6 @@ export function LoginPage() {
     } catch (err) {
       setLocalError((err as Error).message || 'Google sign-in failed.');
     }
-  }
-
-  async function handleGuestLogin() {
-    setLocalError(null);
-    clearError();
-
-    await signInAsGuest();
-    navigate('/dashboard');
   }
 
   // --------------------------------------------------
@@ -663,14 +653,14 @@ export function LoginPage() {
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-2.5">
+              <div>
                 <Button
                   type="button"
                   variant="secondary"
                   size="lg"
                   onClick={handleGoogleSignIn}
                   disabled={loading}
-                  className="h-11 flex items-center justify-center gap-2 border-line hover:border-line-strong bg-bg-2 text-fg font-medium"
+                  className="h-11 w-full flex items-center justify-center gap-2 border-line hover:border-line-strong bg-bg-2 text-fg font-medium"
                 >
                   <svg className="h-4 w-4" viewBox="0 0 24 24">
                     <path
@@ -691,18 +681,6 @@ export function LoginPage() {
                     />
                   </svg>
                   <span>Google</span>
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="lg"
-                  onClick={handleGuestLogin}
-                  disabled={loading}
-                  className="h-11 flex items-center justify-center gap-2 border-line hover:border-line-strong bg-bg-2 text-fg-muted hover:text-fg font-medium"
-                >
-                  <Sparkles className="h-4 w-4 text-accent" />
-                  <span>Guest demo</span>
                 </Button>
               </div>
             </>

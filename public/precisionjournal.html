@@ -263,7 +263,7 @@ h2 .g{color:var(--gray-word)}
 .app .ap-ghost{border:0;background:transparent;color:var(--soft);padding:9px 14px;border-radius:999px;font-size:13.5px}
 .pane{flex:1;min-height:0;overflow:auto;padding:26px clamp(16px,3vw,40px) 34px}
 .app h2.ap-h{margin:0;font-size:clamp(1.6rem,3vw,2.2rem);font-weight:600;letter-spacing:-.045em;line-height:1.1}
-.ap-guest{color:#3b82f6}
+.ap-name{color:#3b82f6}
 .ap-sub{margin:6px 0 2px;color:var(--text)}
 .ap-meta{color:var(--soft);font-size:12.5px}
 .ap-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:22px 0 16px}
@@ -417,7 +417,7 @@ footer a:hover{color:var(--ink)}
           <aside class="side" aria-label="Demo navigation">
             <div class="ap-brand"><span id="appLogo" class="logo"></span><span><b>PrecisionJournal</b><small>My Journal</small></span></div>
             <button type="button" class="nav-i" data-nav="dashboard" aria-current="page"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Dashboard</button>
-            <div class="ap-user"><i>G</i><span><b>Guest Trader</b><small>Demo with sample data. Add trades and watch the numbers change.</small></span></div>
+            <div class="ap-user"><i>T</i><span><b>Trader</b><small>Demo with sample data. Add trades and watch the numbers change.</small></span></div>
           </aside>
           <div class="ap-main">
             <div class="ap-tb">
@@ -668,7 +668,7 @@ footer a:hover{color:var(--ink)}
     }
     var up='<svg class="up" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>';
     var down='<svg class="down" viewBox="0 0 24 24"><path d="M3 7l6 6 4-4 8 8M15 17h6v-6"/></svg>';
-    return '<h2 class="ap-h">Welcome Back, <span class="ap-guest">Guest</span></h2>'+
+    return '<h2 class="ap-h">Welcome Back, <span class="ap-name">Trader</span></h2>'+
       '<p class="ap-sub">Here\u2019s your trading performance overview.</p>'+
       '<span class="ap-meta">'+s.n+' trade'+(s.n===1?'':'s')+(list.length?' \u00b7 '+fLong(list[list.length-1].date):'')+'</span>'+
       '<div class="ap-stats">'+
