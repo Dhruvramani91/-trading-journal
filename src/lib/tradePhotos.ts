@@ -19,6 +19,21 @@ function assertConfigured() {
   }
 }
 
+function isMissingStorageObject(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const storageError = error as {
+    status?: number;
+    statusCode?: string;
+    message?: string;
+  };
+
+  return (
+    storageError.status === 404 ||
+    storageError.statusCode === '404' ||
+    /object (was )?not found/i.test(storageError.message ?? '')
+  );
+}
+
 function isDataUrl(value: string): boolean {
   return value.startsWith('data:image/');
 }
@@ -35,6 +50,7 @@ function isStoragePath(value: string): boolean {
 function isOwnedTradePhotoPath(
   value: string,
   userId: string,
+  expectedTradeId?: string,
 ): boolean {
   const [ownerId, tradeId, fileName, ...rest] = value.split('/');
   const uuid = '[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}';
@@ -42,6 +58,7 @@ function isOwnedTradePhotoPath(
   return (
     rest.length === 0 &&
     ownerId === userId &&
+    (expectedTradeId === undefined || tradeId === expectedTradeId) &&
     new RegExp(`^${uuid}$`, 'i').test(tradeId ?? '') &&
     new RegExp(`^(htf|itf|ltf)-${uuid}\\.(jpg|png|webp|gif|bmp)$`, 'i').test(fileName ?? '')
   );
@@ -189,7 +206,39 @@ export async function deleteTradePhoto(
     .from(BUCKET)
     .remove([value]);
 
-  if (error) {
+  if (error && !isMissingStorageObject(error)) {
+    throw new Error(
+      `Trade photo deletion failed: ${error.message}`,
+    );
+  }
+}
+
+export async function deleteTradePhotosForTrade(
+  tradeId: string,
+  photos: TradePhotos | undefined,
+): Promise<void> {
+  if (!photos) return;
+
+  const candidates = (['htf', 'itf', 'ltf'] as const)
+    .map((slot) => photos[slot])
+    .filter(
+      (value): value is string =>
+        typeof value === 'string' && value.length > 0 && isStoragePath(value),
+    );
+  if (candidates.length === 0) return;
+
+  assertConfigured();
+  const userId = await getCurrentUserId();
+  const paths = candidates.filter((value) =>
+    isOwnedTradePhotoPath(value, userId, tradeId),
+  );
+  if (paths.length === 0) return;
+
+  const { error } = await supabase!.storage
+    .from(BUCKET)
+    .remove(paths);
+
+  if (error && !isMissingStorageObject(error)) {
     throw new Error(
       `Trade photo deletion failed: ${error.message}`,
     );

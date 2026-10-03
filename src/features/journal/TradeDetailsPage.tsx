@@ -106,7 +106,7 @@ export function TradeDetailsPage() {
 
     setDeleting(true);
 
-    await remove(id);
+    await remove(id, trade ?? undefined);
 
     navigate('/journal');
   }

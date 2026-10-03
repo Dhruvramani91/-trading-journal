@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Trade } from '@/domain/models/trade';
 import { tradeRepository } from '@/data/supabaseTradeRepository';
+import { deleteTradePhotosForTrade } from '@/lib/tradePhotos';
 
 interface TradesState {
   trades: Trade[];
@@ -22,7 +23,7 @@ interface TradesState {
     patch: Parameters<typeof tradeRepository.update>[1]
   ) => Promise<Trade>;
 
-  remove: (id: string) => Promise<void>;
+  remove: (id: string, existingTrade?: Pick<Trade, 'photos'>) => Promise<void>;
 }
 
 let requestVersion = 0;
@@ -132,8 +133,21 @@ export const useTradesStore = create<TradesState>((set, get) => ({
     return updated;
   },
 
-  async remove(id) {
+  async remove(id, existingTrade) {
+    const tradeForCleanup = existingTrade ?? await tradeRepository.get(id);
     await tradeRepository.remove(id);
+
+    if (tradeForCleanup?.photos) {
+      try {
+        await deleteTradePhotosForTrade(id, tradeForCleanup.photos);
+      } catch (error) {
+        console.error(
+          `Trade ${id} was deleted, but its screenshots could not be cleaned up:`,
+          error,
+        );
+      }
+    }
+
     await get().refresh();
   },
 }));

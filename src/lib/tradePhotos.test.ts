@@ -18,13 +18,16 @@ vi.mock('@/lib/supabase', () => ({
 
 import {
   deleteTradePhoto,
+  deleteTradePhotosForTrade,
   persistEditedTradePhotos,
+  persistTradePhotos,
   type TradePhotos,
 } from './tradePhotos';
 
 const USER_ID = '11111111-1111-4111-8111-111111111111';
 const TRADE_ID = '22222222-2222-4222-8222-222222222222';
 const OLD_PHOTO = `${USER_ID}/${TRADE_ID}/htf-33333333-3333-4333-8333-333333333333.png`;
+const OTHER_TRADE_ID = '44444444-4444-4444-8444-444444444444';
 const NEW_DATA_URL = 'data:image/png;base64,aGVsbG8=';
 
 describe('trade photo persistence and cleanup', () => {
@@ -69,6 +72,19 @@ describe('trade photo persistence and cleanup', () => {
     expect(savedPhotos?.htf).toBe(result.htf);
     expect(result.htf).not.toBe(OLD_PHOTO);
     expect(storageMocks.remove).toHaveBeenCalledWith([OLD_PHOTO]);
+  });
+
+  it('uploads all three selected screenshots under the new trade ID', async () => {
+    const paths = await persistTradePhotos(TRADE_ID, {
+      htf: NEW_DATA_URL,
+      itf: 'data:image/png;base64,aGVsbG8=',
+      ltf: 'data:image/png;base64,aGVsbG8=',
+    });
+
+    expect(storageMocks.upload).toHaveBeenCalledTimes(3);
+    expect(paths.htf).toMatch(new RegExp(`^${USER_ID}/${TRADE_ID}/htf-`));
+    expect(paths.itf).toMatch(new RegExp(`^${USER_ID}/${TRADE_ID}/itf-`));
+    expect(paths.ltf).toMatch(new RegExp(`^${USER_ID}/${TRADE_ID}/ltf-`));
   });
 
   it('saves a removed screenshot before deleting its Storage object', async () => {
@@ -163,5 +179,39 @@ describe('trade photo persistence and cleanup', () => {
     await expect(deleteTradePhoto(OLD_PHOTO)).rejects.toThrow(
       'Trade photo deletion failed: permission denied',
     );
+  });
+
+  it('deletes only authenticated-user paths for the requested trade', async () => {
+    const otherTradePath = `${USER_ID}/${OTHER_TRADE_ID}/itf-33333333-3333-4333-8333-333333333333.png`;
+    const otherUserPath = `aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa/${TRADE_ID}/ltf-33333333-3333-4333-8333-333333333333.png`;
+
+    await deleteTradePhotosForTrade(TRADE_ID, {
+      htf: OLD_PHOTO,
+      itf: otherTradePath,
+      ltf: otherUserPath,
+    });
+
+    expect(storageMocks.remove).toHaveBeenCalledWith([OLD_PHOTO]);
+  });
+
+  it('does not look up auth or delete legacy and external photo values', async () => {
+    await deleteTradePhotosForTrade(TRADE_ID, {
+      htf: NEW_DATA_URL,
+      itf: 'https://example.com/trade.png',
+      ltf: 'http://example.com/other.png',
+    });
+
+    expect(storageMocks.getUser).not.toHaveBeenCalled();
+    expect(storageMocks.remove).not.toHaveBeenCalled();
+  });
+
+  it('treats an already-missing Storage object as successfully cleaned up', async () => {
+    storageMocks.remove.mockResolvedValue({
+      error: { statusCode: '404', message: 'Object not found' },
+    });
+
+    await expect(
+      deleteTradePhotosForTrade(TRADE_ID, { htf: OLD_PHOTO }),
+    ).resolves.toBeUndefined();
   });
 });

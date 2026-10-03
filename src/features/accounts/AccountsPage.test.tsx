@@ -271,6 +271,8 @@ describe('AccountsPage', () => {
 
     const fallback = await renderWithAccounts(mockAccounts, attachments, [tradeSummary]);
     expect(await screen.findAllByText('+$1,250.00')).toHaveLength(2);
+    expect(mockTradesStore.state.load).not.toHaveBeenCalled();
+    expect(mockListTradeSummaries).toHaveBeenCalledWith('user-1');
     const fallbackCardText = fallback.container.querySelector('article')?.textContent;
     fallback.unmount();
     mockListTradeSummaries.mockClear();

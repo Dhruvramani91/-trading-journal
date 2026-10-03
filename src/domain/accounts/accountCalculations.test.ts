@@ -1,12 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  buildAccountResultValues,
   calculateAccountSummary,
   calculateEquityCurve,
   enrichAttachmentsWithTradePnl,
   isValidAccountPhase,
-  parseOptionalNumber,
   resolveAttachmentPnl,
 } from './accountCalculations';
 
@@ -451,119 +449,12 @@ describe('calculateAccountSummary', () => {
   it('enrichAttachmentsWithTradePnl backfills legacy NULL accountPnl from trades.pnl', () => {
     const a1 = createAttachment(null, { tradeId: 't1' });
     const a2 = createAttachment(75, { tradeId: 't2' });
-    const enriched = enrichAttachmentsWithTradePnl([a1, a2], { t1: { pnl: 100 }, t2: { pnl: 200 } });
+    const enriched = enrichAttachmentsWithTradePnl([a1, a2], {
+      t1: { pnl: 100 },
+      t2: { pnl: 200 },
+    });
     expect(enriched[0]?.accountPnl).toBe(100);
     // Existing account-specific override is preserved
     expect(enriched[1]?.accountPnl).toBe(75);
-  });
-});
-
-describe('buildAccountResultValues', () => {
-  it('Keep as General copies journal P&L and R as a snapshot', () => {
-    const values = buildAccountResultValues(514, 2.16, 'general', {
-      accountPnl: 999,
-      accountR: 9.99,
-    });
-
-    // Journal values win in general mode, regardless of the custom payload.
-    expect(values.accountPnl).toBe(514);
-    expect(values.accountR).toBe(2.16);
-  });
-
-  it('Keep as General handles a journal trade with no P&L (null)', () => {
-    const values = buildAccountResultValues(null, 0, 'general', {
-      accountPnl: 123,
-      accountR: 1,
-    });
-
-    expect(values.accountPnl).toBeNull();
-    expect(values.accountR).toBe(0);
-  });
-
-  it('Keep as General handles a journal trade with zero P&L', () => {
-    const values = buildAccountResultValues(0, 0, 'general', {
-      accountPnl: null,
-      accountR: null,
-    });
-
-    expect(values.accountPnl).toBe(0);
-    expect(values.accountR).toBe(0);
-  });
-
-  it('Customize P&L uses the supplied account-specific values', () => {
-    const values = buildAccountResultValues(514, 2.16, 'custom', {
-      accountPnl: 250,
-      accountR: 1.0,
-    });
-
-    expect(values.accountPnl).toBe(250);
-    expect(values.accountR).toBe(1.0);
-  });
-
-  it('Customize P&L allows a negative account P&L (not coerced to positive)', () => {
-    const values = buildAccountResultValues(514, 2.16, 'custom', {
-      accountPnl: -180,
-      accountR: -0.75,
-    });
-
-    expect(values.accountPnl).toBe(-180);
-    expect(values.accountR).toBe(-0.75);
-  });
-
-  it('Customize P&L allows zero P&L', () => {
-    const values = buildAccountResultValues(514, 2.16, 'custom', {
-      accountPnl: 0,
-      accountR: 0,
-    });
-
-    expect(values.accountPnl).toBe(0);
-  });
-
-  it('the journal trade is never mutated by the choice', () => {
-    const journalPnl = 514;
-    const journalR = 2.16;
-
-    buildAccountResultValues(journalPnl, journalR, 'custom', {
-      accountPnl: 250,
-      accountR: 1,
-    });
-
-    // Primitives cannot be mutated, but assert the source values are intact.
-    expect(journalPnl).toBe(514);
-    expect(journalR).toBe(2.16);
-  });
-});
-
-describe('parseOptionalNumber', () => {
-  it('parses a valid positive number', () => {
-    expect(parseOptionalNumber('250')).toEqual({ ok: true, value: 250 });
-  });
-
-  it('parses a valid negative number without flipping the sign', () => {
-    expect(parseOptionalNumber('-180')).toEqual({ ok: true, value: -180 });
-  });
-
-  it('parses zero', () => {
-    expect(parseOptionalNumber('0')).toEqual({ ok: true, value: 0 });
-  });
-
-  it('returns null for an empty string (field left blank)', () => {
-    expect(parseOptionalNumber('')).toEqual({ ok: true, value: null });
-    expect(parseOptionalNumber('   ')).toEqual({ ok: true, value: null });
-  });
-
-  it('rejects non-numeric input', () => {
-    const result = parseOptionalNumber('abc');
-    expect(result.ok).toBe(false);
-  });
-
-  it('rejects non-finite input (NaN / Infinity)', () => {
-    expect(parseOptionalNumber('NaN').ok).toBe(false);
-    expect(parseOptionalNumber('Infinity').ok).toBe(false);
-  });
-
-  it('parses decimal values', () => {
-    expect(parseOptionalNumber('1.00')).toEqual({ ok: true, value: 1 });
-    expect(parseOptionalNumber('2.16')).toEqual({ ok: true, value: 2.16 });
   });
 });

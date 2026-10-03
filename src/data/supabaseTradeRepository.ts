@@ -143,6 +143,30 @@ function toRow(
   };
 }
 
+function toPatchRow(patch: Partial<Trade>): Record<string, unknown> {
+  const row: Record<string, unknown> = {};
+
+  if ('templateId' in patch) row.template_id = patch.templateId;
+  if ('number' in patch) row.number = patch.number ?? null;
+  if ('openedAt' in patch) row.opened_at = patch.openedAt;
+  if ('closedAt' in patch) row.closed_at = patch.closedAt ?? null;
+  if ('instrument' in patch) row.instrument = patch.instrument;
+  if ('direction' in patch) row.direction = patch.direction;
+  if ('result' in patch) row.result = patch.result;
+  if ('entry' in patch) row.entry = patch.entry ?? null;
+  if ('exit' in patch) row.exit = patch.exit ?? null;
+  if ('pnl' in patch) row.pnl = patch.pnl ?? null;
+  if ('r' in patch) row.r = patch.r;
+  if ('plannedRR' in patch) row.planned_rr = patch.plannedRR ?? null;
+  if ('durationMin' in patch) row.duration_min = patch.durationMin ?? 0;
+  if ('templateData' in patch) row.template_data = patch.templateData ?? {};
+  if ('notes' in patch) row.notes = patch.notes ?? null;
+  if ('photos' in patch) row.photos = patch.photos ?? null;
+
+  row.updated_at = new Date().toISOString();
+  return row;
+}
+
 export const tradeRepository: TradeRepository = {
   async list(): Promise<Trade[]> {
     const userId = await getUserId();
@@ -208,61 +232,20 @@ export const tradeRepository: TradeRepository = {
   ): Promise<Trade> {
     const userId = await getUserId();
 
-    const existing = await this.get(id);
-
-    if (!existing) {
-      throw new Error(`Trade ${id} not found`);
-    }
-
-    const merged = {
-      ...existing,
-      ...patch,
-    };
-
     const { data, error } = await supabase!
       .from('trades')
-      .update({
-        template_id: merged.templateId,
-
-        number: merged.number ?? null,
-
-        opened_at: merged.openedAt,
-
-        closed_at: merged.closedAt ?? null,
-
-        instrument: merged.instrument,
-
-        direction: merged.direction,
-
-        result: merged.result,
-
-        entry: merged.entry ?? null,
-
-        exit: merged.exit ?? null,
-
-        pnl: merged.pnl ?? null,
-
-        r: merged.r,
-
-        planned_rr: merged.plannedRR ?? null,
-
-        duration_min: merged.durationMin ?? 0,
-
-        template_data: merged.templateData ?? {},
-
-        notes: merged.notes ?? null,
-
-        photos: merged.photos ?? null,
-
-        updated_at: new Date().toISOString(),
-      })
+      .update(toPatchRow(patch))
       .eq('id', id)
       .eq('user_id', userId)
       .select('*')
-      .single();
+      .maybeSingle();
 
     if (error) {
       throw new Error(`Supabase update: ${error.message}`);
+    }
+
+    if (!data) {
+      throw new Error(`Trade ${id} not found`);
     }
 
     return toTrade(data as SupabaseTradeRow);
