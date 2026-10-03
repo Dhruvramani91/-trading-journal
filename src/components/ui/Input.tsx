@@ -1,4 +1,5 @@
 import { forwardRef, type InputHTMLAttributes } from 'react';
+import { guardNumberInputWheel } from '@/lib/numberInputWheel';
 import { cn } from '@/lib/cn';
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -6,9 +7,14 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className, invalid, ...props }, ref) => (
+  ({ className, invalid, onWheel, ...props }, ref) => (
     <input
       ref={ref}
+      onWheel={(event) => {
+        // Mouse wheel must never change a numeric input's value.
+        guardNumberInputWheel(event);
+        onWheel?.(event);
+      }}
       className={cn(
         'h-9 w-full rounded-lg border bg-bg-2 px-3 text-sm text-fg placeholder:text-fg-dim shadow-input',
         'transition-all focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/60',

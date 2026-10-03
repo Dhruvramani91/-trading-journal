@@ -8,6 +8,7 @@ import {
   Square,
   X,
   ArrowLeft,
+  CircleHelp,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -26,6 +27,7 @@ import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/Table';
 import { Stat } from '@/components/ui/Stat';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { cn } from '@/lib/cn';
 import {
   formatMoney,
@@ -39,6 +41,8 @@ import { accountTradeAttachmentRepository } from '@/data/supabaseAccountTradeAtt
 import { tradeRepository } from '@/data/supabaseTradeRepository';
 import {
   calculateAccountSummary,
+  buildAccountResultValues,
+  parseOptionalNumber,
   enrichAttachmentsWithTradePnl,
   getPhaseLabel,
   getPhaseTone,
@@ -48,10 +52,7 @@ import {
 } from '@/domain/accounts/accountCalculations';
 import type { Account, AccountType, AccountRuleMode } from '@/domain/models/account';
 import type { Trade } from '@/domain/models/trade';
-import type {
-  AccountTradeAttachment,
-  CreateAccountTradeAttachmentInput,
-} from '@/domain/models/accountTradeAttachment';
+import type { AccountTradeAttachment } from '@/domain/models/accountTradeAttachment';
 
 /* -------------------------------------------------------------------------- */
 /* Constants                                                                  */
@@ -162,6 +163,15 @@ function AttachTradesModal({
   const overlayRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
+  /* Attach-result step (phase 2) */
+  const [phase, setPhase] = useState<'select' | 'result'>('select');
+  const [pendingTradeIds, setPendingTradeIds] = useState<string[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [attachMode, setAttachMode] = useState<'general' | 'custom'>('general');
+  const [customPnl, setCustomPnl] = useState('');
+  const [customR, setCustomR] = useState('');
+  const [fieldError, setFieldError] = useState<string | null>(null);
+
   const closeModal = useCallback(() => {
     if (!saving) {
       onClose();
@@ -198,6 +208,13 @@ function AttachTradesModal({
       setDirectionFilter('all');
       setResultFilter('all');
       setSelectedIds(new Set());
+      setPhase('select');
+      setPendingTradeIds([]);
+      setCurrentIndex(0);
+      setAttachMode('general');
+      setCustomPnl('');
+      setCustomR('');
+      setFieldError(null);
     }
   }, [open]);
 
@@ -247,41 +264,113 @@ function AttachTradesModal({
     }
   }
 
-  async function handleAttach() {
+  /*
+   * Phase 1 -> Phase 2: queue the selected trades and open the
+   * account-result step for the first one.
+   */
+  function handleAttach() {
     if (selectedIds.size === 0) return;
+
+    const ids = Array.from(selectedIds);
+    setPendingTradeIds(ids);
+    setCurrentIndex(0);
+    setAttachMode('general');
+
+    const firstTrade = allTrades.find((t) => t.id === ids[0]);
+    setCustomPnl(firstTrade?.pnl != null ? String(firstTrade.pnl) : '');
+    setCustomR(firstTrade ? String(firstTrade.r) : '');
+    setFieldError(null);
+    setSaveError(null);
+    setPhase('result');
+  }
+
+  function resetResultFieldsForTrade(trade: Trade | undefined) {
+    setAttachMode('general');
+    setCustomPnl(trade?.pnl != null ? String(trade.pnl) : '');
+    setCustomR(trade ? String(trade.r) : '');
+    setFieldError(null);
+  }
+
+  function handleBackToSelection() {
+    setPhase('select');
+    setPendingTradeIds([]);
+    setCurrentIndex(0);
+    setFieldError(null);
+    setSaveError(null);
+  }
+
+  /*
+   * Phase 2: attach the current trade with the chosen account result,
+   * then advance to the next pending trade (if any).
+   */
+  async function handleResultAttach() {
+    const tradeId = pendingTradeIds[currentIndex];
+    const trade = allTrades.find((t) => t.id === tradeId);
+    if (!trade) {
+      setFieldError('Trade no longer available.');
+      return;
+    }
+
+    /* Already attached to this account: skip instead of duplicating. */
+    if (existingAttachmentTradeIds.includes(trade.id)) {
+      advanceToNext();
+      return;
+    }
+
+    const pnlParse = parseOptionalNumber(customPnl);
+    const rParse = parseOptionalNumber(customR);
+
+    if (!pnlParse.ok) {
+      setFieldError(`Account P&L ${pnlParse.message}.`);
+      return;
+    }
+    if (!rParse.ok) {
+      setFieldError(`Account R ${rParse.message}.`);
+      return;
+    }
+
+    const values = buildAccountResultValues(
+      trade.pnl,
+      trade.r,
+      attachMode,
+      {
+        accountPnl: attachMode === 'custom' ? pnlParse.value : null,
+        accountR: attachMode === 'custom' ? rParse.value : null,
+      }
+    );
 
     setSaving(true);
     setSaveError(null);
+    setFieldError(null);
 
     try {
-      const inputs: CreateAccountTradeAttachmentInput[] = [];
+      await accountTradeAttachmentRepository.create({
+        accountId,
+        tradeId: trade.id,
+        accountPnl: values.accountPnl,
+        accountR: values.accountR,
+      });
 
-      for (const tradeId of selectedIds) {
-        const trade = allTrades.find((t) => t.id === tradeId);
-        if (!trade) continue;
-
-        inputs.push({
-          accountId,
-          tradeId,
-          accountPnl: trade.pnl ?? null,
-          accountR: trade.r,
-          quantity: null,
-        });
-      }
-
-      await Promise.all(
-        inputs.map((input) =>
-          accountTradeAttachmentRepository.create(input)
-        )
-      );
-
-      onAttached();
-      closeModal();
+      advanceToNext();
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Failed to attach trades.');
+      setSaveError(err instanceof Error ? err.message : 'Failed to attach trade.');
     } finally {
       setSaving(false);
     }
+  }
+
+  function advanceToNext() {
+    const nextIndex = currentIndex + 1;
+
+    if (nextIndex >= pendingTradeIds.length) {
+      onAttached();
+      closeModal();
+      return;
+    }
+
+    setCurrentIndex(nextIndex);
+    const nextTrade = allTrades.find((t) => t.id === pendingTradeIds[nextIndex]);
+    resetResultFieldsForTrade(nextTrade);
   }
 
   if (!open) return null;
@@ -304,7 +393,7 @@ function AttachTradesModal({
       <div
         ref={contentRef}
         className={cn(
-          'relative z-[60] w-full max-w-3xl max-h-[85vh] rounded-xl border border-line bg-bg-1 shadow-pop',
+          'relative z-[60] w-full min-w-0 max-w-3xl max-h-[85vh] rounded-xl border border-line bg-bg-1 shadow-pop',
           'flex flex-col'
         )}
         onClick={(e) => e.stopPropagation()}
@@ -312,10 +401,12 @@ function AttachTradesModal({
         <div className="flex shrink-0 items-start justify-between gap-4 border-b border-line px-5 py-4">
           <div>
             <h2 id="attach-title" className="text-base font-bold text-fg">
-              Attach Journal Trades
+              {phase === 'result' ? 'Attach Trade to Account' : 'Attach Journal Trades'}
             </h2>
             <p className="mt-1 text-sm text-fg-muted">
-              Attach trades to <span className="font-medium text-fg">{accountName}</span>.
+              {phase === 'result'
+                ? 'Choose how this trade records on the account.'
+                : <>Attach trades to <span className="font-medium text-fg">{accountName}</span>.</>}
             </p>
           </div>
 
@@ -334,50 +425,55 @@ function AttachTradesModal({
           </button>
         </div>
 
-        <div className="flex shrink-0 items-center gap-3 border-b border-line px-5 py-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-dim" />
-            <input
-              type="text"
-              placeholder="Search by instrument..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className={cn(
-                'h-9 w-full rounded-lg border bg-bg-2 pl-10 pr-3 text-sm text-fg',
-                'focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/60'
-              )}
-            />
-          </div>
+        {phase === 'select' ? (
+          <>
+            <div className="flex shrink-0 items-center gap-3 border-b border-line px-5 py-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-fg-dim" />
+                <input
+                  type="text"
+                  placeholder="Search by instrument..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className={cn(
+                    'h-9 w-full rounded-lg border bg-bg-2 pl-10 pr-3 text-sm text-fg',
+                    'focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/60'
+                  )}
+                />
+              </div>
 
-          <select
-            value={directionFilter}
-            onChange={(e) => setDirectionFilter(e.target.value as typeof directionFilter)}
-            className={cn(
-              'h-9 rounded-lg border bg-bg-2 px-3 text-sm text-fg',
-              'focus:outline-none focus:ring-2 focus:ring-accent/40'
-            )}
-          >
-            <option value="all">All directions</option>
-            <option value="long">Long</option>
-            <option value="short">Short</option>
-          </select>
+              <select
+                value={directionFilter}
+                onChange={(e) => setDirectionFilter(e.target.value as typeof directionFilter)}
+                className={cn(
+                  'h-9 rounded-lg border bg-bg-2 px-3 text-sm text-fg',
+                  'focus:outline-none focus:ring-2 focus:ring-accent/40'
+                )}
+              >
+                <option value="all">All directions</option>
+                <option value="long">Long</option>
+                <option value="short">Short</option>
+              </select>
 
-          <select
-            value={resultFilter}
-            onChange={(e) => setResultFilter(e.target.value as typeof resultFilter)}
-            className={cn(
-              'h-9 rounded-lg border bg-bg-2 px-3 text-sm text-fg',
-              'focus:outline-none focus:ring-2 focus:ring-accent/40'
-            )}
-          >
-            <option value="all">All results</option>
-            <option value="win">Win</option>
-            <option value="loss">Loss</option>
-            <option value="be">Break-even</option>
-          </select>
-        </div>
+              <select
+                value={resultFilter}
+                onChange={(e) => setResultFilter(e.target.value as typeof resultFilter)}
+                className={cn(
+                  'h-9 rounded-lg border bg-bg-2 px-3 text-sm text-fg',
+                  'focus:outline-none focus:ring-2 focus:ring-accent/40'
+                )}
+              >
+                <option value="all">All results</option>
+                <option value="win">Win</option>
+                <option value="loss">Loss</option>
+                <option value="be">Break-even</option>
+              </select>
+            </div>
+          </>
+        ) : null}
 
-        <div className="flex-1 overflow-y-auto px-2">
+        {phase === 'select' ? (
+        <div className="min-w-0 flex-1 overflow-x-auto overflow-y-auto px-2">
           {saveError ? (
             <div
               role="alert"
@@ -514,29 +610,82 @@ function AttachTradesModal({
             </table>
           )}
         </div>
+        ) : (
+          <AttachResultStep
+            trade={allTrades.find((t) => t.id === pendingTradeIds[currentIndex])}
+            accountName={accountName}
+            mode={attachMode}
+            customPnl={customPnl}
+            customR={customR}
+            fieldError={fieldError}
+            saveError={saveError}
+            position={currentIndex + 1}
+            total={pendingTradeIds.length}
+            saving={saving}
+            onModeChange={setAttachMode}
+            onCustomPnlChange={setCustomPnl}
+            onCustomRChange={setCustomR}
+          />
+        )}
 
-        <div className="flex shrink-0 items-center justify-end gap-2 border-t border-line px-5 py-4 bg-bg-2/50">
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            disabled={saving}
-            onClick={closeModal}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            variant="primary"
-            size="sm"
-            disabled={saving || selectedIds.size === 0}
-            onClick={handleAttach}
-          >
-            {saving
-              ? 'Attaching…'
-              : `Attach ${selectedIds.size} trade${selectedIds.size === 1 ? '' : 's'}`}
-          </Button>
-        </div>
+        {phase === 'select' ? (
+          <div className="flex shrink-0 items-center justify-end gap-2 border-t border-line px-5 py-4 bg-bg-2/50">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={saving}
+              onClick={closeModal}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              disabled={saving || selectedIds.size === 0}
+              onClick={handleAttach}
+            >
+              {saving
+                ? 'Attaching…'
+                : `Attach ${selectedIds.size} trade${selectedIds.size === 1 ? '' : 's'}`}
+            </Button>
+          </div>
+        ) : (
+          <div className="flex shrink-0 items-center justify-end gap-2 border-t border-line px-5 py-4 bg-bg-2/50">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={saving}
+              onClick={handleBackToSelection}
+            >
+              Back
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={saving}
+              onClick={closeModal}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              disabled={saving}
+              onClick={handleResultAttach}
+            >
+              {saving
+                ? 'Attaching…'
+                : currentIndex + 1 >= pendingTradeIds.length
+                  ? 'Attach Trade'
+                  : `Attach Trade (${currentIndex + 1}/${pendingTradeIds.length})`}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -555,6 +704,266 @@ function ResultBadge({ result }: { result: Trade['result'] }) {
     case 'be':
       return <Badge tone="be">BE</Badge>;
   }
+}
+
+/**
+ * Small help icon that explains how per-account P&L works when attaching a
+ * journal trade to an account.
+ *
+ * The tooltip is rendered through the Radix portal-based Tooltip rather than a
+ * custom absolutely-positioned element, so it is never clipped by — and never
+ * widens — the modal's scroll container.
+ */
+function AttachHelpTip({ className }: { className?: string }) {
+  return (
+    <Tooltip
+      side="top"
+      align="center"
+      collisionPadding={12}
+      contentClassName="max-w-[300px]"
+      content={
+        <>
+          The same Journal Trade can be attached to many accounts. Each account
+          records its own P&amp;L and R, because the position size — and
+          therefore the result — differs from account to account. Enter the
+          values for this account only. The original Journal Trade is never
+          changed.
+        </>
+      }
+    >
+      <button
+        type="button"
+        aria-label="How per-account P&L works"
+        className={cn(
+          'inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full',
+          'text-fg-muted transition-colors hover:text-accent',
+          'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50',
+          className
+        )}
+      >
+        <CircleHelp className="h-4 w-4 cursor-help" aria-hidden="true" />
+      </button>
+    </Tooltip>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* Attach result step (phase 2)                                              */
+/* -------------------------------------------------------------------------- */
+
+interface AttachResultStepProps {
+  trade: Trade | undefined;
+  accountName: string;
+  mode: 'general' | 'custom';
+  customPnl: string;
+  customR: string;
+  fieldError: string | null;
+  saveError: string | null;
+  position: number;
+  total: number;
+  saving: boolean;
+  onModeChange: (mode: 'general' | 'custom') => void;
+  onCustomPnlChange: (value: string) => void;
+  onCustomRChange: (value: string) => void;
+}
+
+const inputCls = cn(
+  'h-9 w-full min-w-0 max-w-full rounded-lg border bg-bg-2 px-3 text-sm text-fg',
+  'focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/60'
+);
+
+function AttachResultStep({
+  trade,
+  accountName,
+  mode,
+  customPnl,
+  customR,
+  fieldError,
+  saveError,
+  position,
+  total,
+  saving,
+  onModeChange,
+  onCustomPnlChange,
+  onCustomRChange,
+}: AttachResultStepProps) {
+  if (!trade) {
+    return (
+      <div className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-5 py-6 text-center text-sm text-fg-muted">
+        Trade no longer available.
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-5 py-4">
+      {(fieldError || saveError) && (
+        <div
+          role="alert"
+          className="mb-4 rounded-lg border border-loss/30 bg-loss/10 px-4 py-3 text-sm text-loss"
+        >
+          {fieldError ?? saveError}
+        </div>
+      )}
+
+      {total > 1 && (
+        <div className="mb-4 text-xs text-fg-dim">
+          Trade {position} of {total}
+        </div>
+      )}
+
+      {/* Trade summary */}
+      <div className="rounded-xl border border-line bg-bg-2/60 p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-mono text-2xs text-fg-dim">
+            {trade.number != null ? `Trade #${trade.number}` : 'Journal trade'}
+          </span>
+          <span className="font-semibold text-fg">{trade.instrument}</span>
+          {trade.direction === 'long' ? (
+            <Badge tone="win">Long</Badge>
+          ) : (
+            <Badge tone="loss">Short</Badge>
+          )}
+          <ResultBadge result={trade.result} />
+        </div>
+
+        <div className="mt-4 grid min-w-0 grid-cols-2 gap-4">
+          <div>
+            <div className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
+              Journal Result
+            </div>
+            <div className="mt-1 space-y-0.5">
+              <div className="text-sm font-semibold tabular-nums text-fg">
+                {trade.pnl != null ? formatSignedMoney(trade.pnl) : '—'}
+              </div>
+              <div className="text-xs tabular-nums text-fg-dim">
+                {formatR(trade.r)}
+              </div>
+            </div>
+          </div>
+          <div>
+            <div className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
+              Account
+            </div>
+            <div className="mt-1 break-words text-sm font-medium text-fg">{accountName}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Account result choice */}
+      <div className="mt-5 space-y-3">
+        <div className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
+          Account Result
+        </div>
+
+        <label
+          className={cn(
+            'flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors',
+            mode === 'general'
+              ? 'border-accent/60 bg-accent/5'
+              : 'border-line bg-bg-2/40 hover:bg-bg-2'
+          )}
+        >
+          <input
+            type="radio"
+            name="attach-mode"
+            value="general"
+            checked={mode === 'general'}
+            onChange={() => onModeChange('general')}
+            className="mt-0.5 h-4 w-4 accent-[var(--accent)]"
+          />
+          <span className="min-w-0">
+            <span className="block text-sm font-semibold text-fg">
+              Keep as General
+            </span>
+            <span className="mt-0.5 block text-xs text-fg-muted">
+              Use the Journal Trade's result for this account.
+            </span>
+          </span>
+        </label>
+
+        <label
+          className={cn(
+            'flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition-colors',
+            mode === 'custom'
+              ? 'border-accent/60 bg-accent/5'
+              : 'border-line bg-bg-2/40 hover:bg-bg-2'
+          )}
+        >
+          <input
+            type="radio"
+            name="attach-mode"
+            value="custom"
+            checked={mode === 'custom'}
+            onChange={() => onModeChange('custom')}
+            className="mt-0.5 h-4 w-4 accent-[var(--accent)]"
+          />
+          <span className="min-w-0">
+            <span className="block text-sm font-semibold text-fg">
+              Customize P&amp;L
+            </span>
+            <span className="mt-0.5 block text-xs text-fg-muted">
+              Enter a different result for this specific account.
+            </span>
+          </span>
+        </label>
+      </div>
+
+      {/* Customize fields */}
+      {mode === 'custom' && (
+        <div className="mt-5 space-y-4 rounded-xl border border-line bg-bg-2/40 p-4">
+          <div className="flex min-w-0 items-center justify-between gap-2">
+            <span className="min-w-0 text-2xs font-semibold uppercase tracking-wider text-fg-dim">
+              This Account's P&amp;L
+            </span>
+            <AttachHelpTip />
+          </div>
+          <div className="grid min-w-0 gap-4 sm:grid-cols-2">
+            <div className="min-w-0">
+              <label
+                htmlFor="attach-account-pnl"
+                className="mb-1.5 block text-2xs font-semibold uppercase tracking-wider text-fg-dim"
+              >
+                Account P&amp;L
+              </label>
+              <input
+                id="attach-account-pnl"
+                type="number"
+                step="any"
+                value={customPnl}
+                onChange={(e) => onCustomPnlChange(e.target.value)}
+                disabled={saving}
+                placeholder="0.00"
+                className={inputCls}
+              />
+            </div>
+            <div className="min-w-0">
+              <label
+                htmlFor="attach-account-r"
+                className="mb-1.5 block text-2xs font-semibold uppercase tracking-wider text-fg-dim"
+              >
+                Account R
+              </label>
+              <input
+                id="attach-account-r"
+                type="number"
+                step="any"
+                value={customR}
+                onChange={(e) => onCustomRChange(e.target.value)}
+                disabled={saving}
+                placeholder="0.00"
+                className={inputCls}
+              />
+            </div>
+          </div>
+          <p className="text-xs text-fg-dim">
+            These values are saved only on this account's attachment. The
+            original Journal Trade is never modified.
+          </p>
+        </div>
+      )}
+    </div>
+  );
 }
 
 /* -------------------------------------------------------------------------- */
@@ -600,14 +1009,46 @@ export function AccountSummaryPage() {
       setAttachmentsWithTrades(joined);
 
       // Legacy attachments are created with account_pnl = NULL. Enrich them
-      // with the canonical trades.pnl so statistics and the equity curve
-      // compute without requiring the user to detach/re-attach.
+      // with the canonical trades.pnl + trade open date so statistics, the
+      // equity curve, and trading-day consistency compute without requiring
+      // the user to detach/re-attach.
       // Read-only: no DB writes, original trades/attachments untouched.
-      const tradePnlById: Record<string, number | null | undefined> = {};
-      for (const { attachment, trade } of joined) {
-        tradePnlById[attachment.tradeId] = trade?.pnl ?? null;
+      const tradeById: Record<
+        string,
+        {
+          pnl?: number | null;
+          openedAt?: string | null;
+        }
+      > = {};
+
+      for (const trade of allTrades) {
+        tradeById[trade.id] = {
+          pnl: trade.pnl ?? null,
+          openedAt: trade.openedAt ?? null,
+        };
       }
-      setAttachments(enrichAttachmentsWithTradePnl(atts, tradePnlById));
+
+      const enrichedAttachments = enrichAttachmentsWithTradePnl(atts, tradeById);
+
+      // Preserve the account-specific R override; backfill from canonical
+      // trade.r only when no account R exists. Monetary P&L is never derived
+      // from R.
+      setAttachments(
+        enrichedAttachments.map((attachment) => {
+          const trade = tradesById.get(attachment.tradeId);
+
+          return {
+            ...attachment,
+            accountR:
+              attachment.accountR != null &&
+              Number.isFinite(attachment.accountR)
+                ? attachment.accountR
+                : trade?.r != null && Number.isFinite(trade.r)
+                  ? trade.r
+                  : null,
+          };
+        })
+      );
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load account.');

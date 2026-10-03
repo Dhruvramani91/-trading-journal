@@ -54,6 +54,7 @@ export const SEED_TRADES: Trade[] = [
     direction: 'short',
     result: 'win',
     r: 1,
+    pnl: 200,
     durationMin: 28,
     templateData: {
       dayOfWeek: 'Monday',
@@ -85,6 +86,7 @@ export const SEED_TRADES: Trade[] = [
     direction: 'long',
     result: 'loss',
     r: -1,
+    pnl: -200,
     durationMin: 38,
     templateData: {
       dayOfWeek: 'Tuesday',
@@ -116,6 +118,7 @@ export const SEED_TRADES: Trade[] = [
     direction: 'short',
     result: 'be',
     r: 0,
+    pnl: 0,
     durationMin: 22,
     templateData: {
       dayOfWeek: 'Thursday',
@@ -147,6 +150,7 @@ export const SEED_TRADES: Trade[] = [
     direction: 'long',
     result: 'win',
     r: 2,
+    pnl: 400,
     durationMin: 150,
     templateData: {
       dayOfWeek: 'Monday',
@@ -178,6 +182,7 @@ export const SEED_TRADES: Trade[] = [
     direction: 'short',
     result: 'win',
     r: 2,
+    pnl: 400,
     durationMin: 18,
     templateData: {
       dayOfWeek: 'Monday',

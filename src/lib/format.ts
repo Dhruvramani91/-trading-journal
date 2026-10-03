@@ -18,6 +18,28 @@ export function formatMoney(value: number, currency = 'USD'): string {
   }).format(value);
 }
 
+/**
+ * Currency without cents — for compact chart axis / tick labels
+ * (e.g. "$1,250"). Display values keep the full precision from `formatMoney`.
+ */
+export function formatMoneyCompact(value: number, currency = 'USD'): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+/**
+ * Signed currency for P&L display: "+$540.00" / "-$250.00" / "$0.00".
+ * Mirrors the signed-money convention already used by the account pages.
+ */
+export function formatSignedMoney(value: number, currency = 'USD'): string {
+  if (value > 0) return `+${formatMoney(value, currency)}`;
+  if (value < 0) return `-${formatMoney(Math.abs(value), currency)}`;
+  return formatMoney(0, currency);
+}
+
 /** Short duration like "2h 30m" / "45m" / "12s". */
 export function formatDuration(minutes: number): string {
   if (minutes < 1) return `${Math.round(minutes * 60)}s`;

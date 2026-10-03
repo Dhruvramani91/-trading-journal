@@ -445,6 +445,10 @@ export function TradeFormPage() {
       }
     }
 
+    if (form.pnl === '' || Number.isNaN(Number(form.pnl))) {
+      errors.pnl = 'P&L is required.';
+    }
+
     if (
       !form.templateData.entry ||
       form.templateData.entry.trim() === ''

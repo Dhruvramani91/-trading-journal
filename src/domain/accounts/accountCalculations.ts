@@ -275,7 +275,8 @@ function getPnls(
     .map((attachment) => attachment.accountPnl)
     .filter(
       (pnl): pnl is number =>
-        pnl != null && Number.isFinite(pnl)
+        typeof pnl === 'number' &&
+        Number.isFinite(pnl)
     );
 }
 
@@ -320,44 +321,141 @@ export type AttachmentWithTradePnl = {
 
 export function enrichAttachmentsWithTradePnl(
   attachments: AccountTradeAttachment[],
-  tradesById: Map<string, number | null | undefined> | Record<string, number | null | undefined>
-): AccountTradeAttachment[] {
-  const lookup =
-    tradesById instanceof Map
-      ? (id: string) => tradesById.get(id)
-      : (id: string) => tradesById[id];
+  tradeById: Record<
+    string,
+    {
+      pnl?: number | null;
+      openedAt?: string | null;
+    }
+  >,
+): Array<
+  AccountTradeAttachment & {
+    tradeOpenedAt?: string | null;
+  }
+> {
   return attachments.map((attachment) => {
-    if (attachment.accountPnl != null && Number.isFinite(attachment.accountPnl)) {
-      return attachment;
-    }
-    const tradePnl = lookup(attachment.tradeId);
-    if (tradePnl != null && Number.isFinite(tradePnl)) {
-      return { ...attachment, accountPnl: tradePnl };
-    }
-    return attachment;
+    const trade = tradeById[attachment.tradeId];
+
+    const attachmentPnl =
+      typeof attachment.accountPnl === 'number' &&
+      Number.isFinite(attachment.accountPnl)
+        ? attachment.accountPnl
+        : null;
+
+    const tradePnl =
+      typeof trade?.pnl === 'number' &&
+      Number.isFinite(trade.pnl)
+        ? trade.pnl
+        : null;
+
+    const resolvedPnl =
+      attachmentPnl !== null
+        ? attachmentPnl
+        : tradePnl;
+
+    return {
+      ...attachment,
+      accountPnl: resolvedPnl,
+      tradeOpenedAt: trade?.openedAt ?? null,
+    };
   });
 }
 
+/* -------------------------------------------------------------------------- */
+/* Account-specific attach result choice                                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * How the user wants the account attachment to interpret the journal trade:
+ * - "general": snapshot the journal trade's P&L and R onto the attachment.
+ * - "custom": use account-specific P&L / R / quantity values.
+ *
+ * The choice is resolved into concrete saved values on the attachment so that
+ * future edits to the original journal trade never mutate a historical account
+ * result.
+ */
+export type AccountResultMode = 'general' | 'custom';
+
+export interface AccountResultValues {
+  accountPnl: number | null;
+  accountR: number | null;
+}
+
+/**
+ * Builds the account-specific attachment values for a single journal trade.
+ *
+ * "general" copies the journal trade's P&L and R (a snapshot, not a reference).
+ * "custom" uses the supplied account-specific values.
+ *
+ * This function is pure: it never mutates the journal trade or any attachment.
+ */
+export function buildAccountResultValues(
+  tradePnl: number | null | undefined,
+  tradeR: number,
+  mode: AccountResultMode,
+  custom: AccountResultValues
+): AccountResultValues {
+  if (mode === 'general') {
+    return {
+      accountPnl: tradePnl ?? null,
+      accountR: tradeR,
+    };
+  }
+
+  return {
+    accountPnl: custom.accountPnl,
+    accountR: custom.accountR,
+  };
+}
+
+/**
+ * Parses an optional numeric input for the customize step.
+ * Empty string -> null (field left blank).
+ * Non-numeric / non-finite -> { ok: false }.
+ * Otherwise -> { ok: true, value }.
+ *
+ * Negative and zero values are preserved as-is.
+ */
+export function parseOptionalNumber(
+  raw: string
+): { ok: true; value: number | null } | { ok: false; message: string } {
+  const trimmed = raw.trim();
+
+  if (trimmed === '') {
+    return { ok: true, value: null };
+  }
+
+  const num = Number(trimmed);
+
+  if (!Number.isFinite(num)) {
+    return { ok: false, message: 'must be a valid number' };
+  }
+
+  return { ok: true, value: num };
+}
+
 function calculateTradeStats(
-  attachments: AccountTradeAttachment[]
+  attachments: Array<
+    AccountTradeAttachment & {
+      tradeOpenedAt?: string | null;
+    }
+  >
 ): AccountTradeStats {
   const pnls = getPnls(attachments);
 
   const winningPnls = pnls.filter((pnl) => pnl > 0);
   const losingPnls = pnls.filter((pnl) => pnl < 0);
 
-  const breakevenTrades = pnls.filter(
-    (pnl) => pnl === 0
-  ).length;
+  const breakevenTrades = pnls.filter((pnl) => pnl === 0).length;
 
-  const totalPnl = pnls.reduce(
-    (sum, pnl) => sum + pnl,
-    0
-  );
+  const totalPnl = pnls.reduce((sum, pnl) => sum + pnl, 0);
 
-  // Trades with no realized P&L are excluded from counts/rates entirely.
-  // totalTrades stays as attached count for display, but win rate uses only
-  // decided trades (wins + losses).
+  /*
+   * totalTrades represents the number of attached journal trades.
+   *
+   * Trades without a monetary P&L are excluded from win/loss calculations,
+   * because there is no valid realized P&L from which to determine a result.
+   */
   const totalTrades = attachments.length;
 
   const winningTrades = winningPnls.length;
@@ -371,6 +469,7 @@ function calculateTradeStats(
       : 0;
 
   const rs = getRs(attachments);
+
   const totalR = rs.reduce((sum, r) => sum + r, 0);
 
   const grossWinners = pnls.filter((pnl) => pnl > 0);
@@ -380,14 +479,14 @@ function calculateTradeStats(
     (sum, pnl) => sum + pnl,
     0
   );
+
   const sumLosers = grossLosers.reduce(
     (sum, pnl) => sum + pnl,
     0
   );
+
   const sumLosersAbs = Math.abs(sumLosers);
 
-  // Profit factor: gross wins / |gross losses|.
-  // All wins (no losses) => Infinity; no wins and no losses => null (—).
   const profitFactor =
     sumLosersAbs > 0
       ? sumWinners / sumLosersAbs
@@ -400,7 +499,6 @@ function calculateTradeStats(
       ? sumWinners / grossWinners.length
       : null;
 
-  // Signed average of losing trades (negative), i.e. gross losing P&L / count.
   const averageLoser =
     grossLosers.length > 0
       ? sumLosers / grossLosers.length
@@ -411,7 +509,6 @@ function calculateTradeStats(
       ? totalR / rs.length
       : null;
 
-  // Consistency calculation: group by trading day, find best day, divide by total positive profit
   const consistencyData = calculateConsistency(attachments);
 
   return {
@@ -470,7 +567,6 @@ function calculateTradeStats(
     averageLoser,
     expectancy,
 
-    // Consistency statistic
     consistencyPercentage: consistencyData.percentage,
     bestTradingDayProfit: consistencyData.bestTradingDayProfit,
     totalPositiveProfit: consistencyData.totalPositiveProfit,
@@ -483,54 +579,100 @@ export interface ConsistencyData {
   totalPositiveProfit: number;
 }
 
-function calculateConsistency(attachments: AccountTradeAttachment[]): ConsistencyData {
+function calculateConsistency(
+  attachments: Array<
+    AccountTradeAttachment & {
+      tradeOpenedAt?: string | null;
+    }
+  >
+): ConsistencyData {
   if (attachments.length === 0) {
-    return { percentage: null, bestTradingDayProfit: 0, totalPositiveProfit: 0 };
+    return {
+      percentage: null,
+      bestTradingDayProfit: 0,
+      totalPositiveProfit: 0,
+    };
   }
 
-  // Group trades by trading day (using attachedAt date)
   const dailyPnlMap = new Map<string, number>();
 
   attachments.forEach((attachment) => {
-    // Null/undefined P&L = "no realized P&L available": skip entirely.
-    // Never coerce to $0 (would corrupt best-day / totals).
     const raw = attachment.accountPnl;
-    if (raw == null || !Number.isFinite(raw)) return;
-    const pnl: number = raw;
-    const attachedAt: string = attachment.attachedAt ?? '';
-    if (!attachedAt) return;
-    const parsed = new Date(attachedAt);
-    if (Number.isNaN(parsed.getTime())) return;
-    const date: string = parsed.toISOString().split('T')[0] ?? attachedAt; // YYYY-MM-DD
-    const existing: number = dailyPnlMap.get(date) ?? 0;
-    dailyPnlMap.set(date, existing + pnl);
+
+    if (
+      raw == null ||
+      !Number.isFinite(raw)
+    ) {
+      return;
+    }
+
+    const openedAt = attachment.tradeOpenedAt;
+
+    if (!openedAt) {
+      return;
+    }
+
+    const parsed = new Date(openedAt);
+
+    if (Number.isNaN(parsed.getTime())) {
+      return;
+    }
+
+    const date = parsed.toISOString().split('T')[0];
+
+    if (!date) {
+      return;
+    }
+
+    const existing = dailyPnlMap.get(date) ?? 0;
+
+    dailyPnlMap.set(
+      date,
+      existing + raw
+    );
   });
 
-  // Find best trading day (only positive days)
   let bestTradingDayProfit = 0;
+
   for (const dailyPnl of dailyPnlMap.values()) {
     if (dailyPnl > bestTradingDayProfit) {
       bestTradingDayProfit = dailyPnl;
     }
   }
 
-  // Calculate total positive profit
-  const totalPositiveProfit = Array.from(dailyPnlMap.values())
+  /*
+   * IMPORTANT:
+   * Total positive profit is the sum of positive DAILY P&L values.
+   */
+  const totalPositiveProfit = Array.from(
+    dailyPnlMap.values()
+  )
     .filter((pnl) => pnl > 0)
-    .reduce((sum, pnl) => sum + pnl, 0);
+    .reduce(
+      (sum, pnl) => sum + pnl,
+      0
+    );
 
-  // Calculate consistency percentage
   const percentage =
-    totalPositiveProfit > 0 && bestTradingDayProfit > 0
+    totalPositiveProfit > 0 &&
+    bestTradingDayProfit > 0
       ? (bestTradingDayProfit / totalPositiveProfit) * 100
       : null;
 
-  return { percentage, bestTradingDayProfit, totalPositiveProfit };
+  return {
+    percentage,
+    bestTradingDayProfit,
+    totalPositiveProfit,
+  };
 }
 
 function calculatePerformance(
   account: Account,
-  attachments: AccountTradeAttachment[]
+  attachments: Array<
+    AccountTradeAttachment & {
+      tradeOpenedAt?: string | null;
+    }
+  >
 ): AccountPerformance {
   const tradeStats = calculateTradeStats(attachments);
 
@@ -616,7 +758,11 @@ function calculatePerformance(
 /* -------------------------------------------------------------------------- */
 
 export function calculateEquityCurve(
-  attachments: AccountTradeAttachment[]
+  attachments: Array<
+    AccountTradeAttachment & {
+      tradeOpenedAt?: string | null;
+    }
+  >
 ): EquityPoint[] {
   if (attachments.length === 0) return [];
 
@@ -659,7 +805,11 @@ export function calculateEquityCurve(
 
 export function calculateAccountSummary(
   account: Account,
-  attachments: AccountTradeAttachment[]
+  attachments: Array<
+    AccountTradeAttachment & {
+      tradeOpenedAt?: string | null;
+    }
+  >
 ): AccountSummary {
   const tradeStats =
     calculateTradeStats(attachments);

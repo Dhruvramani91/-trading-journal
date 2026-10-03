@@ -196,8 +196,8 @@ describe('AccountsPage', () => {
         result: 'active',
         accountSize: 100000,
         ruleMode: 'standard',
-        profitTarget: null,
-        maxDrawdown: null,
+        profitTarget: 6000,
+        maxDrawdown: 3000,
       });
     }, { timeout: 3000 });
   });
@@ -228,8 +228,8 @@ describe('AccountsPage', () => {
         result: 'active',
         accountSize: 50000,
         ruleMode: 'standard',
-        profitTarget: null,
-        maxDrawdown: null,
+        profitTarget: 3000,
+        maxDrawdown: 2000,
       });
     }, { timeout: 3000 });
   });
