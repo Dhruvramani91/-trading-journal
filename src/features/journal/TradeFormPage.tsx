@@ -24,6 +24,12 @@ import type {
 
 import { tradeRepository } from '@/data/supabaseTradeRepository';
 import { formatDateLong } from '@/lib/format';
+import {
+  persistEditedTradePhotos,
+  persistTradePhotos,
+  resolveTradePhotoUrl,
+  type TradePhotos,
+} from '@/lib/tradePhotos';
 
 interface FormState {
   openedAt: string;
@@ -218,6 +224,8 @@ export function TradeFormPage() {
 
   const [form, setForm] =
     useState<FormState>(DEFAULTS);
+  const [originalPhotos, setOriginalPhotos] =
+    useState<TradePhotos>({});
 
   const [loading, setLoading] =
     useState(isEdit);
@@ -261,6 +269,7 @@ export function TradeFormPage() {
 
       if (trade) {
         setForm(tradeToForm(trade));
+        setOriginalPhotos(trade.photos ?? {});
       }
 
       setLoading(false);
@@ -556,33 +565,47 @@ export function TradeFormPage() {
           form.notes.trim() ||
           undefined,
 
-        photos: {
-          htf:
-            form.photos.htf ||
-            undefined,
-
-          itf:
-            form.photos.itf ||
-            undefined,
-
-          ltf:
-            form.photos.ltf ||
-            undefined,
-        },
       } satisfies Omit<
         Trade,
         'id' | 'createdAt' | 'updatedAt'
       >;
 
       if (isEdit && id) {
-        await update(id, payload);
+        await persistEditedTradePhotos(
+          id,
+          originalPhotos,
+          {
+            htf: form.photos.htf || undefined,
+            itf: form.photos.itf || undefined,
+            ltf: form.photos.ltf || undefined,
+          },
+          async (photos) => {
+            await update(id, {
+              ...payload,
+              photos,
+            });
+          },
+        );
 
         navigate(
           `/journal/${id}`,
         );
       } else {
-        const created =
-          await create(payload);
+        const created = await create({
+          ...payload,
+          photos: undefined,
+        });
+
+        const persistedPhotos =
+          await persistTradePhotos(created.id, {
+            htf: form.photos.htf || undefined,
+            itf: form.photos.itf || undefined,
+            ltf: form.photos.ltf || undefined,
+          });
+
+        await update(created.id, {
+          photos: persistedPhotos,
+        });
 
         navigate(
           `/journal/${created.id}`,
@@ -1398,6 +1421,45 @@ function PhotoUploadSlot({
 }) {
   const inputRef =
     useRef<HTMLInputElement>(null);
+  const [previewUrl, setPreviewUrl] =
+    useState<string | undefined>();
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function resolvePreview() {
+      if (!value) {
+        setPreviewUrl(undefined);
+        return;
+      }
+
+      setPreviewUrl(undefined);
+
+      try {
+        const resolved =
+          await resolveTradePhotoUrl(value);
+
+        if (!cancelled) {
+          setPreviewUrl(resolved);
+        }
+      } catch (error) {
+        console.error(
+          `Unable to resolve ${label} trade screenshot preview:`,
+          error,
+        );
+
+        if (!cancelled) {
+          setPreviewUrl(undefined);
+        }
+      }
+    }
+
+    void resolvePreview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [value, label]);
 
   function handleFile(
     e: React.ChangeEvent<HTMLInputElement>,
@@ -1457,7 +1519,7 @@ function PhotoUploadSlot({
       {value ? (
         <div className="group relative aspect-video overflow-hidden rounded-lg border border-line bg-bg-1">
           <img
-            src={value}
+            src={previewUrl}
             alt={label}
             className="h-full w-full object-contain"
           />

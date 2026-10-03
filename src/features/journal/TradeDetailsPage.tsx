@@ -13,6 +13,7 @@ import { useTradesStore, bootTradesStore } from '@/store/tradesStore';
 import { tradeRepository } from '@/data/supabaseTradeRepository';
 import { readFieldLabel } from '@/domain/templates/resolve';
 import { formatDateLong, formatR, formatDuration } from '@/lib/format';
+import { resolveTradePhotoUrl } from '@/lib/tradePhotos';
 
 import type { Trade } from '@/domain/models/trade';
 
@@ -25,6 +26,9 @@ export function TradeDetailsPage() {
   const [trade, setTrade] = useState<Trade | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [resolvedPhotoUrls, setResolvedPhotoUrls] = useState<
+    Partial<Record<'htf' | 'itf' | 'ltf', string>>
+  >({});
 
   useEffect(() => {
     bootTradesStore();
@@ -53,6 +57,47 @@ export function TradeDetailsPage() {
       cancelled = true;
     };
   }, [id]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function resolvePhotos() {
+      const next: Partial<
+        Record<'htf' | 'itf' | 'ltf', string>
+      > = {};
+
+      for (const tf of ['htf', 'itf', 'ltf'] as const) {
+        const value = trade?.photos?.[tf];
+
+        if (!value) {
+          continue;
+        }
+
+        try {
+          const resolved = await resolveTradePhotoUrl(value);
+
+          if (resolved) {
+            next[tf] = resolved;
+          }
+        } catch (error) {
+          console.error(
+            `Unable to resolve ${tf} trade screenshot:`,
+            error,
+          );
+        }
+      }
+
+      if (!cancelled) {
+        setResolvedPhotoUrls(next);
+      }
+    }
+
+    void resolvePhotos();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [trade]);
 
   async function handleDelete() {
     if (!id) return;
@@ -431,7 +476,7 @@ export function TradeDetailsPage() {
                 {(
                   ['htf', 'itf', 'ltf'] as const
                 ).map((tf) => {
-                  const src = trade.photos?.[tf];
+                  const src = resolvedPhotoUrls[tf];
 
                   return (
                     <div
