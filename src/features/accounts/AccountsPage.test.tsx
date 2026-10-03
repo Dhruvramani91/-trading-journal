@@ -8,6 +8,7 @@ const mockRemove = vi.hoisted(() => vi.fn());
 const mockList = vi.hoisted(() => vi.fn());
 
 const mockListForAccount = vi.hoisted(() => vi.fn());
+const mockListTrades = vi.hoisted(() => vi.fn());
 
 vi.mock('@/data/supabaseAccountRepository', () => ({
   accountRepository: {
@@ -21,6 +22,12 @@ vi.mock('@/data/supabaseAccountRepository', () => ({
 vi.mock('@/data/supabaseAccountTradeAttachmentRepository', () => ({
   accountTradeAttachmentRepository: {
     listForAccount: mockListForAccount,
+  },
+}));
+
+vi.mock('@/data/supabaseTradeRepository', () => ({
+  tradeRepository: {
+    list: mockListTrades,
   },
 }));
 
@@ -81,9 +88,14 @@ const mockAccounts = [
   },
 ];
 
-async function renderWithAccounts(initialAccounts: typeof mockAccounts) {
+async function renderWithAccounts(
+  initialAccounts: typeof mockAccounts,
+  attachments: unknown[] = [],
+  trades: unknown[] = [],
+) {
   mockList.mockResolvedValue(initialAccounts);
-  mockListForAccount.mockResolvedValue([]);
+  mockListForAccount.mockResolvedValue(attachments);
+  mockListTrades.mockResolvedValue(trades);
   mockCreate.mockResolvedValue({ ...(initialAccounts[0] ?? {}), name: 'New Account' });
   mockUpdate.mockResolvedValue({ ...(initialAccounts[0] ?? {}), name: 'Updated Account' });
 
@@ -134,6 +146,29 @@ describe('AccountsPage', () => {
     expect(within(accountCard!).getByText(/50K/)).toBeInTheDocument();
     expect(within(accountCard!).getByText(/Standard rules/)).toBeInTheDocument();
     expect(within(accountCard!).getByText('View Account')).toBeInTheDocument();
+  });
+
+  it('uses linked journal trade P&L for legacy attachments without account P&L', async () => {
+    await renderWithAccounts(
+      mockAccounts,
+      [{
+        id: 'attachment-1',
+        accountId: 'acc-1',
+        tradeId: 'trade-1',
+        userId: 'user-1',
+        accountPnl: null,
+        accountR: 1.5,
+        quantity: null,
+        attachedAt: '2026-01-02T00:00:00.000Z',
+      }],
+      [{
+        id: 'trade-1',
+        pnl: 1250,
+        openedAt: '2026-01-02T12:00:00.000Z',
+      }],
+    );
+
+    expect(await screen.findAllByText('+$1,250.00')).toHaveLength(2);
   });
 
   it('opens the create account form when "Add Account" is clicked', async () => {

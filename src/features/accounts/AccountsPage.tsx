@@ -19,7 +19,11 @@ import {
 
 import { accountRepository } from '@/data/supabaseAccountRepository';
 import { accountTradeAttachmentRepository } from '@/data/supabaseAccountTradeAttachmentRepository';
-import { calculateAccountSummary } from '@/domain/accounts/accountCalculations';
+import { tradeRepository } from '@/data/supabaseTradeRepository';
+import {
+  calculateAccountSummary,
+  enrichAttachmentsWithTradePnl,
+} from '@/domain/accounts/accountCalculations';
 import {
   getPhaseLabel,
   getPhaseTone,
@@ -496,8 +500,19 @@ export function AccountsPage() {
           : (await Promise.all(
               data.map((account) => accountTradeAttachmentRepository.listForAccount(account.id))
             )).flat();
+        const trades = await tradeRepository.list();
+        const tradeById = Object.fromEntries(
+          trades.map((trade) => [trade.id, {
+            pnl: trade.pnl,
+            openedAt: trade.openedAt,
+          }]),
+        );
+        const enrichedAttachments = enrichAttachmentsWithTradePnl(
+          attachments,
+          tradeById,
+        );
         for (const account of data) map[account.id] = [];
-        for (const attachment of attachments) {
+        for (const attachment of enrichedAttachments) {
           (map[attachment.accountId] ??= []).push(attachment);
         }
       } catch (err) {
