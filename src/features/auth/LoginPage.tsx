@@ -559,7 +559,7 @@ export function LoginPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="enter your password"
-                      minLength={mode === 'signup' ? 6 : undefined}
+                      minLength={mode === 'signup' ? MIN_PASSWORD_LENGTH : undefined}
                       required
                       autoComplete={
                         mode === 'signup' ? 'new-password' : 'current-password'
