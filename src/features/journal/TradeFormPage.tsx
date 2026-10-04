@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { Save, Trash2, X, Upload, ImageOff } from 'lucide-react';
 
 import { PageHeader } from '@/components/ui/PageHeader';
+import { Loader } from '@/components/ui/Loader';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -748,9 +749,7 @@ export function TradeFormPage() {
       ) : null}
 
       {loading ? (
-        <div className="text-sm text-fg-muted">
-          Loading trade…
-        </div>
+        <Loader size="sm" title="Loading trade…" className="min-h-40" />
       ) : (
         <div className="space-y-6">
           {/* =========================

@@ -12,6 +12,7 @@ import {
   type TooltipPayloadEntry,
 } from 'recharts';
 import { Button } from '@/components/ui/Button';
+import { Loader } from '@/components/ui/Loader';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Stat } from '@/components/ui/Stat';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -135,7 +136,7 @@ export function DashboardPage() {
   const avgDuration = tradesToUse.length ? tradesToUse.reduce((a, t) => a + t.durationMin, 0) / tradesToUse.length : 0;
 
   if (!loaded) {
-    return <div className="pt-20 text-center text-sm text-fg-muted">Loading trading data…</div>;
+    return <Loader title="Loading trading data…" className="min-h-64" />;
   }
 
   return (

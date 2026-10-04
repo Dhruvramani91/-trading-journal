@@ -1,6 +1,7 @@
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { isSupabaseConfigured } from '@/lib/supabase';
+import { Loader } from '@/components/ui/Loader';
 
 /**
  * Guards every workspace route (everything rendered under AppShell).
@@ -20,7 +21,7 @@ export function RequireAuth() {
   }
 
   if (!initialized) {
-    return null;
+    return <Loader title="Loading your workspace…" className="min-h-screen bg-bg-0" />;
   }
 
   if (!user) {

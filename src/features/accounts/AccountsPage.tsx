@@ -39,9 +39,10 @@ import { formatR, formatPct } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
-import { Card, CardBody } from '@/components/ui/Card';
+import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Segmented } from '@/components/ui/Select';
+import { Loader } from '@/components/ui/Loader';
 
 type AccountId = Account['id'];
 
@@ -302,8 +303,8 @@ function AccountCard({
   return (
     <article
       className={cn(
-        'group relative rounded-xl border border-line bg-bg-1 p-5 transition-colors',
-        'hover:bg-bg-2'
+        'group relative rounded-xl border border-line bg-bg-1 p-5 shadow-card transition-all duration-200',
+        'hover:-translate-y-0.5 hover:bg-bg-2 hover:shadow-pop'
       )}
     >
       <div
@@ -362,8 +363,8 @@ function AccountCard({
       </div>
 
       {statsAvailable ? <div className="mt-5 space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
+        <div className="grid grid-cols-2 divide-x divide-line rounded-xl border border-line bg-bg-3/70">
+          <div className="p-3.5">
             <div className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
               P&L
             </div>
@@ -381,7 +382,7 @@ function AccountCard({
             </div>
           </div>
 
-          <div>
+          <div className="p-3.5">
             <div className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
               Total R
             </div>
@@ -400,7 +401,7 @@ function AccountCard({
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-4 px-0.5">
           <div>
             <div className="flex items-center justify-between text-xs text-fg-dim mb-1">
               <span>Profit target</span>
@@ -723,20 +724,11 @@ export function AccountsPage() {
 
   if (initialLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <div className="h-7 w-48 rounded bg-bg-3 animate-pulse" />
-            <div className="mt-1.5 h-3 w-64 rounded bg-bg-3 animate-pulse" />
-          </div>
-          <div className="h-9 w-32 rounded-xl bg-bg-3 animate-pulse" />
-        </div>
-        <div className="h-16 rounded-xl bg-bg-2 border border-line animate-pulse" />
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="h-56 rounded-xl bg-bg-2 border border-line animate-pulse" />
-          <div className="h-56 rounded-xl bg-bg-2 border border-line animate-pulse" />
-        </div>
-      </div>
+      <Loader
+        title="Loading accounts…"
+        subtitle="Preparing your account performance."
+        className="min-h-[22rem]"
+      />
     );
   }
 
@@ -778,10 +770,17 @@ export function AccountsPage() {
       </div>
 
       {heroStats ? (
-        <Card>
+        <Card className="overflow-hidden">
+          <CardHeader className="flex-col items-start gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle>Performance overview</CardTitle>
+              <p className="mt-1 text-xs text-fg-dim">Combined results for your {TYPE_LABEL[activeTab].toLowerCase()} accounts</p>
+            </div>
+            <Badge tone="outline">{heroStats.totalTrades} trades</Badge>
+          </CardHeader>
           <CardBody>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="rounded-lg bg-bg-3/70 p-3">
                 <div className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
                   Total P&amp;L
                 </div>
@@ -799,7 +798,7 @@ export function AccountsPage() {
                 </div>
               </div>
 
-              <div>
+              <div className="rounded-lg bg-bg-3/70 p-3">
                 <div className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
                   Total R
                 </div>
@@ -817,7 +816,7 @@ export function AccountsPage() {
                 </div>
               </div>
 
-              <div>
+              <div className="rounded-lg bg-bg-3/70 p-3">
                 <div className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
                   Win Rate
                 </div>
@@ -826,7 +825,7 @@ export function AccountsPage() {
                 </div>
               </div>
 
-              <div>
+              <div className="rounded-lg bg-bg-3/70 p-3">
                 <div className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
                   Trades
                 </div>
@@ -837,15 +836,19 @@ export function AccountsPage() {
             </div>
           </CardBody>
         </Card>
-      ) : (
+      ) : visibleAccounts.length > 0 ? (
         <Card>
-          <CardBody className="text-center py-8">
+          <CardBody className="flex flex-col items-center gap-2 py-8 text-center">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-bg-3 text-fg-muted">
+              {activeTab === 'futures' ? <BarChart3 className="h-5 w-5" aria-hidden="true" /> : <Globe2 className="h-5 w-5" aria-hidden="true" />}
+            </div>
+            <h2 className="text-sm font-semibold text-fg">Performance overview</h2>
             <p className="text-sm text-fg-muted">
-              No attached trades yet. Create an account and attach journal trades to start tracking.
+              No trades are attached to these accounts yet. Attach journal trades to see combined results here.
             </p>
           </CardBody>
         </Card>
-      )}
+      ) : null}
 
       {loadError ? (
         <div

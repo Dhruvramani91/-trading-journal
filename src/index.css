@@ -153,3 +153,74 @@
 .dark .brand-logo-dark {
   display: block;
 }
+
+@keyframes loader-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes loader-breathe {
+  50% { transform: scale(1.025); }
+}
+
+@keyframes loader-text-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.loader-rings {
+  color: rgb(var(--fg));
+  animation: loader-breathe 4s ease-in-out infinite;
+}
+
+.loader-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: conic-gradient(from 0deg, transparent 0deg, currentColor 100deg, transparent 200deg, transparent 360deg);
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+.loader-ring-outer {
+  opacity: 0.42;
+  -webkit-mask-image: radial-gradient(circle, transparent 35%, #000 37%, #000 39%, transparent 41%);
+  mask-image: radial-gradient(circle, transparent 35%, #000 37%, #000 39%, transparent 41%);
+  animation: loader-spin 3s linear infinite;
+}
+
+.loader-ring-primary {
+  opacity: 0.82;
+  background: conic-gradient(from 0deg, transparent 0deg, currentColor 120deg, color-mix(in srgb, currentColor 50%, transparent) 240deg, transparent 360deg);
+  -webkit-mask-image: radial-gradient(circle, transparent 42%, #000 44%, #000 48%, transparent 50%);
+  mask-image: radial-gradient(circle, transparent 42%, #000 44%, #000 48%, transparent 50%);
+  animation: loader-spin 2.5s ease-in-out infinite;
+}
+
+.loader-ring-secondary {
+  opacity: 0.28;
+  background: conic-gradient(from 180deg, transparent 0deg, currentColor 45deg, transparent 90deg);
+  -webkit-mask-image: radial-gradient(circle, transparent 52%, #000 54%, #000 56%, transparent 58%);
+  mask-image: radial-gradient(circle, transparent 52%, #000 54%, #000 56%, transparent 58%);
+  animation: loader-spin 4s linear infinite reverse;
+}
+
+.loader-ring-particle {
+  opacity: 0.36;
+  background: conic-gradient(from 270deg, transparent 0deg, currentColor 20deg, transparent 40deg);
+  -webkit-mask-image: radial-gradient(circle, transparent 61%, #000 62%, #000 63%, transparent 64%);
+  mask-image: radial-gradient(circle, transparent 61%, #000 62%, #000 63%, transparent 64%);
+  animation: loader-spin 3.5s linear infinite;
+}
+
+.loader-text-in {
+  animation: loader-text-in 0.8s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loader-rings,
+  .loader-ring,
+  .loader-text-in {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

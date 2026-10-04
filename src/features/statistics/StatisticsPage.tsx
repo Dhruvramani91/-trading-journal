@@ -3,6 +3,7 @@ import type { KeyboardEvent, ReactNode } from 'react';
 import { BarChart3 } from 'lucide-react';
 
 import { PageHeader } from '@/components/ui/PageHeader';
+import { Loader } from '@/components/ui/Loader';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -330,9 +331,7 @@ export function StatisticsPage() {
       />
 
       {!loaded || !s ? (
-        <div className="text-sm text-fg-muted">
-          Loading statistics…
-        </div>
+        <Loader size="sm" title="Loading statistics…" className="min-h-56" />
       ) : trades.length === 0 ? (
         <EmptyState
           icon={<BarChart3 className="h-6 w-6" />}

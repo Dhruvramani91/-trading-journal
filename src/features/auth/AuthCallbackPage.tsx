@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BrandLogo } from '@/components/layout/Brand';
+import { Loader } from '@/components/ui/Loader';
 import { useAuthStore } from '@/store/authStore';
 
 export function AuthCallbackPage() {
@@ -28,12 +29,9 @@ export function AuthCallbackPage() {
 
   return (
     <div className="min-h-screen bg-bg-0 flex items-center justify-center">
-      <div className="text-center space-y-4">
+      <div className="flex flex-col items-center">
         <BrandLogo size="lg" className="mx-auto animate-pulse" />
-        <div className="space-y-1">
-          <p className="text-sm font-semibold text-fg">Signing you in...</p>
-          <p className="text-xs text-fg-muted">Please wait a moment.</p>
-        </div>
+        <Loader title="Signing you in…" subtitle="Please wait a moment." className="pt-4" />
       </div>
     </div>
   );

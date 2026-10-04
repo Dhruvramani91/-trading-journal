@@ -28,6 +28,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/Table';
 import { Stat } from '@/components/ui/Stat';
 import { Tooltip } from '@/components/ui/Tooltip';
+import { Loader } from '@/components/ui/Loader';
 import { cn } from '@/lib/cn';
 import {
   formatMoney,
@@ -484,7 +485,7 @@ function AttachTradesModal({
           ) : null}
 
           {loadingTrades ? (
-            <div className="p-4 text-sm text-fg-muted">Loading trades…</div>
+            <Loader size="sm" title="Loading trades…" className="min-h-32" />
           ) : availableTrades.length === 0 ? (
             <div className="p-6 text-center text-sm text-fg-muted">
               No available trades match your filters.
@@ -1101,25 +1102,11 @@ export function AccountSummaryPage() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-2">
-          <div className="h-4 w-4 rounded bg-bg-3 animate-pulse" />
-          <div className="h-4 w-20 rounded bg-bg-3 animate-pulse" />
-        </div>
-        <div className="h-6 w-48 rounded bg-bg-3 animate-pulse" />
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="h-20 rounded-xl bg-bg-2 animate-pulse" />
-          <div className="h-20 rounded-xl bg-bg-2 animate-pulse" />
-          <div className="h-20 rounded-xl bg-bg-2 animate-pulse" />
-          <div className="h-20 rounded-xl bg-bg-2 animate-pulse" />
-        </div>
-        <Card>
-          <CardBody className="h-64" />
-        </Card>
-        <Card>
-          <CardBody className="h-64" />
-        </Card>
-      </div>
+      <Loader
+        title="Loading account…"
+        subtitle="Preparing your account performance."
+        className="min-h-[28rem]"
+      />
     );
   }
 

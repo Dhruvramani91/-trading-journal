@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 
 import { PageHeader } from '@/components/ui/PageHeader';
+import { Loader } from '@/components/ui/Loader';
 
 import { Card, CardBody } from '@/components/ui/Card';
 
@@ -483,7 +484,7 @@ export function JournalPage() {
 
           {!loaded ? (
 
-            <div className="p-6 text-sm text-fg-muted">Loading trades…</div>
+            <Loader size="sm" title="Loading trades…" className="min-h-40" />
 
           ) : sorted.length === 0 ? (
 

@@ -18,6 +18,7 @@ import {
   type TooltipPayloadEntry,
 } from 'recharts';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { Loader } from '@/components/ui/Loader';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Stat } from '@/components/ui/Stat';
 import { Badge } from '@/components/ui/Badge';
@@ -93,7 +94,7 @@ export function MistakesPage() {
     : null;
 
   if (!loaded) {
-    return <div className="pt-20 text-center text-sm text-fg-muted">Loading mistakes data…</div>;
+    return <Loader title="Loading mistakes data…" className="min-h-64" />;
   }
 
   return (

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { ResultPill } from '@/components/ui/ResultPill';
 import { DirectionPill } from '@/components/ui/DirectionPill';
 import { Stat } from '@/components/ui/Stat';
+import { Loader } from '@/components/ui/Loader';
 
 import { useTradesStore } from '@/store/tradesStore';
 import { useAuthStore } from '@/store/authStore';
@@ -136,9 +137,7 @@ export function TradeDetailsPage() {
 
   if (loading) {
     return (
-      <div className="text-sm text-fg-muted">
-        Loading…
-      </div>
+      <Loader title="Loading trade…" className="min-h-64" />
     );
   }
 

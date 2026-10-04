@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Calendar, TrendingUp } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { Loader } from '@/components/ui/Loader';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Stat } from '@/components/ui/Stat';
@@ -154,11 +155,7 @@ export function CalendarPage() {
     year === now.getFullYear() && month === now.getMonth();
 
   if (!loaded) {
-    return (
-      <div className="pt-20 text-center text-sm text-fg-muted">
-        Loading calendar…
-      </div>
-    );
+    return <Loader title="Loading calendar…" className="min-h-64" />;
   }
 
   return (
