@@ -657,6 +657,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           throw uploadError;
         }
 
+        // Avatars are intentionally public-read; Storage policies restrict
+        // uploads and mutations to the authenticated user's own folder.
         const { data: publicUrlData } = supabase.storage
           .from('avatars')
           .getPublicUrl(path);
