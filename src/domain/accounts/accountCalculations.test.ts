@@ -107,6 +107,32 @@ describe('calculateAccountSummary', () => {
     ).toBeCloseTo(66.6667, 2);
   });
 
+  it('uses the shared trade statistics for performance and account totals', () => {
+    const account = createAccount();
+    const attachments = [
+      createAttachment(400, { accountR: 2 }),
+      createAttachment(-100, { accountR: -0.5 }),
+      createAttachment(0, { accountR: 0 }),
+    ];
+
+    const summary = calculateAccountSummary(account, attachments);
+
+    expect(summary.tradeStats).toMatchObject({
+      totalTrades: 3,
+      winningTrades: 1,
+      losingTrades: 1,
+      breakevenTrades: 1,
+      totalPnl: 300,
+      totalR: 1.5,
+      winRate: 50,
+    });
+    expect(summary.performance).toMatchObject({
+      totalPnl: summary.tradeStats.totalPnl,
+      currentBalance: 25_300,
+      pnlPercentage: 1.2,
+    });
+  });
+
   it('calculates best and worst trade', () => {
     const account = createAccount();
 

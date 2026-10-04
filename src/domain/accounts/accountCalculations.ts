@@ -668,14 +668,8 @@ function calculateConsistency(
 
 function calculatePerformance(
   account: Account,
-  attachments: Array<
-    AccountTradeAttachment & {
-      tradeOpenedAt?: string | null;
-    }
-  >
+  tradeStats: AccountTradeStats,
 ): AccountPerformance {
-  const tradeStats = calculateTradeStats(attachments);
-
   const totalPnl = tradeStats.totalPnl;
 
   const startingBalance = account.accountSize;
@@ -817,7 +811,7 @@ export function calculateAccountSummary(
   const performance =
     calculatePerformance(
       account,
-      attachments
+      tradeStats,
     );
 
   const equityCurve =

@@ -6,6 +6,7 @@ import { deleteTradePhotosForTrade } from '@/lib/tradePhotos';
 interface TradesState {
   trades: Trade[];
   ownerId: string | null;
+  loadingOwnerId: string | null;
   loaded: boolean;
   loading: boolean;
   error: string | null;
@@ -32,6 +33,7 @@ let inFlightLoad: Promise<void> | null = null;
 export const useTradesStore = create<TradesState>((set, get) => ({
   trades: [],
   ownerId: null,
+  loadingOwnerId: null,
   loaded: false,
   loading: false,
   error: null,
@@ -43,6 +45,7 @@ export const useTradesStore = create<TradesState>((set, get) => ({
 
     set({
       loading: true,
+      loadingOwnerId: ownerId ?? null,
       error: null,
     });
 
@@ -56,6 +59,7 @@ export const useTradesStore = create<TradesState>((set, get) => ({
         set({
           trades,
           ownerId: ownerId ?? null,
+          loadingOwnerId: null,
           loaded: true,
           loading: false,
           error: null,
@@ -68,6 +72,7 @@ export const useTradesStore = create<TradesState>((set, get) => ({
             err instanceof Error
               ? err.message
               : 'Failed to load trades.',
+          loadingOwnerId: null,
           loading: false,
         });
       }
@@ -92,6 +97,7 @@ export const useTradesStore = create<TradesState>((set, get) => ({
       set({
         trades,
         ownerId: get().ownerId,
+        loadingOwnerId: null,
         loaded: true,
         loading: false,
         error: null,
@@ -104,6 +110,8 @@ export const useTradesStore = create<TradesState>((set, get) => ({
           err instanceof Error
             ? err.message
             : 'Failed to refresh trades.',
+        loadingOwnerId: null,
+        loading: false,
       });
     }
   },
@@ -115,6 +123,7 @@ export const useTradesStore = create<TradesState>((set, get) => ({
     set({
       trades: [],
       ownerId: null,
+      loadingOwnerId: null,
       loaded: false,
       loading: false,
       error: null,
@@ -158,7 +167,10 @@ export function bootTradesStore(): void {
   if (booted) return;
   booted = true;
 
-  void useTradesStore.getState().load();
+  const state = useTradesStore.getState();
+  if (state.loaded || state.loading) return;
+
+  void state.load();
 }
 
 export async function reloadTradesForCurrentUser(userId?: string): Promise<void> {

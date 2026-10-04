@@ -9,7 +9,8 @@ import { ResultPill } from '@/components/ui/ResultPill';
 import { DirectionPill } from '@/components/ui/DirectionPill';
 import { Stat } from '@/components/ui/Stat';
 
-import { useTradesStore, bootTradesStore } from '@/store/tradesStore';
+import { useTradesStore } from '@/store/tradesStore';
+import { useAuthStore } from '@/store/authStore';
 import { tradeRepository } from '@/data/supabaseTradeRepository';
 import { readFieldLabel } from '@/domain/templates/resolve';
 import { formatDateLong, formatR, formatDuration } from '@/lib/format';
@@ -22,6 +23,7 @@ export function TradeDetailsPage() {
   const navigate = useNavigate();
 
   const { remove } = useTradesStore();
+  const { user } = useAuthStore();
 
   const [trade, setTrade] = useState<Trade | null>(null);
   const [loading, setLoading] = useState(true);
@@ -31,19 +33,39 @@ export function TradeDetailsPage() {
   >({});
 
   useEffect(() => {
-    bootTradesStore();
-  }, []);
-
-  useEffect(() => {
     let cancelled = false;
 
     async function load() {
       if (!id) {
+        setTrade(null);
         setLoading(false);
         return;
       }
 
-      const t = await tradeRepository.get(id);
+      setLoading(true);
+
+      let current = useTradesStore.getState();
+      let cachedTrade: Trade | undefined;
+
+      if (user?.id && current.loaded && current.ownerId === user.id) {
+        cachedTrade = current.trades.find((item) => item.id === id);
+      } else if (
+        user?.id &&
+        current.loading &&
+        current.loadingOwnerId === user.id
+      ) {
+        // Join an existing load for this user; do not initiate a full-history
+        // fetch from the TradeDetails route.
+        await current.load(user.id);
+        if (cancelled) return;
+
+        current = useTradesStore.getState();
+        if (current.loaded && current.ownerId === user.id) {
+          cachedTrade = current.trades.find((item) => item.id === id);
+        }
+      }
+
+      const t = cachedTrade ?? await tradeRepository.get(id);
 
       if (!cancelled) {
         setTrade(t);
@@ -56,7 +78,7 @@ export function TradeDetailsPage() {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, user?.id]);
 
   useEffect(() => {
     let cancelled = false;
