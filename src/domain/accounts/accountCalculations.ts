@@ -669,6 +669,7 @@ function calculateConsistency(
 function calculatePerformance(
   account: Account,
   tradeStats: AccountTradeStats,
+  equityCurve: EquityPoint[],
 ): AccountPerformance {
   const totalPnl = tradeStats.totalPnl;
 
@@ -701,17 +702,15 @@ function calculatePerformance(
         )
       : null;
 
-  /*
-   * Current drawdown is calculated from the
-   * account's starting balance and current P&L.
-   *
-   * Positive P&L = no drawdown.
-   * Negative P&L = drawdown.
-   */
-  const currentDrawdown =
-    totalPnl < 0
-      ? Math.abs(totalPnl)
-      : 0;
+  // The account model has a single drawdown limit measured from starting
+  // balance. Retain the worst historical loss below that 0-P&L baseline.
+  let lowestPnl = 0;
+  for (const point of equityCurve) {
+    if (point.cumulativePnl < lowestPnl) {
+      lowestPnl = point.cumulativePnl;
+    }
+  }
+  const currentDrawdown = Math.abs(lowestPnl);
 
   const maxDrawdown =
     account.maxDrawdown;
@@ -808,14 +807,15 @@ export function calculateAccountSummary(
   const tradeStats =
     calculateTradeStats(attachments);
 
+  const equityCurve =
+    calculateEquityCurve(attachments);
+
   const performance =
     calculatePerformance(
       account,
       tradeStats,
+      equityCurve,
     );
-
-  const equityCurve =
-    calculateEquityCurve(attachments);
 
   return {
     account,

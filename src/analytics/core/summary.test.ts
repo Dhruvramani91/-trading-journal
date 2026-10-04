@@ -80,6 +80,23 @@ describe('summary', () => {
     expect(s.maxDrawdownR).toBe(1);
   });
 
+  it.each([
+    { rs: [-3], expected: 3 },
+    { rs: [-1, -1, 1], expected: 2 },
+    { rs: [1, 2, 0.5], expected: 0 },
+    { rs: [-3, 2, 3], expected: 3 },
+  ])('includes zero equity and retains historical drawdown for $rs', ({ rs, expected }) => {
+    const trades = rs.map((r, index) =>
+      makeTrade({
+        openedAt: `2026-01-${String(index + 1).padStart(2, '0')}T10:00:00Z`,
+        r,
+        result: r > 0 ? 'win' : r < 0 ? 'loss' : 'be',
+      }),
+    );
+
+    expect(summary(trades).maxDrawdownR).toBe(expected);
+  });
+
   
 
   it('averages plannedRR across trades that carry a valid value', () => {

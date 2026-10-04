@@ -96,8 +96,9 @@ export function summary(trades: readonly Trade[]): TradeSummary {
 
 /** Maximum drawdown of an equity curve, in R. */
 function maxDrawdown(points: readonly EquityPoint[]): number {
-  if (points.length === 0) return 0;
-  let peak = -Infinity;
+  // Trading equity starts at 0R, even though the displayed curve contains
+  // only post-trade points.
+  let peak = 0;
   let dd = 0;
   for (const p of points) {
     if (p.cumR > peak) peak = p.cumR;

@@ -38,6 +38,8 @@ type SupabaseTradeRow = {
   updated_at: string;
 };
 
+const TRADE_LIST_PAGE_SIZE = 500;
+
 function assertConfigured() {
   if (!isSupabaseConfigured || !supabase) {
     throw new Error(
@@ -170,20 +172,32 @@ function toPatchRow(patch: Partial<Trade>): Record<string, unknown> {
 export const tradeRepository: TradeRepository = {
   async list(): Promise<Trade[]> {
     const userId = await getUserId();
+    const rows: SupabaseTradeRow[] = [];
+    let offset = 0;
 
-    const { data, error } = await supabase!
-      .from('trades')
-      .select('*')
-      .eq('user_id', userId)
-      .order('opened_at', { ascending: false });
+    while (true) {
+      const { data, error } = await supabase!
+        .from('trades')
+        .select('*')
+        .eq('user_id', userId)
+        .order('opened_at', { ascending: false })
+        .order('id', { ascending: true })
+        .range(offset, offset + TRADE_LIST_PAGE_SIZE - 1);
 
-    if (error) {
-      throw new Error(`Supabase list: ${error.message}`);
+      if (error) {
+        throw new Error(`Supabase list: ${error.message}`);
+      }
+
+      const page = (data ?? []) as SupabaseTradeRow[];
+      if (page.length === 0) break;
+
+      rows.push(...page);
+      // Advance by the number actually returned, so a server-side row cap
+      // smaller than the requested range cannot cause rows to be skipped.
+      offset += page.length;
     }
 
-    return (data ?? []).map((row) =>
-      toTrade(row as SupabaseTradeRow)
-    );
+    return rows.map(toTrade);
   },
 
   async get(id: string): Promise<Trade | null> {

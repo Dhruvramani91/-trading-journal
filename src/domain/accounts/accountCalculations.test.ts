@@ -230,6 +230,46 @@ describe('calculateAccountSummary', () => {
     ).toBe(600);
   });
 
+  it('retains the worst static drawdown after partial recovery', () => {
+    const account = createAccount({ maxDrawdown: 1_500 });
+    const attachments = [
+      createAttachment(-1_200, { attachedAt: '2026-01-01T10:00:00.000Z' }),
+      createAttachment(800, { attachedAt: '2026-01-02T10:00:00.000Z' }),
+    ];
+
+    const summary = calculateAccountSummary(account, attachments);
+
+    expect(summary.performance.totalPnl).toBe(-400);
+    expect(summary.performance.currentDrawdown).toBe(1_200);
+    expect(summary.performance.remainingDrawdown).toBe(300);
+  });
+
+  it('keeps drawdown at zero when the equity curve never falls below its start', () => {
+    const account = createAccount({ maxDrawdown: 1_000 });
+    const attachments = [
+      createAttachment(500, { attachedAt: '2026-01-01T10:00:00.000Z' }),
+      createAttachment(200, { attachedAt: '2026-01-02T10:00:00.000Z' }),
+    ];
+
+    const summary = calculateAccountSummary(account, attachments);
+
+    expect(summary.performance.currentDrawdown).toBe(0);
+    expect(summary.performance.remainingDrawdown).toBe(1_000);
+  });
+
+  it('measures static drawdown from the starting balance rather than a trailing peak', () => {
+    const account = createAccount({ maxDrawdown: 1_000 });
+    const attachments = [
+      createAttachment(500, { attachedAt: '2026-01-01T10:00:00.000Z' }),
+      createAttachment(-700, { attachedAt: '2026-01-02T10:00:00.000Z' }),
+    ];
+
+    const summary = calculateAccountSummary(account, attachments);
+
+    expect(summary.performance.totalPnl).toBe(-200);
+    expect(summary.performance.currentDrawdown).toBe(200);
+  });
+
   it('calculates consistency percentage from trading days', () => {
     const account = createAccount();
 

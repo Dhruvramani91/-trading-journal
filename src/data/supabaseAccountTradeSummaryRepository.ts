@@ -12,6 +12,8 @@ type SupabaseTradeSummaryRow = {
   opened_at: string;
 };
 
+const TRADE_SUMMARY_PAGE_SIZE = 500;
+
 function assertConfigured() {
   if (!isSupabaseConfigured || !supabase) {
     throw new Error(
@@ -44,22 +46,34 @@ export const accountTradeSummaryRepository = {
     const userId = authenticatedUserId ?? await getUserId();
     if (!userId) throw new Error('No authenticated user.');
 
-    const { data, error } = await supabase!
-      .from('trades')
-      .select('id, pnl, opened_at')
-      .eq('user_id', userId)
-      .order('opened_at', { ascending: false });
+    const rows: SupabaseTradeSummaryRow[] = [];
+    let offset = 0;
 
-    if (error) {
-      throw new Error(`Supabase account trade summaries list: ${error.message}`);
+    while (true) {
+      const { data, error } = await supabase!
+        .from('trades')
+        .select('id, pnl, opened_at')
+        .eq('user_id', userId)
+        .order('opened_at', { ascending: false })
+        .order('id', { ascending: true })
+        .range(offset, offset + TRADE_SUMMARY_PAGE_SIZE - 1);
+
+      if (error) {
+        throw new Error(`Supabase account trade summaries list: ${error.message}`);
+      }
+
+      const page = (data ?? []) as SupabaseTradeSummaryRow[];
+      if (page.length === 0) break;
+
+      rows.push(...page);
+      offset += page.length;
     }
 
-    return (data ?? []).map((row) => {
-      const trade = row as SupabaseTradeSummaryRow;
+    return rows.map((row) => {
       return {
-        id: trade.id,
-        pnl: trade.pnl == null ? null : Number(trade.pnl),
-        openedAt: trade.opened_at,
+        id: row.id,
+        pnl: row.pnl == null ? null : Number(row.pnl),
+        openedAt: row.opened_at,
       };
     });
   },
