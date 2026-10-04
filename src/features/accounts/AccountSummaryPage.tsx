@@ -12,8 +12,8 @@ import {
 } from 'lucide-react';
 import {
   ResponsiveContainer,
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   Tooltip as ReTooltip,
@@ -1174,120 +1174,75 @@ export function AccountSummaryPage() {
         <span className="text-fg-muted truncate max-w-[200px]">{account.name}</span>
       </div>
 
-      {/* Account Header Card */}
-      <Card className="w-full max-w-full min-w-0">
-        <CardBody>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between min-w-0">
-            <div className="min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-fg">
-                {account.name}
-              </h1>
-              <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-fg-dim">
-                <Badge tone={account.accountType === 'futures' ? 'accent' : 'win'}>
-                  {TYPE_LABEL[account.accountType]}
-                </Badge>
-                <span className="mx-1.5 text-fg-dim">·</span>
-                <Badge tone={phaseTone}>{phaseLabel}</Badge>
-                <span className="mx-1.5 text-fg-dim">·</span>
-                <Badge tone={resultTone}>{resultLabel}</Badge>
-              </p>
-              <p className="mt-2 text-sm text-fg-dim truncate max-w-[400px]">
-                {TYPE_LABEL[account.accountType]} ·
-                {accountSizeLabel(account.accountSize)} size ·
-                {attachments.length} attached trade{attachments.length !== 1 ? 's' : ''}
-              </p>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <Button
-                variant="secondary"
-                size="sm"
-                leftIcon={<Plus className="h-4 w-4" />}
-                onClick={() => setAttachModalOpen(true)}
-              >
-                Attach journal trades
-              </Button>
-            </div>
+      {/* Dashboard-style account heading */}
+      <header className="flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-[26px] font-bold tracking-tight leading-tight text-fg">{account.name}</h1>
+          <p className="mt-1 text-[13px] text-fg-muted">A focused view of this account’s performance.</p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <Badge tone={account.accountType === 'futures' ? 'accent' : 'win'}>{TYPE_LABEL[account.accountType]}</Badge>
+            <Badge tone={phaseTone}>{phaseLabel}</Badge>
+            <Badge tone={resultTone}>{resultLabel}</Badge>
+            <span className="text-xs text-fg-dim">{accountSizeLabel(account.accountSize)} account · {attachments.length} attached trade{attachments.length !== 1 ? 's' : ''}</span>
           </div>
-        </CardBody>
-      </Card>
+        </div>
+        <Button
+          variant="primary"
+          className="h-10 shrink-0 rounded-lg px-4 text-xs font-semibold shadow-none"
+          leftIcon={<Plus className="h-4 w-4" />}
+          onClick={() => setAttachModalOpen(true)}
+        >
+          Attach journal trades
+        </Button>
+      </header>
 
       {/* Summary Statistics - 4 Cards */}
-      <div className="grid grid-cols-1 min-[480px]:grid-cols-2 gap-4 xl:grid-cols-4">
+      <section aria-label="Account performance" className="space-y-3">
+      <h2 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-muted">
+        <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent" />
+        Account performance
+      </h2>
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {/* Net Realized P&L */}
-        <Card>
-          <CardBody>
-            <div className="space-y-1">
-              <div className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
-                NET REALIZED P&L
-              </div>
-              <div className={cn(
-                'text-3xl font-bold tabular-nums',
-                PNL_TONE(performance.totalPnl)
-              )}>
-                {formatSignedMoney(performance.totalPnl)}
-              </div>
-              <div className="text-xs text-fg-dim">
-                {formatMoney(currentEquity)} current equity
-              </div>
-            </div>
+        <Card className="transition-colors hover:border-line-strong">
+          <CardBody className="p-4 sm:p-5">
+            <Stat label="Net realized P&L" value={formatSignedMoney(performance.totalPnl)} tone={PNL_TONE(performance.totalPnl)} />
+          </CardBody>
+        </Card>
+
+        <Card className="transition-colors hover:border-line-strong">
+          <CardBody className="p-4 sm:p-5">
+            <Stat label="Current equity" value={formatMoney(currentEquity)} tone={currentEquity >= account.accountSize ? 'win' : 'default'} />
           </CardBody>
         </Card>
 
         {/* Profit Target */}
-        <Card>
-          <CardBody>
-            <div className="space-y-1">
-              <div className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
-                PROFIT TARGET
-              </div>
-              <div className="text-3xl font-bold tabular-nums text-fg">
-                {account.profitTarget != null ? formatMoney(account.profitTarget) : '—'}
-              </div>
-              <div className="text-xs text-fg-dim">
-                {profitTargetProgress != null ? `${Math.round(profitTargetProgress)}% of target` : 'Not set'}
-              </div>
-            </div>
+        <Card className="transition-colors hover:border-line-strong">
+          <CardBody className="p-4 sm:p-5">
+            <Stat label="Profit target" value={account.profitTarget != null ? formatMoney(account.profitTarget) : '—'} tone="accent" hint={account.profitTarget != null ? `${Math.round(profitTargetProgress)}% complete` : 'Not set'} />
           </CardBody>
         </Card>
 
         {/* Max Drawdown */}
-        <Card>
-          <CardBody>
-            <div className="space-y-1">
-              <div className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
-                MAX DRAWDOWN
-              </div>
-              <div className="text-3xl font-bold tabular-nums text-fg">
-                {account.maxDrawdown != null ? formatMoney(account.maxDrawdown) : '—'}
-              </div>
-              <div className="text-xs text-fg-dim">
-                {performance.maxDrawdown != null && performance.maxDrawdown > 0
-                  ? `${Math.round(drawdownUsed)}% used`
-                  : 'Not set'}
-              </div>
-            </div>
+        <Card className="transition-colors hover:border-line-strong">
+          <CardBody className="p-4 sm:p-5">
+            <Stat label="Max drawdown" value={account.maxDrawdown != null ? formatMoney(account.maxDrawdown) : '—'} tone={drawdownUsed >= 80 ? 'loss' : drawdownUsed >= 50 ? 'accent' : 'default'} hint={performance.maxDrawdown != null && performance.maxDrawdown > 0 ? `${Math.round(drawdownUsed)}% used` : 'Not set'} />
           </CardBody>
         </Card>
-
       </div>
+      </section>
 
-      {/* Main Content Area - Performance Curve & Trade Intelligence */}
-      <div className="grid gap-6 min-w-0 grid-cols-1 xl:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
+      {/* Dashboard-style account equity curve */}
+      <div className="space-y-6 min-w-0">
         {/* Performance Curve */}
-        <Card className="min-w-0">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>PERFORMANCE CURVE</CardTitle>
-              <div className="text-xs text-fg-dim">
-                Equity progression
-              </div>
+        <Card className="min-w-0 overflow-hidden shadow-none">
+          <CardHeader className="min-h-[76px] px-4 py-4 sm:px-5">
+            <div>
+              <CardTitle className="text-[15px]">Account equity curve</CardTitle>
+              <CardDescription className="mt-1">Cumulative P&amp;L across {attachments.length} attached trade{attachments.length !== 1 ? 's' : ''}</CardDescription>
             </div>
-            <CardDescription>
-              Cumulative P&L from attached trades · {attachments.length} trade{attachments.length !== 1 ? 's' : ''}
-            </CardDescription>
           </CardHeader>
-          <CardBody className="h-[320px] sm:h-[360px] xl:h-[400px] min-w-0">
+          <CardBody className="h-[300px] p-3 sm:h-[360px] sm:p-5 min-w-0">
             {equityData.length === 0 ? (
               <div className="flex h-full items-center justify-center text-sm text-fg-muted">
                 No attached trades to chart yet.
@@ -1295,8 +1250,14 @@ export function AccountSummaryPage() {
             ) : (
               <div className="h-full w-full min-w-0">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={equityData} margin={{ top: 8, right: 16, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} vertical={false} />
+                <AreaChart data={equityData} margin={{ top: 8, right: 16, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="accountEquityCurveFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={performance.totalPnl >= 0 ? chart.win : chart.loss} stopOpacity={0.2} />
+                      <stop offset="100%" stopColor={performance.totalPnl >= 0 ? chart.win : chart.loss} stopOpacity={0.015} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="2 5" stroke={chart.grid} vertical={false} />
                   <XAxis
                     dataKey="dateLabel"
                     tick={{ fontSize: 11, fill: chart.axisText }}
@@ -1326,16 +1287,17 @@ export function AccountSummaryPage() {
                       return [formatMoney(pnl), `T${p.tradeCount} · ${formatMoney(pnl)}`];
                     }}
                   />
-                  <Line
+                  <Area
                     type="monotone"
                     dataKey="cumulativePnl"
                     stroke={performance.totalPnl >= 0 ? chart.win : chart.loss}
-                    strokeWidth={2.5}
-                    dot={{ r: 4, fill: performance.totalPnl >= 0 ? chart.win : chart.loss, strokeWidth: 2, stroke: chart.tooltipBg }}
-                    activeDot={{ r: 6, fill: performance.totalPnl >= 0 ? chart.win : chart.loss, strokeWidth: 2, stroke: chart.tooltipBg }}
+                    strokeWidth={2}
+                    fill="url(#accountEquityCurveFill)"
+                    dot={false}
+                    activeDot={{ r: 4, fill: performance.totalPnl >= 0 ? chart.win : chart.loss, stroke: chart.tooltipBg, strokeWidth: 2 }}
                     isAnimationActive={false}
                   />
-                </LineChart>
+                </AreaChart>
               </ResponsiveContainer>
               </div>
             )}
@@ -1345,11 +1307,11 @@ export function AccountSummaryPage() {
         {/* Trade Intelligence */}
         <Card className="min-w-0">
           <CardHeader>
-            <CardTitle>DEEP STATISTICS</CardTitle>
-            <CardDescription>Trade intelligence</CardDescription>
+            <CardTitle className="text-[15px]">Trade statistics</CardTitle>
+            <CardDescription>Performance details for this account</CardDescription>
           </CardHeader>
           <CardBody>
-            <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-x-5 gap-y-6 sm:grid-cols-3 lg:grid-cols-4">
               <Stat
                 label="WIN RATE"
                 value={tradeStats.totalTrades > 0 ? formatPct(tradeStats.winRate / 100) : '—'}

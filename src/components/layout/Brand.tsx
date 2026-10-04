@@ -7,32 +7,29 @@ export const BRAND_TAGLINE = 'Journal your trades';
 export function BrandLogo({
   size = 'md',
   className,
-  rounded = 'rounded-lg',
 }: {
   size?: 'sm' | 'md' | 'lg';
   className?: string;
-  rounded?: string;
 }) {
   const box =
     size === 'lg'
-      ? 'h-12 w-12'
+      ? 'h-10 w-10'
       : size === 'sm'
         ? 'h-7 w-7'
         : 'h-8 w-8';
 
   const img =
     size === 'lg'
-      ? 'h-8 w-8'
+      ? 'h-full w-full'
       : size === 'sm'
-        ? 'h-4.5 w-4.5'
-        : 'h-5 w-5';
+        ? 'h-6 w-6'
+        : 'h-7 w-7';
 
   return (
     <div
       className={cn(
-        'relative flex items-center justify-center overflow-hidden bg-bg-2 border border-line shrink-0',
+        'relative flex shrink-0 items-center justify-center',
         box,
-        rounded,
         className,
       )}
     >

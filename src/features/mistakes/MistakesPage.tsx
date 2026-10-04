@@ -101,6 +101,7 @@ export function MistakesPage() {
       <PageHeader
         title="Mistakes & Filters"
         description="Track recurring mistakes and rule violations — frequency, R impact, and win/loss correlation."
+        className="mb-1"
       />
 
       {trades.length === 0 ? (
@@ -122,9 +123,9 @@ export function MistakesPage() {
       ) : (
         <>
           {/* Hero stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Card>
-              <CardBody>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <Card className="overflow-hidden border-t-2 border-t-loss/70">
+              <CardBody className="p-4 sm:p-5">
                 <Stat
                   label="Trades with mistakes"
                   value={String(totalMistakeTrades)}
@@ -137,8 +138,8 @@ export function MistakesPage() {
                 </div>
               </CardBody>
             </Card>
-            <Card>
-              <CardBody>
+            <Card className="overflow-hidden border-t-2 border-t-loss/70">
+              <CardBody className="p-4 sm:p-5">
                 <Stat
                   label="R lost to mistakes"
                   value={formatR(totalRLost)}
@@ -146,8 +147,8 @@ export function MistakesPage() {
                 />
               </CardBody>
             </Card>
-            <Card>
-              <CardBody>
+            <Card className="overflow-hidden border-t-2 border-t-accent/70">
+              <CardBody className="p-4 sm:p-5">
                 <Stat
                   label="Most common"
                   value={mostCommon?.label ?? '—'}
@@ -157,8 +158,8 @@ export function MistakesPage() {
                 </div>
               </CardBody>
             </Card>
-            <Card>
-              <CardBody>
+            <Card className="overflow-hidden border-t-2 border-t-win/70">
+              <CardBody className="p-4 sm:p-5">
                 <Stat
                   label="Clean trades"
                   value={String(noMistakeBucket?.count ?? 0)}
@@ -174,18 +175,18 @@ export function MistakesPage() {
 
           {/* Top 3 costliest mistakes */}
           {costliest.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
               {costliest.map((b, i) => (
-                <Card key={b.key}>
-                  <CardHeader>
+                <Card key={b.key} className="overflow-hidden border-t-2 border-t-loss/70">
+                  <CardHeader className="bg-loss/5">
                     <CardTitle className="flex items-center gap-2">
                       <TrendingDown className="h-4 w-4 text-loss" />
                       #{i + 1} Costliest
                     </CardTitle>
                   </CardHeader>
-                  <CardBody>
-                    <div className="flex items-center justify-between">
-                      <Badge tone="loss">{b.label}</Badge>
+                  <CardBody className="p-4 sm:p-5">
+                    <div className="flex items-center justify-between gap-3">
+                      <Badge tone="loss" className="max-w-[70%] truncate">{b.label}</Badge>
                       <span className="text-lg font-bold text-loss tabular-nums">
                         {formatR(b.totalR)}
                       </span>
@@ -217,13 +218,13 @@ export function MistakesPage() {
 {/* R Impact bar chart */}
           {chartData.length > 0 && (
             <Card>
-              <CardHeader>
+              <CardHeader className="bg-bg-1">
                 <CardTitle className="flex items-center gap-2">
                   <BarChart3 className="h-4 w-4 text-accent" />
                   R Impact by Mistake Type
                 </CardTitle>
               </CardHeader>
-              <CardBody className="h-72">
+              <CardBody className="h-72 p-3 sm:h-80 sm:p-5">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={chartData}
@@ -251,6 +252,7 @@ export function MistakesPage() {
                       width={110}
                     />
                     <ReTooltip
+                      cursor={false}
                       contentStyle={{
                         background: chart.tooltipBg,
                         border: `1px solid ${chart.tooltipBorder}`,
@@ -259,6 +261,8 @@ export function MistakesPage() {
                         color: chart.tooltipText,
                         fontSize: '0.75rem',
                       }}
+                      labelStyle={{ color: chart.tooltipText }}
+                      itemStyle={{ color: chart.tooltipText }}
                       formatter={(value: unknown, _name: unknown, item: TooltipPayloadEntry) => {
                         const p = item.payload as { fullName: string; count: number; avgR: number } | undefined;
                         if (!p) return ['—', 'Total R'];
@@ -290,8 +294,8 @@ export function MistakesPage() {
             </CardHeader>
             <CardBody className="p-0">
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
+                <table className="w-full min-w-[640px] text-sm">
+                  <thead className="bg-bg-3/80">
                     <tr className="border-b border-line">
                       <th className="px-4 py-2.5 text-left text-2xs uppercase tracking-wider text-fg-dim font-medium">
                         Mistake
@@ -313,7 +317,7 @@ export function MistakesPage() {
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-line">
+                  <tbody className="divide-y divide-line bg-bg-2">
                     {/* Clean trades first, de-emphasized */}
                     {noMistakeBucket && (
                       <MistakeRow bucket={noMistakeBucket} muted />
@@ -366,31 +370,31 @@ export function MistakesPage() {
 
 function MistakeRow({ bucket, muted }: { bucket: CategoryBucket; muted?: boolean }) {
   return (
-    <tr className={cn('transition-colors hover:bg-bg-4', muted && 'opacity-50')}>
-      <td className="px-4 py-2.5">
+    <tr className={cn('transition-colors odd:bg-bg-2 even:bg-bg-3/30 hover:bg-bg-4', muted && 'opacity-60')}>
+      <td className="px-4 py-3">
         <Badge tone={muted ? 'accent' : bucket.totalR < 0 ? 'loss' : bucket.totalR > 0 ? 'win' : 'be'}>
           {bucket.label}
         </Badge>
       </td>
-      <td className="px-4 py-2.5 text-right tabular-nums text-fg-muted">
+      <td className="px-4 py-3 text-right tabular-nums text-fg-muted">
         {bucket.count}
       </td>
       <td className={cn(
-        'px-4 py-2.5 text-right tabular-nums font-semibold',
+        'px-4 py-3 text-right tabular-nums font-semibold',
         bucket.totalR > 0 ? 'text-win' : bucket.totalR < 0 ? 'text-loss' : 'text-be',
       )}>
         {formatR(bucket.totalR)}
       </td>
       <td className={cn(
-        'px-4 py-2.5 text-right tabular-nums',
+        'px-4 py-3 text-right tabular-nums',
         bucket.avgR > 0 ? 'text-win' : bucket.avgR < 0 ? 'text-loss' : 'text-be',
       )}>
         {formatR(bucket.avgR)}
       </td>
-      <td className="px-4 py-2.5 text-right tabular-nums text-fg-muted">
+      <td className="px-4 py-3 text-right tabular-nums text-fg-muted">
         {bucket.winRate == null ? '—' : formatPct(bucket.winRate)}
       </td>
-      <td className="px-4 py-2.5 text-right text-xs text-fg-dim">
+      <td className="px-4 py-3 text-right text-xs text-fg-dim">
         {bucket.wins}W / {bucket.losses}L / {bucket.bes}BE
       </td>
     </tr>

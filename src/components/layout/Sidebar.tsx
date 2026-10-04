@@ -1,176 +1,49 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard,
-  ScrollText,
   BarChart3,
-  Calendar,
-  AlertTriangle,
-  PanelLeftClose,
-  PanelLeftOpen,
+  CalendarDays,
+  LayoutDashboard,
   LogOut,
-  User,
+  ScrollText,
+  UserRound,
   Wallet,
+  TriangleAlert,
 } from 'lucide-react';
-import { cn } from '@/lib/cn';
+import { NavLink, useNavigate } from 'react-router-dom';
+import type { KeyboardEvent, PointerEvent } from 'react';
+import { BrandLogo } from '@/components/layout/Brand';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { useSidebarStore } from '@/store/sidebarStore';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/store/authStore';
+import { useSidebarStore } from '@/store/sidebarStore';
+import { useRef, useState } from 'react';
 
-interface NavItem {
-  to: string;
-  label: string;
-  icon: React.ComponentType<{ className?: string }>;
-  group: 'core' | 'analytics';
-}
-
-const NAV: NavItem[] = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, group: 'core' },
-  { to: '/journal', label: 'Journal', icon: ScrollText, group: 'core' },
-  { to: '/accounts', label: 'Accounts', icon: Wallet, group: 'core' },
-  { to: '/statistics', label: 'Statistics', icon: BarChart3, group: 'analytics' },
-  { to: '/calendar', label: 'Monthly Performance', icon: Calendar, group: 'analytics' },
-  { to: '/mistakes', label: 'Mistakes & Filters', icon: AlertTriangle, group: 'analytics' },
-];
-
-const CORE = NAV.filter((n) => n.group === 'core');
-const ANALYTICS = NAV.filter((n) => n.group === 'analytics');
-
-const COLLAPSED_WIDTH = 80;
-const COLLAPSE_THRESHOLD = 130;
-const EXPAND_THRESHOLD = 145;
-const MIN_EXPANDED_WIDTH = 180;
-const MAX_EXPANDED_WIDTH = 360;
-
-function NavRow({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
-  const Icon = item.icon;
-
-  if (collapsed) {
-    return (
-      <NavLink
-        to={item.to}
-        end={item.to === '/dashboard'}
-        title={item.label}
-        className={({ isActive }) =>
-          cn(
-            'group relative flex items-center justify-center mx-auto transition-all duration-150',
-            isActive
-              ? 'h-12 w-12 rounded-2xl bg-fg text-fg-inverse shadow-md'
-              : 'h-11 w-11 rounded-xl text-fg-dim hover:text-fg hover:bg-bg-4',
-          )
-        }
-      >
-        {({ isActive }) => (
-          <>
-            <Icon
-              className={cn(
-                'h-5 w-5 shrink-0 transition-colors',
-                isActive ? 'text-fg-inverse' : 'text-fg-dim group-hover:text-fg',
-              )}
-            />
-            <span className="sr-only">{item.label}</span>
-          </>
-        )}
-      </NavLink>
-    );
-  }
-
-  return (
-    <NavLink
-      to={item.to}
-      end={item.to === '/dashboard'}
-      className={({ isActive }) =>
-        cn(
-          'group relative flex items-center gap-2.5 rounded-lg px-3 py-2 w-full text-sm font-medium transition-all',
-          isActive
-            ? 'bg-fg text-fg-inverse shadow-sm'
-            : 'text-fg-muted hover:text-fg hover:bg-bg-4',
-        )
-      }
-    >
-      {({ isActive }) => (
-        <>
-          <Icon
-            className={cn(
-              'h-4 w-4 shrink-0 transition-colors',
-              isActive ? 'text-fg-inverse' : 'text-fg-dim group-hover:text-fg-muted',
-            )}
-          />
-          <span className="truncate">{item.label}</span>
-        </>
-      )}
-    </NavLink>
-  );
-}
-
-function getTraderLevelLabel(level?: string) {
-  switch (level) {
-    case 'beginner':
-      return 'Beginner Trader';
-    case 'intermediate':
-      return 'Intermediate Trader';
-    case 'advanced':
-      return 'Advanced Trader';
-    default:
-      return 'Beginner Trader';
-  }
-}
-
+const GROUPS = [
+  {
+    label: 'Overview',
+    links: [
+      { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
+      { to: '/journal', label: 'Journal', icon: ScrollText },
+      { to: '/accounts', label: 'Accounts', icon: Wallet },
+    ],
+  },
+  {
+    label: 'Analytics',
+    links: [
+      { to: '/statistics', label: 'Statistics', icon: BarChart3 },
+      { to: '/calendar', label: 'Calendar', icon: CalendarDays },
+      { to: '/mistakes', label: 'Mistakes', icon: TriangleAlert },
+    ],
+  },
+] as const;
 
 export function Sidebar() {
-  useLocation();
   const navigate = useNavigate();
-  const { collapsed, width, toggleCollapse, setCollapsed, setWidth } = useSidebarStore();
+  const { width, setWidth } = useSidebarStore();
+  const collapsed = width < 128;
   const { user, signOut } = useAuthStore();
-  const [isResizing, setIsResizing] = useState(false);
   const [logoutOpen, setLogoutOpen] = useState(false);
-  const sidebarRef = useRef<HTMLElement>(null);
-
-  const startResizing = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
-  }, []);
-
-  const stopResizing = useCallback(() => {
-    setIsResizing(false);
-  }, []);
-
-  const resize = useCallback(
-    (e: MouseEvent) => {
-      if (!isResizing || !sidebarRef.current) return;
-      const left = sidebarRef.current.getBoundingClientRect().left;
-      const newWidth = e.clientX - left;
-
-      if (collapsed) {
-        if (newWidth > EXPAND_THRESHOLD) {
-          setCollapsed(false);
-          setWidth(Math.min(MAX_EXPANDED_WIDTH, Math.max(MIN_EXPANDED_WIDTH, newWidth)));
-        }
-      } else {
-        if (newWidth < COLLAPSE_THRESHOLD) {
-          setCollapsed(true);
-        } else {
-          setWidth(Math.min(MAX_EXPANDED_WIDTH, Math.max(MIN_EXPANDED_WIDTH, newWidth)));
-        }
-      }
-    },
-    [isResizing, collapsed, setCollapsed, setWidth],
-  );
-
-  useEffect(() => {
-    if (isResizing) {
-      window.addEventListener('mousemove', resize);
-      window.addEventListener('mouseup', stopResizing);
-    }
-    return () => {
-      window.removeEventListener('mousemove', resize);
-      window.removeEventListener('mouseup', stopResizing);
-    };
-  }, [isResizing, resize, stopResizing]);
-
-  function handleSignOut() {
-    setLogoutOpen(true);
-  }
+  const resizeStart = useRef<{ x: number; width: number } | null>(null);
 
   async function confirmSignOut() {
     setLogoutOpen(false);
@@ -178,134 +51,141 @@ export function Sidebar() {
     navigate('/');
   }
 
+  function resizeFromPointer(event: PointerEvent<HTMLDivElement>) {
+    if (!resizeStart.current) return;
+    const nextWidth = resizeStart.current.width + event.clientX - resizeStart.current.x;
+    setWidth(nextWidth);
+  }
+
+  function handleResizeKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    setWidth(width + (event.key === 'ArrowRight' ? 16 : -16));
+  }
+
   return (
     <aside
-      ref={sidebarRef}
-      style={{ width: collapsed ? `${COLLAPSED_WIDTH}px` : `${width}px` }}
+      aria-label="Main sidebar"
+      style={{ width }}
       className={cn(
-        'relative hidden md:flex shrink-0 flex-col border-r border-line bg-bg-1 select-none',
-        !isResizing && 'transition-[width] duration-200 ease-in-out',
+        'relative z-20 hidden shrink-0 flex-col bg-bg-1 md:flex',
+        collapsed
+          ? 'my-3 ml-3 mr-2 h-[calc(100%-24px)] rounded-2xl border border-line shadow-pop'
+          : 'h-full border-r border-line',
       )}
     >
-      {collapsed ? (
-        <div className="flex flex-col items-center justify-center py-4 border-b border-line">
-          <img
-            src="/logo.png"
-            alt="PrecisionJournal"
-            title="PrecisionJournal"
-            className="h-12 w-12 rounded-2xl bg-white border border-line object-contain p-1.5 shadow-md"
-          />
-        </div>
-      ) : (
-        <div className="flex h-14 items-center justify-between border-b border-line px-4">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <img
-              src="/logo.png"
-              alt="PrecisionJournal"
-              className="h-8 w-8 shrink-0 rounded-lg bg-white border border-line object-contain p-1 shadow-sm"
-            />
-            <div className="flex flex-col leading-tight min-w-0">
-              <span className="text-sm font-bold text-fg tracking-tight truncate">PrecisionJournal</span>
-              <span className="text-2xs text-fg-dim truncate">My Journal</span>
+      <div className={cn('flex h-16 shrink-0 items-center', collapsed ? 'justify-center px-2' : 'justify-start px-4')}>
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard')}
+          className={cn('flex min-w-0 items-center text-left', collapsed ? 'justify-center' : 'gap-3')}
+          aria-label="The Precision Lab home"
+        >
+          <BrandLogo size="lg" className="h-9 w-9" />
+          {!collapsed && (
+            <span className="flex min-w-0 flex-col leading-tight">
+              <span className="truncate text-[13px] font-bold tracking-tight text-fg">The Precision Lab</span>
+              <span className="mt-0.5 truncate text-[11px] text-fg-muted">Trading Journal</span>
+            </span>
+          )}
+        </button>
+      </div>
+
+      <nav className={cn('min-h-0 flex-1 space-y-7 overflow-y-auto py-6', collapsed ? 'px-2' : 'px-3')}>
+        {GROUPS.map((group) => (
+          <div key={group.label}>
+            {!collapsed && <h2 className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-fg-dim">{group.label}</h2>}
+            <div className="space-y-1">
+              {group.links.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    end={'end' in item ? item.end : false}
+                    title={collapsed ? item.label : undefined}
+                    aria-label={collapsed ? item.label : undefined}
+                    className={({ isActive }) => cn(
+                      'group flex h-10 items-center rounded-lg text-[13px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+                      collapsed ? 'justify-center px-0' : 'gap-3 px-3',
+                      isActive
+                        ? 'bg-accent/10 text-accent'
+                        : 'text-fg-muted hover:bg-bg-3 hover:text-fg',
+                    )}
+                  >
+                    <Icon className="h-[17px] w-[17px] shrink-0" strokeWidth={1.8} />
+                    {!collapsed && <span className="truncate">{item.label}</span>}
+                    {collapsed && <span className="sr-only">{item.label}</span>}
+                  </NavLink>
+                );
+              })}
             </div>
           </div>
-          <button
-            type="button"
-            onClick={toggleCollapse}
-            title="Collapse sidebar"
-            className="flex h-7 w-7 items-center justify-center rounded-md text-fg-muted hover:text-fg hover:bg-bg-4 transition-colors"
-          >
-            <PanelLeftClose className="h-4 w-4" />
-          </button>
-        </div>
-      )}
-
-      <nav className={cn('flex-1 overflow-y-auto px-2 py-4 space-y-4', collapsed && 'px-0 space-y-2')}>
-        <div>
-          {!collapsed ? (
-            <p className="px-2 mb-1.5 text-2xs font-semibold uppercase tracking-wider text-fg-dim">
-              Daily
-            </p>
-          ) : null}
-          <div className={cn('space-y-1.5', collapsed && 'space-y-2')}>
-            {CORE.map((item) => (
-              <NavRow key={item.to} item={item} collapsed={collapsed} />
-            ))}
-          </div>
-        </div>
-
-        <div>
-          {!collapsed ? (
-            <p className="px-2 mb-1.5 text-2xs font-semibold uppercase tracking-wider text-fg-dim">
-              Performance
-            </p>
-          ) : (
-            <div className="my-3 border-t border-line/70 w-8 mx-auto" />
-          )}
-          <div className={cn('space-y-1.5', collapsed && 'space-y-2')}>
-            {ANALYTICS.map((item) => (
-              <NavRow key={item.to} item={item} collapsed={collapsed} />
-            ))}
-          </div>
-        </div>
+        ))}
       </nav>
 
-      {/* Footer / User */}
-      <div className={cn('border-t border-line p-2', collapsed && 'p-2.5')}>
-        {collapsed ? (
-          <div className="space-y-1.5 flex flex-col items-center">
-            <button
-              type="button"
-              onClick={handleSignOut}
-              title="Sign out to homepage"
-              className="flex h-11 w-11 mx-auto items-center justify-center rounded-xl text-fg-dim hover:text-loss hover:bg-loss/10 transition-colors"
-            >
-              <LogOut className="h-5 w-5" />
-            </button>
-            <button
-              type="button"
-              onClick={toggleCollapse}
-              title="Expand sidebar"
-              className="flex h-11 w-11 mx-auto items-center justify-center rounded-xl text-fg-muted hover:text-fg hover:bg-bg-4 transition-colors"
-            >
-              <PanelLeftOpen className="h-5 w-5" />
-            </button>
-          </div>
-        ) : (
-          user && (
-            <button
-              type="button"
-              onClick={() => navigate('/profile')}
-              title="Open profile"
-              className="w-full text-left flex items-center gap-2 rounded-lg border border-line bg-bg-4 px-2.5 py-2 hover:bg-bg-3 transition-colors"
-            >
-              <div className="h-7 w-7 rounded-full bg-accent/15 text-accent flex items-center justify-center shrink-0 overflow-hidden">
-                {user.avatar ? (
-                  <img src={user.avatar} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <User className="h-3.5 w-3.5" />
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-fg truncate">
-                  {user.name || user.email}
-                </p>
-                <p className="text-[10px] text-fg-dim truncate">
-                  {getTraderLevelLabel(user?.traderLevel)}
-                </p>
-              </div>
-            </button>
-          )
+      <div className={cn('shrink-0 border-t border-line py-3', collapsed ? 'px-2' : 'px-3')}>
+        {user && (
+          <button
+            type="button"
+            onClick={() => navigate('/profile')}
+            title={collapsed ? `${user.name || user.email} · Profile` : undefined}
+            className={cn(
+              'mb-2 flex h-10 w-full items-center rounded-lg text-left transition-colors hover:bg-bg-3',
+              collapsed ? 'justify-center' : 'gap-3 px-2',
+            )}
+          >
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line bg-bg-3 text-accent">
+              {user.avatar ? <img src={user.avatar} alt="" className="h-full w-full object-cover" /> : <UserRound className="h-4 w-4" />}
+            </span>
+            {!collapsed && (
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-xs font-semibold text-fg">{user.name || user.email}</span>
+                <span className="block truncate text-[10px] text-fg-dim">Profile</span>
+              </span>
+            )}
+          </button>
         )}
+        <ThemeToggle
+          showLabel={!collapsed}
+          className={cn(
+            'mb-1 h-9 border-0 bg-transparent shadow-none hover:bg-bg-3',
+            collapsed ? 'w-full' : 'w-full justify-start px-3 text-[13px]',
+          )}
+        />
+        <button
+          type="button"
+          onClick={() => setLogoutOpen(true)}
+          title={collapsed ? 'Sign out' : undefined}
+          aria-label="Sign out"
+          className={cn('flex h-9 w-full items-center rounded-lg text-[13px] font-medium text-fg-muted transition-colors hover:bg-loss/10 hover:text-loss', collapsed ? 'justify-center' : 'gap-3 px-3')}
+        >
+          <LogOut className="h-4 w-4 shrink-0" strokeWidth={1.8} />
+          {!collapsed && <span>Sign out</span>}
+        </button>
       </div>
 
       <div
-        onMouseDown={startResizing}
-        title={collapsed ? 'Drag right to expand sidebar' : 'Drag to resize sidebar'}
-        className={cn(
-          'absolute -right-1 top-0 bottom-0 w-2.5 cursor-col-resize hover:bg-accent/40 active:bg-accent transition-colors z-30',
-          isResizing && 'bg-accent',
-        )}
+        role="separator"
+        aria-label="Resize sidebar"
+        aria-orientation="vertical"
+        aria-valuemin={72}
+        aria-valuemax={360}
+        aria-valuenow={width}
+        tabIndex={0}
+        onPointerDown={(event) => {
+          resizeStart.current = { x: event.clientX, width };
+          event.currentTarget.setPointerCapture?.(event.pointerId);
+        }}
+        onPointerMove={resizeFromPointer}
+        onPointerUp={(event) => {
+          resizeFromPointer(event);
+          resizeStart.current = null;
+          event.currentTarget.releasePointerCapture?.(event.pointerId);
+        }}
+        onPointerCancel={() => { resizeStart.current = null; }}
+        onKeyDown={handleResizeKeyDown}
+        className="absolute inset-y-0 -right-1.5 z-30 w-3 cursor-col-resize touch-none outline-none after:absolute after:inset-y-0 after:left-1/2 after:w-px after:-translate-x-1/2 after:transition-colors hover:after:bg-accent focus-visible:after:bg-accent"
       />
 
       <ConfirmDialog

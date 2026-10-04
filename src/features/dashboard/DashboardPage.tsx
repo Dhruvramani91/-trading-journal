@@ -3,8 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowUp, TrendingUp, TrendingDown } from 'lucide-react';
 import {
   ResponsiveContainer,
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   Tooltip as ReTooltip,
@@ -50,18 +50,6 @@ interface WeekdayRow {
   totalPnl: number;
   pnlCount: number;
   winRate: number | null;
-}
-
-function greetingFirstName(name?: string, email?: string): string {
-  if (name) {
-    const first = name.trim().split(/\s+/)[0];
-    if (first) return first;
-  }
-  if (email) {
-    const local = email.split('@')[0];
-    if (local) return local;
-  }
-  return 'Trader';
 }
 
 export function DashboardPage() {
@@ -151,24 +139,19 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Personalized greeting */}
-      <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-1">
+    <div className="mx-auto w-full max-w-[1440px] space-y-6 lg:space-y-7">
+      <header className="flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-fg leading-tight">
-            Welcome Back, <span className="text-accent">{greetingFirstName(user?.name, user?.email)}</span>
-          </h1>
-          <p className="mt-1 text-sm text-fg-muted">
-            Here's your trading performance overview.
-          </p>
-          <p className="mt-0.5 text-xs text-fg-dim">
+          <h1 className="text-[26px] font-bold tracking-tight text-fg leading-tight">Dashboard</h1>
+          <p className="mt-1 text-[13px] text-fg-muted">A focused view of your trading performance{user?.name ? `, ${user.name.split(/\s+/)[0]}` : ''}.</p>
+          <p className="mt-1.5 text-[11px] text-fg-dim">
             {tradesToUse.length === 0
               ? 'Add your first trade to see your stats.'
               : `${tradesToUse.length} trade${tradesToUse.length === 1 ? '' : 's'} · ${formatDateLong(tradesToUse[0]?.openedAt ?? '')}`}
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <Button asChild variant="primary" leftIcon={<TrendingUp className="h-4 w-4" />}>
+        <div className="flex shrink-0 items-center gap-2">
+          <Button asChild variant="primary" className="h-10 rounded-lg bg-accent px-4 text-xs font-semibold text-accent-fg shadow-none hover:bg-accent-hover" leftIcon={<TrendingUp className="h-4 w-4" />}>
             <Link to="/journal/new">New trade</Link>
           </Button>
         </div>
@@ -189,87 +172,73 @@ export function DashboardPage() {
         />
       ) : (
         <>
-          <section className="space-y-3">
-            <h2 className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">Performance — R</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Card>
-                <CardBody>
+          <section aria-label="Realized R statistics" className="space-y-3">
+            <h2 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-muted">
+              <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent" />
+              Performance — R
+            </h2>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+              <Card className="transition-colors hover:border-line-strong">
+                <CardBody className="p-4 sm:p-5">
                   <Stat label="Total R" value={formatR(s?.totalR ?? 0)} tone={s && s.totalR > 0 ? 'win' : s && s.totalR < 0 ? 'loss' : 'default'} />
                 </CardBody>
               </Card>
-              <Card>
-                <CardBody>
+              <Card className="transition-colors hover:border-line-strong">
+                <CardBody className="p-4 sm:p-5">
                   <Stat label="Win Rate" value={s?.winRate == null ? '—' : formatPct(s.winRate)} />
                 </CardBody>
               </Card>
-              <Card>
-                <CardBody>
+              <Card className="transition-colors hover:border-line-strong">
+                <CardBody className="p-4 sm:p-5">
                   <Stat label="Avg R" value={s ? formatR(s.avgR) : '—'} />
                 </CardBody>
               </Card>
-              <Card>
-                <CardBody>
+              <Card className="transition-colors hover:border-line-strong">
+                <CardBody className="p-4 sm:p-5">
                   <Stat label="Avg Duration" value={formatDuration(avgDuration)} />
                 </CardBody>
               </Card>
             </div>
           </section>
 
-          <section className="space-y-3">
-            <h2 className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">Performance — P&amp;L</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <Card>
-                <CardBody>
-                  <Stat label="Total P&amp;L" value={formatSignedMoney(pnlStats.total)} tone={pnlStats.total > 0 ? 'win' : pnlStats.total < 0 ? 'loss' : 'default'} />
-                </CardBody>
-              </Card>
-              <Card>
-                <CardBody>
-                  <Stat label="Win Rate" value={s?.winRate == null ? '—' : formatPct(s.winRate)} />
-                </CardBody>
-              </Card>
-              <Card>
-                <CardBody>
-                  <Stat label="Avg P&amp;L" value={formatSignedMoney(pnlStats.average)} tone={pnlStats.average > 0 ? 'win' : pnlStats.average < 0 ? 'loss' : 'default'} />
-                </CardBody>
-              </Card>
-              <Card>
-                <CardBody>
-                  <Stat label="Avg Duration" value={formatDuration(avgDuration)} />
-                </CardBody>
-              </Card>
-            </div>
-          </section>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Equity curve</CardTitle>
-              <div className="flex gap-1 bg-bg-3 p-1 rounded-lg border border-line">
+          <Card className="overflow-hidden shadow-none">
+            <CardHeader className="min-h-[76px] flex-col items-start gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+              <div>
+                <CardTitle className="text-[15px]">Equity curve</CardTitle>
+                <p className="mt-1 text-xs text-fg-muted">Cumulative performance across your trade history</p>
+              </div>
+              <div className="flex w-full gap-1 rounded-lg border border-line bg-bg-3 p-1 sm:w-auto">
                 <button
                   type="button"
-                  className={cn('px-3 py-1 rounded-md text-xs font-semibold transition-all', metric === 'r' ? 'bg-bg-2 text-fg shadow-sm' : 'text-fg-muted hover:text-fg')}
+                  className={cn('flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors sm:flex-none', metric === 'r' ? 'bg-bg-1 text-fg shadow-sm' : 'text-fg-muted hover:text-fg')}
                   onClick={() => setMetric('r')}
                 >
                   Cumulative R
                 </button>
                 <button
                   type="button"
-                  className={cn('px-3 py-1 rounded-md text-xs font-semibold transition-all', metric === 'pnl' ? 'bg-bg-2 text-fg shadow-sm' : 'text-fg-muted hover:text-fg')}
+                  className={cn('flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition-colors sm:flex-none', metric === 'pnl' ? 'bg-bg-1 text-fg shadow-sm' : 'text-fg-muted hover:text-fg')}
                   onClick={() => setMetric('pnl')}
                 >
                   Cumulative P&amp;L
                 </button>
               </div>
             </CardHeader>
-            <CardBody className="h-72">
+            <CardBody className="h-[300px] p-3 sm:h-[360px] sm:p-5">
               {chartData.length === 0 ? (
                 <div className="flex h-full items-center justify-center text-sm text-fg-muted">
                   {metric === 'r' ? 'No trades to chart yet.' : 'No P&L recorded on your trades yet.'}
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={chartData} margin={{ top: 8, right: 16, left: metric === 'r' ? -20 : 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={chart.grid} vertical={false} />
+                  <AreaChart data={chartData} margin={{ top: 8, right: 16, left: metric === 'r' ? -20 : 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="dashboardCurveFill" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={chart.accent} stopOpacity={0.2} />
+                        <stop offset="100%" stopColor={chart.accent} stopOpacity={0.015} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="2 5" stroke={chart.grid} vertical={false} />
                     <XAxis dataKey="dateLabel" tick={{ fontSize: 11, fill: chart.axisText }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 11, fill: chart.axisText }} axisLine={false} tickLine={false} tickFormatter={(v: number) => (metric === 'r' ? `${v}R` : formatMoneyCompact(v))} width={metric === 'r' ? 45 : 64} />
                     <ReTooltip
@@ -282,12 +251,25 @@ export function DashboardPage() {
                         return [p ? `${formatted} (${p.dateLabel})` : formatted, name];
                       }}
                     />
-                    <Line type="monotone" dataKey="cumulative" stroke={chart.accent} strokeWidth={2.5} dot={{ r: 3, fill: chart.accent }} activeDot={{ r: 5, fill: chart.accent }} isAnimationActive={false} />
-                  </LineChart>
+                    <Area type="monotone" dataKey="cumulative" stroke={chart.accent} strokeWidth={2} fill="url(#dashboardCurveFill)" dot={false} activeDot={{ r: 4, fill: chart.accent, stroke: chart.tooltipBg, strokeWidth: 2 }} isAnimationActive={false} />
+                  </AreaChart>
                 </ResponsiveContainer>
               )}
             </CardBody>
           </Card>
+
+          <section aria-label="Journal P&L statistics" className="space-y-3">
+            <h2 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-muted">
+              <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent" />
+              Performance — P&amp;L
+            </h2>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+              <Card><CardBody className="p-4 sm:p-5"><Stat label="Total P&amp;L" value={formatSignedMoney(pnlStats.total)} tone={pnlStats.total > 0 ? 'win' : pnlStats.total < 0 ? 'loss' : 'default'} /></CardBody></Card>
+              <Card><CardBody className="p-4 sm:p-5"><Stat label="P&amp;L Win Rate" value={s?.winRate == null ? '—' : formatPct(s.winRate)} /></CardBody></Card>
+              <Card><CardBody className="p-4 sm:p-5"><Stat label="Avg P&amp;L" value={formatSignedMoney(pnlStats.average)} tone={pnlStats.average > 0 ? 'win' : pnlStats.average < 0 ? 'loss' : 'default'} /></CardBody></Card>
+              <Card><CardBody className="p-4 sm:p-5"><Stat label="Avg Duration" value={formatDuration(avgDuration)} /></CardBody></Card>
+            </div>
+          </section>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card>

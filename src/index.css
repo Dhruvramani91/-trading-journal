@@ -5,73 +5,74 @@
 @layer base {
   :root {
     color-scheme: light;
-    --bg: 255 255 255;
-    --bg-0: 247 248 250;
+    --bg: 243 245 248;
+    --bg-0: 243 245 248;
     --bg-1: 255 255 255;
     --bg-2: 255 255 255;
-    --bg-3: 250 250 252;
-    --bg-4: 243 244 246;
+    --bg-3: 247 248 250;
+    --bg-4: 238 241 246;
 
-    --line: 238 240 241;
-    --line-strong: 224 226 230;
-    --line-subtle: 244 245 247;
+    --line: 224 228 235;
+    --line-strong: 204 211 222;
+    --line-subtle: 237 240 245;
 
-    --fg: 16 16 20;
-    --fg-muted: 100 116 139;
-    --fg-dim: 162 164 167;
+    --fg: 25 31 43;
+    --fg-muted: 95 106 123;
+    --fg-dim: 133 143 158;
     --fg-inverse: 255 255 255;
 
-    --accent: 59 130 246;
-    --accent-hover: 37 99 235;
-    --accent-muted: 59 130 246;
+    --accent: 57 91 190;
+    --accent-hover: 44 73 161;
+    --accent-muted: 57 91 190;
     --accent-fg: 255 255 255;
 
-    --win: 57 189 154;
-    --win-muted: 66 213 161;
-    --loss: 217 93 101;
-    --loss-muted: 242 79 84;
-    --be: 162 164 167;
-    --be-muted: 162 164 167;
+    --win: 24 133 96;
+    --win-muted: 34 153 111;
+    --loss: 192 70 86;
+    --loss-muted: 208 83 99;
+    --be: 128 138 153;
+    --be-muted: 145 154 168;
 
-    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-    --shadow-pop: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
-    --shadow-shell: 0 4px 32px rgba(0, 0, 0, 0.10), 0 1px 4px rgba(0, 0, 0, 0.06);
+    --shadow-card: 0 1px 2px rgba(20, 32, 52, 0.035), 0 6px 18px rgba(20, 32, 52, 0.035);
+    --shadow-pop: 0 12px 36px rgba(20, 32, 52, 0.14), 0 2px 8px rgba(20, 32, 52, 0.06);
+    --shadow-shell: none;
     --shadow-input: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --font-data: 'Geist Mono', ui-monospace, monospace;
   }
 
   .dark {
     color-scheme: dark;
-    --bg: 9 11 16;
-    --bg-0: 15 17 23;
-    --bg-1: 17 19 26;
-    --bg-2: 21 24 32;
-    --bg-3: 18 21 29;
-    --bg-4: 29 32 41;
+    --bg: 13 13 14;
+    --bg-0: 13 13 14;
+    --bg-1: 19 19 20;
+    --bg-2: 24 24 25;
+    --bg-3: 31 31 32;
+    --bg-4: 40 40 42;
 
-    --line: 40 44 54;
-    --line-strong: 52 58 70;
-    --line-subtle: 28 31 39;
+    --line: 41 41 43;
+    --line-strong: 60 60 63;
+    --line-subtle: 31 31 33;
 
-    --fg: 232 234 238;
-    --fg-muted: 156 164 178;
-    --fg-dim: 120 128 142;
-    --fg-inverse: 16 16 20;
+    --fg: 243 243 241;
+    --fg-muted: 166 166 163;
+    --fg-dim: 123 123 120;
+    --fg-inverse: 13 13 14;
 
-    --accent: 96 165 250;
-    --accent-hover: 147 197 253;
-    --accent-muted: 59 130 246;
-    --accent-fg: 16 16 20;
+    --accent: 220 220 216;
+    --accent-hover: 242 242 239;
+    --accent-muted: 220 220 216;
+    --accent-fg: 13 13 14;
 
-    --win: 72 205 167;
-    --win-muted: 66 213 161;
-    --loss: 240 100 108;
-    --loss-muted: 242 79 84;
-    --be: 110 118 132;
-    --be-muted: 162 164 167;
+    --win: 78 205 157;
+    --win-muted: 78 205 157;
+    --loss: 244 123 137;
+    --loss-muted: 244 123 137;
+    --be: 153 153 149;
+    --be-muted: 153 153 149;
 
-    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-pop: 0 8px 32px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
-    --shadow-shell: 0 4px 32px rgba(0, 0, 0, 0.55), 0 1px 4px rgba(0, 0, 0, 0.35);
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.22);
+    --shadow-pop: 0 12px 36px rgba(0, 0, 0, 0.48), 0 2px 8px rgba(0, 0, 0, 0.24);
+    --shadow-shell: none;
     --shadow-input: 0 1px 2px rgba(0, 0, 0, 0.3);
   }
 
@@ -103,8 +104,17 @@
 }
 
 @layer components {
+  .journal-table-scroll {
+    scrollbar-color: rgb(var(--line-strong)) rgb(var(--bg-3));
+    scrollbar-width: auto;
+  }
+  .journal-table-scroll::-webkit-scrollbar { width: 8px; height: 12px; }
+  .journal-table-scroll::-webkit-scrollbar-track { @apply bg-bg-3 rounded-full; }
+  .journal-table-scroll::-webkit-scrollbar-thumb { @apply bg-line-strong rounded-full border-2 border-bg-3; }
+  .journal-table-scroll::-webkit-scrollbar-thumb:hover { @apply bg-fg-dim; }
+
   .card {
-    @apply bg-bg-2 border border-line rounded-xl shadow-card;
+    @apply bg-bg-2 border border-line rounded-[14px] shadow-card;
   }
   .card-hover {
     @apply transition-colors hover:bg-bg-3;
@@ -122,7 +132,8 @@
   .pill-loss { @apply pill text-loss border-loss/25 bg-loss/10; }
   .pill-be   { @apply pill text-be   border-be/25   bg-be/10;   }
   .pill-accent { @apply pill text-accent border-accent/25 bg-accent/10; }
-  .num { @apply tabular-nums; }
+  .num { @apply tabular-nums; font-family: var(--font-data); }
+  .data-value { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
 }
 
 /* PrecisionJournal brand logo theme switching */

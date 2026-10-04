@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { BrandLogo } from '@/components/layout/Brand';
 import { useAuthStore } from '@/store/authStore';
 
 export function AuthCallbackPage() {
@@ -28,11 +29,7 @@ export function AuthCallbackPage() {
   return (
     <div className="min-h-screen bg-bg-0 flex items-center justify-center">
       <div className="text-center space-y-4">
-        <img
-          src="/logo.png"
-          alt="PrecisionJournal"
-          className="h-12 w-12 mx-auto rounded-2xl bg-bg-2 border border-line object-contain animate-pulse"
-        />
+        <BrandLogo size="lg" className="mx-auto animate-pulse" />
         <div className="space-y-1">
           <p className="text-sm font-semibold text-fg">Signing you in...</p>
           <p className="text-xs text-fg-muted">Please wait a moment.</p>

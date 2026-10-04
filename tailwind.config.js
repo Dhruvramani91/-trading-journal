@@ -44,8 +44,9 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
-        mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+        sans: ['Manrope', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+        mono: ['Geist Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+        data: ['Geist Mono', 'ui-monospace', 'monospace'],
       },
       fontSize: {
         '2xs': ['0.6875rem', { lineHeight: '1rem' }],
@@ -55,9 +56,9 @@ export default {
         sm: '0.375rem',
         md: '0.625rem',
         lg: '0.875rem',
-        xl: '1.125rem',
-        '2xl': '1.5rem',
-        shell: '1.75rem',
+        xl: '0.875rem',
+        '2xl': '1rem',
+        shell: '0',
       },
       boxShadow: {
         card: 'var(--shadow-card)',

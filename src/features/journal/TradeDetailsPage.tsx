@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Pencil, ArrowLeft, Trash2 } from 'lucide-react';
 
 import { PageHeader } from '@/components/ui/PageHeader';
+import { InstrumentMark } from '@/components/trade/InstrumentMark';
 import { Card, CardHeader, CardTitle, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { ResultPill } from '@/components/ui/ResultPill';
@@ -179,6 +180,10 @@ export function TradeDetailsPage() {
         description={`${trade.instrument} · ${formatDateLong(trade.openedAt)}`}
         actions={
           <div className="flex items-center gap-2 flex-wrap">
+            <span className="mr-2 inline-flex items-center gap-2 rounded-lg border border-line bg-bg-2 px-2.5 py-1.5 text-sm font-semibold text-fg">
+              <InstrumentMark instrument={trade.instrument} className="h-6 w-6 rounded-md p-0.5" />
+              {trade.instrument}
+            </span>
             <Button
               asChild
               variant="secondary"

@@ -1,0 +1,95 @@
+/* Shared visual and motion tokens for Dropdown and DatePicker. */
+:root {
+  --input-overlay-trigger: 255 255 255;
+  --input-overlay-panel: 255 255 255;
+  --input-overlay-hover: 243 244 246;
+  --input-overlay-border: 229 231 235;
+  --input-overlay-text: 31 31 32;
+  --input-overlay-muted: 107 114 128;
+  --input-overlay-shadow: 0 16px 36px rgba(15, 15, 15, 0.14), 0 2px 8px rgba(15, 15, 15, 0.06);
+  --input-overlay-radius: 12px;
+  /* Tune these durations and easing to adjust the shared animation feel. */
+  --input-overlay-open-duration: 190ms;
+  --input-overlay-close-duration: 150ms;
+  --input-overlay-row-duration: 180ms;
+  --input-overlay-easing: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dark {
+  --input-overlay-trigger: 28 28 29;
+  --input-overlay-panel: 24 24 25;
+  --input-overlay-hover: 40 40 42;
+  --input-overlay-border: 60 60 63;
+  --input-overlay-text: 243 243 241;
+  --input-overlay-muted: 166 166 163;
+  --input-overlay-shadow: 0 16px 36px rgba(0, 0, 0, 0.48), 0 2px 8px rgba(0, 0, 0, 0.25);
+}
+
+.ui-popover-motion {
+  display: grid;
+  grid-template-rows: 1fr;
+  overflow: hidden;
+  transform-origin: top center;
+}
+
+.ui-popover-motion[data-state='open'] {
+  animation: ui-popover-open var(--input-overlay-open-duration) var(--input-overlay-easing) both;
+}
+
+.ui-popover-motion[data-state='closed'] {
+  animation: ui-popover-close var(--input-overlay-close-duration) ease-in both;
+}
+
+.ui-popover-inner {
+  min-height: 0;
+}
+
+.ui-dropdown-row-enter {
+  animation: ui-dropdown-row var(--input-overlay-row-duration) var(--input-overlay-easing) both;
+}
+
+.ui-month-next { animation: ui-month-next 190ms var(--input-overlay-easing) both; }
+.ui-month-previous { animation: ui-month-previous 190ms var(--input-overlay-easing) both; }
+.ui-date-selected { animation: ui-date-selected 140ms var(--input-overlay-easing) both; }
+
+@keyframes ui-popover-open {
+  from { opacity: 0; transform: translateY(-4px) scale(0.98); grid-template-rows: 0fr; }
+  to { opacity: 1; transform: translateY(0) scale(1); grid-template-rows: 1fr; }
+}
+
+@keyframes ui-popover-close {
+  from { opacity: 1; transform: translateY(0) scale(1); grid-template-rows: 1fr; }
+  to { opacity: 0; transform: translateY(-2px) scale(0.99); grid-template-rows: 0fr; }
+}
+
+@keyframes ui-dropdown-row {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ui-month-next {
+  from { opacity: 0; transform: translateX(8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes ui-month-previous {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes ui-date-selected {
+  from { opacity: 0.7; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-popover-motion,
+  .ui-dropdown-row-enter,
+  .ui-month-next,
+  .ui-month-previous,
+  .ui-date-selected {
+    animation-duration: 1ms !important;
+    animation-delay: 0ms !important;
+    transform: none !important;
+  }
+}

@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { WinRateRing } from '@/components/stats/WinRateRing';
 import { BreakdownCard } from '@/components/stats/BreakdownCard';
+import { InstrumentMark } from '@/components/trade/InstrumentMark';
 
 import { useTradesStore, bootTradesStore } from '@/store/tradesStore';
 import { summary, allBreakdowns } from '@/analytics/core';
@@ -46,14 +47,14 @@ function Metric({
   aside?: ReactNode;
 }) {
   return (
-    <div className="flex min-w-0 items-start justify-between gap-3">
+    <div className="flex min-h-[88px] min-w-0 items-start justify-between gap-3 rounded-xl border border-line bg-bg-1 p-4 shadow-sm transition-colors hover:border-line-strong">
       <div className="min-w-0">
-        <p className="text-2xs text-fg-dim">{label}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-dim">{label}</p>
 
         <p
           className={cn(
             'mt-1 font-semibold tabular-nums tracking-tight',
-            size === 'lg' ? 'text-2xl' : 'text-base',
+            size === 'lg' ? 'text-2xl sm:text-[1.75rem]' : 'text-lg',
             tone === 'win' && 'text-win',
             tone === 'loss' && 'text-loss',
             !tone && 'text-fg',
@@ -346,7 +347,7 @@ export function StatisticsPage() {
              ========================================================= */}
 
           <Card className="overflow-hidden">
-            <div className="grid grid-cols-2 gap-x-6 gap-y-6 p-5 md:grid-cols-5 md:p-6">
+      <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-3 xl:grid-cols-5 xl:p-6">
 
               {/* EXISTING */}
               <Metric
@@ -414,7 +415,7 @@ export function StatisticsPage() {
                 SECONDARY METRICS
                ======================================================= */}
 
-            <div className="grid grid-cols-2 gap-x-6 gap-y-5 border-t border-line px-5 py-5 md:grid-cols-5 md:px-6">
+            <div className="grid grid-cols-1 gap-3 border-t border-line bg-bg-3/40 px-4 py-4 sm:grid-cols-2 sm:px-5 lg:grid-cols-3 xl:grid-cols-5 xl:px-6">
 
               {/* EXISTING */}
               <Metric
@@ -461,7 +462,7 @@ export function StatisticsPage() {
                 THIRD ROW
                ======================================================= */}
 
-            <div className="grid grid-cols-2 gap-x-6 gap-y-5 border-t border-line px-5 py-5 md:grid-cols-5 md:px-6">
+            <div className="grid grid-cols-1 gap-3 border-t border-line bg-bg-3/20 px-4 py-4 sm:grid-cols-2 sm:px-5 lg:grid-cols-3 xl:grid-cols-5 xl:px-6">
 
               {/* NEW */}
               <Metric
@@ -521,7 +522,7 @@ export function StatisticsPage() {
               role="tablist"
               aria-label="Break results down by"
               onKeyDown={onTabKey}
-              className="-mx-1 mb-4 flex gap-2 overflow-x-auto px-1 pb-1"
+              className="mb-4 flex gap-2 overflow-x-auto rounded-xl border border-line bg-bg-2 p-2 shadow-sm"
             >
               {tabs.map((t) => {
                 const selected =
@@ -545,11 +546,11 @@ export function StatisticsPage() {
                       setTab(t.key)
                     }
                     className={cn(
-                      'shrink-0 rounded-full border px-4 py-1.5 text-sm transition-colors',
+                      'shrink-0 rounded-lg border px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
 
                       selected
-                        ? 'border-fg bg-fg font-medium text-fg-inverse'
-                        : 'border-line text-fg-muted hover:bg-bg-4 hover:text-fg',
+                        ? 'border-accent bg-accent/10 text-accent shadow-sm'
+                        : 'border-transparent text-fg-muted hover:border-line hover:bg-bg-3 hover:text-fg',
                     )}
                   >
                     {t.label}
@@ -564,10 +565,13 @@ export function StatisticsPage() {
             >
               {showInstruments ? (
                 <Card className="overflow-hidden">
-                  <div className="flex items-baseline justify-between px-5 pb-3 pt-5">
+                  <div className="flex items-center justify-between border-b border-line bg-bg-1 px-5 py-4">
+                    <div>
                     <h2 className="text-base font-semibold text-fg">
                       Instruments
                     </h2>
+                    <p className="mt-0.5 text-xs text-fg-muted">Performance by traded market</p>
+                    </div>
 
                     <span className="text-xs text-fg-dim">
                       {instruments.length}{' '}
@@ -616,12 +620,13 @@ export function StatisticsPage() {
                         return (
                           <div
                             key={instr}
-                            className="border-t border-line px-5 py-4"
+                            className="mx-3 my-2 rounded-xl border border-line bg-bg-1 px-4 py-4 transition-colors hover:border-line-strong sm:mx-4"
                           >
                             {/* Instrument + R */}
                             <div className="flex items-baseline justify-between gap-3">
-                              <span className="truncate font-medium text-fg">
-                                {instr}
+                              <span className="flex min-w-0 items-center gap-2.5 font-medium text-fg">
+                                <InstrumentMark instrument={instr} className="h-8 w-8" />
+                                <span className="truncate">{instr}</span>
                               </span>
 
                               <span

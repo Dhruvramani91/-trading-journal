@@ -1,9 +1,13 @@
 import { type HTMLAttributes, type ReactNode, type ThHTMLAttributes, type TdHTMLAttributes } from 'react';
 import { cn } from '@/lib/cn';
 
-export function Table({ className, ...props }: HTMLAttributes<HTMLTableElement>) {
+export function Table({
+  className,
+  containerClassName,
+  ...props
+}: HTMLAttributes<HTMLTableElement> & { containerClassName?: string }) {
   return (
-    <div className="w-full overflow-x-auto">
+    <div className={cn('w-full overflow-x-auto', containerClassName)}>
       <table className={cn('w-full border-separate border-spacing-0 text-sm', className)} {...props} />
     </div>
   );
@@ -43,7 +47,7 @@ export function TH({
     <th
       scope="col"
       className={cn(
-        'sticky top-0 z-10 bg-bg-2 px-3 py-2.5 text-2xs font-semibold uppercase tracking-wider text-fg-dim border-b border-line whitespace-nowrap',
+        'sticky top-0 z-10 bg-bg-3 px-3 py-2.5 text-2xs font-semibold uppercase tracking-[0.1em] text-fg-muted border-b border-line-strong whitespace-nowrap',
         align === 'right' && 'text-right',
         align === 'center' && 'text-center',
         className,

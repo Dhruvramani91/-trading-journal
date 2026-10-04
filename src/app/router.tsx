@@ -15,6 +15,7 @@ import { MistakesPage } from '@/features/mistakes/MistakesPage';
 import { ProfilePage } from '@/features/profile/ProfilePage';
 import { AccountSummaryPage } from '@/features/accounts/AccountSummaryPage';
 import { AccountsPage } from '@/features/accounts/AccountsPage';
+import { UIComponentsDemoPage } from '@/features/uiComponentsDemo/UIComponentsDemoPage';
 import { RequireAuth } from './RequireAuth';
 
 export const router = createBrowserRouter([
@@ -24,6 +25,7 @@ export const router = createBrowserRouter([
   { path: '/auth/confirmed', element: <EmailConfirmedPage /> },
   { path: '/auth/reset-password', element: <PasswordResetPage /> },
   { path: '/auth/callback', element: <AuthCallbackPage /> },
+  { path: '/ui-components-demo', element: <UIComponentsDemoPage /> },
 
   // App Workspace Routes (auth required)
   {

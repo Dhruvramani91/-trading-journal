@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/Button';
 import { Stat } from '@/components/ui/Stat';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useTradesStore, bootTradesStore } from '@/store/tradesStore';
-import { byDay, summary } from '@/analytics/core';
-import { formatR, formatPct } from '@/lib/format';
+import { byDay, dayKey, summary } from '@/analytics/core';
+import { formatR, formatPct, formatSignedMoney } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import type { Trade } from '@/domain/models/trade';
 import type { DayPerformance } from '@/analytics/core';
@@ -74,6 +74,7 @@ export function CalendarPage() {
 
   // ON by default so the existing calendar behavior is preserved.
   const [showWeekends, setShowWeekends] = useState(true);
+  const [showCalendarValues, setShowCalendarValues] = useState(true);
 
   useEffect(() => {
     bootTradesStore();
@@ -83,14 +84,20 @@ export function CalendarPage() {
     if (!loaded) void load();
   }, [loaded, load]);
 
-  const dayMap = useMemo(() => {
-    if (!loaded) return new Map<string, DayPerformance>();
+  const dayMap = useMemo<Map<string, DayPerformance & { totalPnl: number | null }>>(() => {
+    if (!loaded) return new Map<string, DayPerformance & { totalPnl: number | null }>();
 
     const days = byDay(trades);
-    const map = new Map<string, DayPerformance>();
+    const map = new Map<string, DayPerformance & { totalPnl: number | null }>();
 
     for (const d of days) {
-      map.set(d.date, d);
+      map.set(d.date, { ...d, totalPnl: null });
+    }
+
+    for (const trade of trades) {
+      const day = map.get(dayKey(trade.openedAt));
+      if (!day || trade.pnl == null || !Number.isFinite(trade.pnl)) continue;
+      day.totalPnl = (day.totalPnl ?? 0) + trade.pnl;
     }
 
     return map;
@@ -187,7 +194,7 @@ export function CalendarPage() {
             </Button>
           </div>
 
-          <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto sm:ml-auto">
+          <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 w-full sm:w-auto sm:ml-auto">
             {/* Weekend visibility toggle */}
             <button
               type="button"
@@ -215,6 +222,31 @@ export function CalendarPage() {
               </span>
             </button>
 
+            <button
+              type="button"
+              role="switch"
+              aria-checked={showCalendarValues}
+              aria-label="Show R and P&L on calendar"
+              onClick={() => setShowCalendarValues((current) => !current)}
+              className="inline-flex items-center gap-2 rounded-lg border border-line bg-bg-2 px-2.5 py-1.5 text-xs font-medium text-fg-muted transition-colors hover:bg-bg-3 hover:text-fg"
+            >
+              <span>Show R &amp; P&amp;L</span>
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'relative block h-5 w-9 shrink-0 rounded-full p-0.5 transition-colors',
+                  showCalendarValues ? 'bg-accent' : 'bg-bg-4 border border-line',
+                )}
+              >
+                <span
+                  className={cn(
+                    'block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200',
+                    showCalendarValues ? 'translate-x-4' : 'translate-x-0',
+                  )}
+                />
+              </span>
+            </button>
+
             {!isCurrentMonth && (
               <Button variant="outline" size="sm" onClick={goToday}>
                 Today
@@ -232,17 +264,19 @@ export function CalendarPage() {
             />
           ) : (
             <>
+              <div className="w-full overflow-x-auto pb-2 pr-1 xl:overflow-visible">
+              <div className="min-w-[980px] xl:min-w-0">
               {/* Weekday header */}
               <div
                 className={cn(
-                  'grid gap-1 sm:gap-1.5 mb-1 sm:mb-2',
+                  'grid gap-2 mb-2',
                   showWeekends ? 'grid-cols-7' : 'grid-cols-5',
                 )}
               >
                 {visibleWeekdays.map((label) => (
                   <div
                     key={label}
-                    className="text-center text-[10px] sm:text-2xs uppercase tracking-wider text-fg-dim font-bold py-1"
+                    className="text-center text-[11px] uppercase tracking-wider text-fg-dim font-bold py-2"
                   >
                     {label}
                   </div>
@@ -252,17 +286,10 @@ export function CalendarPage() {
               {/* Day cells grid */}
               <div
                 className={cn(
-                  'grid gap-1 sm:gap-1.5',
+                  'grid gap-2',
                   showWeekends ? 'grid-cols-7' : 'grid-cols-5',
                 )}
               >
-                {Array.from({ length: offset }, (_, i) => (
-                  <div
-                    key={`empty-${i}`}
-                    className="min-h-[44px] sm:min-h-[64px] rounded-lg bg-bg-3/30"
-                  />
-                ))}
-
                 {Array.from({ length: totalDays }, (_, i) => {
                   const day = i + 1;
                   const date = new Date(year, month, day);
@@ -285,11 +312,12 @@ export function CalendarPage() {
                     <button
                       key={key}
                       type="button"
+                      style={day === 1 ? { gridColumnStart: offset + 1 } : undefined}
                       onClick={() => {
                         if (perf) navigate('/journal');
                       }}
                       className={cn(
-                        'relative flex flex-col items-center justify-between p-1 sm:p-2 rounded-lg border transition-all min-h-[44px] sm:min-h-[64px]',
+                        'relative flex flex-col items-stretch justify-between p-3 rounded-xl border transition-all min-h-[112px]',
                         perf
                           ? cn(
                               rBg(perf.totalR),
@@ -301,7 +329,7 @@ export function CalendarPage() {
                     >
                       <span
                         className={cn(
-                          'text-[10px] sm:text-xs font-semibold self-start',
+                          'text-xs font-semibold self-start',
                           perf ? 'text-fg' : 'text-fg-dim',
                           isToday && 'text-accent font-bold',
                         )}
@@ -310,23 +338,37 @@ export function CalendarPage() {
                       </span>
 
                       {perf && (
-                        <div className="flex flex-col items-center w-full my-auto">
-                          <span
-                            className={cn(
-                              'text-[11px] sm:text-xs md:text-sm font-bold tabular-nums',
-                              rTone(perf.totalR),
-                            )}
-                          >
-                            {formatR(perf.totalR, 1)}
-                          </span>
-                          <span className="hidden sm:inline text-[9px] sm:text-2xs text-fg-dim font-medium">
-                            {perf.count} {perf.count === 1 ? 'tr' : 'trs'}
-                          </span>
+                        <div className="mt-2 flex w-full flex-col gap-1.5">
+                          {showCalendarValues ? (
+                            <>
+                              <div className="flex items-baseline justify-between gap-2">
+                                <span className="text-[10px] font-medium uppercase tracking-wide text-fg-dim">R</span>
+                                <span className={cn('text-sm font-bold tabular-nums', rTone(perf.totalR))}>
+                                  {formatR(perf.totalR, 1)}
+                                </span>
+                              </div>
+                              <div className="flex items-baseline justify-between gap-2">
+                                <span className="text-[10px] font-medium uppercase tracking-wide text-fg-dim">P&amp;L</span>
+                                <span className={cn('text-[13px] font-bold tabular-nums', perf.totalPnl == null ? 'text-fg-dim' : perf.totalPnl > 0 ? 'text-win' : perf.totalPnl < 0 ? 'text-loss' : 'text-be')}>
+                                  {perf.totalPnl == null ? '—' : formatSignedMoney(perf.totalPnl)}
+                                </span>
+                              </div>
+                            </>
+                          ) : (
+                            <span className="self-end text-xs text-fg-dim">{perf.count} trade{perf.count === 1 ? '' : 's'}</span>
+                          )}
+                          {showCalendarValues && (
+                            <span className="text-right text-[10px] font-medium text-fg-dim">
+                              {perf.count} trade{perf.count === 1 ? '' : 's'}
+                            </span>
+                          )}
                         </div>
                       )}
                     </button>
                   );
                 })}
+              </div>
+              </div>
               </div>
             </>
           )}

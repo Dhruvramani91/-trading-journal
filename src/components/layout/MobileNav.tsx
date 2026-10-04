@@ -1,56 +1,55 @@
-import { useState, useEffect } from 'react';
-import { NavLink, useLocation, Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard,
-  ScrollText,
   BarChart3,
-  Calendar,
-  AlertTriangle,
-  Menu,
-  X,
-  Plus,
-  Home,
+  CalendarDays,
+  LayoutDashboard,
   LogOut,
+  Menu,
+  Plus,
+  ScrollText,
+  TriangleAlert,
+  UserRound,
+  Wallet,
+  X,
 } from 'lucide-react';
+import { BrandLogo } from '@/components/layout/Brand';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/store/authStore';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 const ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/journal', label: 'Journal', icon: ScrollText },
+  { to: '/accounts', label: 'Accounts', icon: Wallet },
   { to: '/statistics', label: 'Statistics', icon: BarChart3 },
-  { to: '/calendar', label: 'Monthly Performance', icon: Calendar },
-  { to: '/mistakes', label: 'Mistakes & Filters', icon: AlertTriangle },
+  { to: '/calendar', label: 'Calendar', icon: CalendarDays },
+  { to: '/mistakes', label: 'Mistakes', icon: TriangleAlert },
 ] as const;
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
+  const [logoutOpen, setLogoutOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuthStore();
-  const [logoutOpen, setLogoutOpen] = useState(false);
+
+  useEffect(() => setOpen(false), [location.pathname]);
 
   useEffect(() => {
-    setOpen(false);
-  }, [location.pathname]);
-
-  useEffect(() => {
-    if (open) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', onKeyDown);
     };
   }, [open]);
-
-  async function handleSignOut() {
-    setOpen(false);
-    setLogoutOpen(true);
-  }
 
   async function confirmSignOut() {
     setLogoutOpen(false);
@@ -59,94 +58,76 @@ export function MobileNav() {
   }
 
   return (
-    <div className="md:hidden relative z-50">
-      {/* Mobile Top Bar */}
-      <div className="flex items-center justify-between h-14 px-4 border-b border-line bg-bg-1">
-        <div className="flex items-center gap-2.5">
-          <img
-            src="/logo.png"
-            alt="PrecisionJournal"
-            className="flex h-8 w-8 items-center justify-center rounded-lg bg-white border border-line object-contain shadow-sm"
-          />
-          <span className="text-sm font-bold text-fg tracking-tight">PrecisionJournal</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
-          <Link
-            to="/journal/new"
-            className="inline-flex items-center justify-center gap-1 h-8 px-3 rounded-lg bg-accent text-white text-xs font-semibold shadow-sm hover:bg-accent-hover transition-colors"
-          >
+    <div className="relative z-40 md:hidden">
+      <header className="flex h-14 items-center justify-between border-b border-line bg-bg-1 px-4">
+        <Link to="/dashboard" className="flex min-w-0 items-center gap-2.5" aria-label="The Precision Lab dashboard">
+          <BrandLogo size="md" />
+          <span className="truncate text-[13px] font-bold tracking-tight text-fg">The Precision Lab</span>
+        </Link>
+        <div className="flex shrink-0 items-center gap-2">
+          <Link to="/journal/new" className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-accent px-2.5 text-xs font-semibold text-accent-fg transition-colors hover:bg-accent-hover">
             <Plus className="h-3.5 w-3.5" />
-            <span>New</span>
+            <span>Trade</span>
           </Link>
           <button
             type="button"
-            onClick={() => setOpen((v) => !v)}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-fg-muted hover:text-fg hover:bg-bg-4 transition-colors"
-            aria-label="Toggle navigation menu"
+            onClick={() => setOpen((value) => !value)}
+            aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={open}
+            aria-controls="mobile-navigation"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-fg-muted transition-colors hover:bg-bg-3 hover:text-fg"
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* Backdrop */}
       {open && (
-        <div
-          className="fixed inset-0 bg-fg/20 backdrop-blur-sm z-40 transition-opacity animate-fade-in"
-          onClick={() => setOpen(false)}
-        />
-      )}
-
-      {/* Slide-down Menu */}
-      {open && (
-        <div className="absolute inset-x-0 top-14 bg-bg-1 border-b border-line shadow-pop z-50 animate-fade-in">
-          <nav className="p-3 space-y-1">
-            {ITEMS.map((item) => {
-              const Icon = item.icon;
-              return (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={'end' in item ? item.end : false}
-                  className={({ isActive }) =>
-                    cn(
-                      'flex items-center gap-3 rounded-lg px-3.5 py-3 text-sm font-medium transition-colors',
-                      isActive
-                        ? 'bg-fg text-fg-inverse shadow-sm'
-                        : 'text-fg-muted hover:text-fg hover:bg-bg-4',
-                    )
-                  }
-                >
-                  <Icon className="h-4 w-4 shrink-0" />
-                  <span>{item.label}</span>
-                </NavLink>
-              );
-            })}
-
-            <div className="pt-2 mt-2 border-t border-line space-y-1">
-              <Link
-                to="/"
-                onClick={() => setOpen(false)}
-                className="flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium text-fg-muted hover:text-fg hover:bg-bg-4 transition-colors"
-              >
-                <Home className="h-4 w-4" />
-                <span>Homepage</span>
-              </Link>
-
+        <>
+          <button type="button" aria-label="Close navigation menu" onClick={() => setOpen(false)} className="fixed inset-0 z-40 bg-fg/25 backdrop-blur-[1px]" />
+          <nav
+            id="mobile-navigation"
+            aria-label="Main navigation"
+            className="absolute inset-x-0 top-14 z-50 border-b border-line bg-bg-1 p-3 shadow-pop animate-fade-in"
+          >
+            <div className="space-y-1">
+              {ITEMS.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    end={'end' in item ? item.end : false}
+                    className={({ isActive }) => cn(
+                      'flex h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors',
+                      isActive ? 'bg-accent/10 text-accent' : 'text-fg-muted hover:bg-bg-3 hover:text-fg',
+                    )}
+                  >
+                    <Icon className="h-4 w-4" strokeWidth={1.8} />
+                    {item.label}
+                  </NavLink>
+                );
+              })}
+            </div>
+            {user && (
+              <div className="mt-3 border-t border-line pt-3">
+                <Link to="/profile" className="mb-2 flex h-11 items-center gap-3 rounded-lg px-3 text-sm text-fg-muted hover:bg-bg-3 hover:text-fg">
+                  <UserRound className="h-4 w-4" />
+                  <span className="truncate">{user.name || user.email}</span>
+                </Link>
+              </div>
+            )}
+            <div className={cn(user && 'mt-2 border-t border-line pt-2')}>
+              <ThemeToggle showLabel className="h-11 w-full justify-start border-0 bg-transparent px-3 text-sm shadow-none hover:bg-bg-3" />
               {user && (
-                <button
-                  type="button"
-                  onClick={handleSignOut}
-                  className="w-full flex items-center gap-3 rounded-lg px-3.5 py-2.5 text-sm font-medium text-loss hover:bg-loss/10 transition-colors"
-                >
+                <button type="button" onClick={() => { setOpen(false); setLogoutOpen(true); }} className="flex h-11 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium text-fg-muted hover:bg-loss/10 hover:text-loss">
                   <LogOut className="h-4 w-4" />
-                  <span>Sign Out</span>
+                  Sign out
                 </button>
               )}
             </div>
           </nav>
-        </div>
+        </>
       )}
 
       <ConfirmDialog

@@ -339,13 +339,11 @@ export function LoginPage() {
             to="/"
             className="relative inline-flex items-center gap-3"
           >
-            <div className="h-16 w-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-              <img
-                src="/logo-white.png"
-                alt="PrecisionJournal"
-                className="h-12 w-12 object-contain"
-              />
-            </div>
+            <img
+              src="/logo-white.png"
+              alt="PrecisionJournal"
+              className="h-12 w-12 object-contain"
+            />
 
             <span className="text-3xl font-bold tracking-tight text-white">
               PrecisionJournal

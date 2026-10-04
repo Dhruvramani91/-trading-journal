@@ -22,7 +22,7 @@ export function Stat({ label, value, hint, tone = 'default', className }: StatPr
   return (
     <div className={cn('flex flex-col gap-1', className)}>
       <span className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">{label}</span>
-      <span className={cn('text-2xl font-bold tracking-tight tabular-nums', valueColor)}>{value}</span>
+      <span className={cn('data-value text-2xl font-semibold tracking-tight', valueColor)}>{value}</span>
       {hint ? <span className="text-2xs text-fg-dim">{hint}</span> : null}
     </div>
   );

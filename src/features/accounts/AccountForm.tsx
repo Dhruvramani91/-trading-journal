@@ -34,7 +34,7 @@ import { formatMoney } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Segmented } from '@/components/ui/Select';
+import { Segmented, Select } from '@/components/ui/Select';
 
 const TYPE_LABEL: Record<AccountType, string> = {
   futures: 'Futures',
@@ -425,10 +425,11 @@ export function AccountForm({
             }
           }}
           className={cn(
-            'fixed left-1/2 top-1/2 z-50 w-[calc(100%-24px)] max-w-[520px] -translate-x-1/2 -translate-y-1/2',
-            'flex max-h-[90vh] flex-col overflow-hidden',
+            'fixed left-1/2 top-1/2 z-50 w-[calc(100%-24px)] max-w-[760px] -translate-x-1/2 -translate-y-1/2',
+            'flex max-h-[calc(100dvh-32px)] flex-col overflow-visible',
             'rounded-xl border border-line bg-bg-1 shadow-pop outline-none'
           )}
+          data-select-portal
         >
           <div className="flex shrink-0 items-start justify-between gap-4 border-b border-line px-5 py-4">
             <div>
@@ -459,7 +460,7 @@ export function AccountForm({
           </div>
 
           <form onSubmit={handleSubmit} noValidate className="flex flex-1 flex-col overflow-hidden">
-            <div className="flex-1 overflow-y-auto px-5 py-5">
+            <div className="flex-1 overflow-y-auto px-5 py-4 sm:px-6">
               {submitError ? (
                 <div
                   role="alert"
@@ -481,7 +482,7 @@ export function AccountForm({
                 </div>
               ) : null}
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div>
                   <label
                     htmlFor={nameId}
@@ -508,88 +509,76 @@ export function AccountForm({
                   ) : null}
                 </div>
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   <div>
                     <label
                       htmlFor={`${uid}-size`}
+                      id={`${uid}-size-label`}
                       className="block text-xs font-semibold text-fg mb-1.5"
                     >
                       Account size
                     </label>
-                    <select
+                    <Select
                       id={`${uid}-size`}
                       value={accountSize}
                       onChange={(event) => handleSizeChange(Number(event.target.value))}
                       disabled={saving}
-                      className={cn(
-                        'h-9 w-full rounded-lg border bg-bg-2 px-3 text-sm text-fg',
-                        'focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/60',
-                        'disabled:cursor-not-allowed disabled:opacity-50'
-                      )}
                     >
                       {sizes.map((size) => (
                         <option key={size.value} value={size.value}>
                           {size.label}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   </div>
 
                   <div>
                     <label
                       htmlFor={`${uid}-phase`}
+                      id={`${uid}-phase-label`}
                       className="block text-xs font-semibold text-fg mb-1.5"
                     >
                       Phase
                     </label>
-                    <select
+                    <Select
                       id={`${uid}-phase`}
                       value={phase}
                       onChange={(event) => handlePhaseChange(event.target.value as AccountPhase)}
                       disabled={saving}
-                      className={cn(
-                        'h-9 w-full rounded-lg border bg-bg-2 px-3 text-sm text-fg',
-                        'focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/60',
-                        'disabled:cursor-not-allowed disabled:opacity-50'
-                      )}
                     >
                       {currentPhaseOptions.map((opt) => (
                         <option key={opt.value} value={opt.value}>
                           {opt.label}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                   </div>
-                </div>
 
-                <div>
+                  <div>
                   <label
                     htmlFor={`${uid}-result`}
+                    id={`${uid}-result-label`}
                     className="block text-xs font-semibold text-fg mb-1.5"
                   >
                     Account result
                   </label>
-                  <select
+                  <Select
                     id={`${uid}-result`}
                     value={result}
                     onChange={(event) => setResult(event.target.value as AccountResult)}
                     disabled={saving}
-                    className={cn(
-                      'h-9 w-full rounded-lg border bg-bg-2 px-3 text-sm text-fg',
-                      'focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/60',
-                      'disabled:cursor-not-allowed disabled:opacity-50'
-                    )}
                   >
                     {resultOptions.map((opt) => (
                       <option key={opt.value} value={opt.value}>
                         {opt.label}
                       </option>
                     ))}
-                  </select>
+                  </Select>
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-5">
+              <div className="mt-4">
                 <div className="mb-2 text-xs font-semibold text-fg">Rules</div>
                 <Segmented
                   value={ruleMode}
@@ -603,24 +592,24 @@ export function AccountForm({
 
               {isStandard ? (
                 <>
-                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     {showProfitTarget && (
                       <RuleBox label="Profit target" value={money(toNumberOrNull(effectiveRules.profitTarget))} />
                     )}
                     <RuleBox label="Max drawdown" value={money(toNumberOrNull(effectiveRules.maxDrawdown))} />
                     {!showProfitTarget && (
-                      <div className="sm:col-span-3 text-center text-sm text-fg-muted py-2">
+                        <div className="sm:col-span-2 text-center text-sm text-fg-muted py-2">
                         No profit target for CFD Funded accounts
                       </div>
                     )}
                   </div>
-                  <p className="mt-3 text-xs text-fg-muted">
+                  <p className="mt-2 text-xs text-fg-muted">
                     Standard values for {TYPE_LABEL[accountType]} {getPhaseLabel(phase)} accounts. Switch to Custom to set your own.
                   </p>
                 </>
               ) : (
                 <>
-                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     {showProfitTarget && (
                       <Field
                         id={`${uid}-profitTarget`}

@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { DateTimePicker } from '@/components/ui/DateTimePicker';
 import {
   FormField,
   FormSection,
@@ -768,15 +769,10 @@ export function TradeFormPage() {
                   label="Opened at"
                   required
                 >
-                  <Input
-                    type="datetime-local"
+                  <DateTimePicker
                     value={form.openedAt}
-                    onChange={(e) =>
-                      patch(
-                        'openedAt',
-                        e.target.value,
-                      )
-                    }
+                    onChange={(value) => patch('openedAt', value)}
+                    aria-label="Opened at"
                   />
 
                   <FieldError
@@ -790,15 +786,12 @@ export function TradeFormPage() {
                   label="Closed at"
                   hint="Leave blank for an open trade."
                 >
-                  <Input
-                    type="datetime-local"
+                  <DateTimePicker
                     value={form.closedAt}
-                    onChange={(e) =>
-                      patch(
-                        'closedAt',
-                        e.target.value,
-                      )
-                    }
+                    onChange={(value) => patch('closedAt', value)}
+                    placeholder="Leave blank"
+                    aria-label="Closed at"
+                    clearable
                   />
 
                   <FieldError

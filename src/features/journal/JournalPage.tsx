@@ -33,14 +33,15 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/Table';
 
 import { ResultPill } from '@/components/ui/ResultPill';
+import { InstrumentMark } from '@/components/trade/InstrumentMark';
 
 import { DirectionPill } from '@/components/ui/DirectionPill';
 
-import { Badge } from '@/components/ui/Badge';
-
 import { useTradesStore, bootTradesStore } from '@/store/tradesStore';
 
-import { formatDate, formatDuration, formatR } from '@/lib/format';
+import { formatDate, formatDuration, formatR, formatSignedMoney } from '@/lib/format';
+
+import { cn } from '@/lib/cn';
 
 import { readFieldLabel } from '@/domain/templates/resolve';
 
@@ -210,6 +211,11 @@ export function JournalPage() {
 
   const template = useMemo(() => getTemplate(ACTIVE_TEMPLATE_ID), []);
 
+  const tableFields = useMemo(
+    () => template.fields.filter((field) => !['quarterOpen', 'driver', 'mistake'].includes(field.key)),
+    [template],
+  );
+
 
 
   const filterFields = useMemo(
@@ -269,6 +275,13 @@ export function JournalPage() {
         case 'r':
 
           return (a.r - b.r) * dir;
+
+        case 'pnl': {
+          if (a.pnl == null && b.pnl == null) return 0;
+          if (a.pnl == null) return 1;
+          if (b.pnl == null) return -1;
+          return (a.pnl - b.pnl) * dir;
+        }
 
         case 'durationMin':
 
@@ -527,281 +540,174 @@ export function JournalPage() {
             </div>
 
           ) : (
-
-            <Table>
-
+            <>
+            <div className="flex flex-col gap-1 border-b border-line bg-bg-1 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+              <span className="text-sm font-medium text-fg">Your trades</span>
+              <span className="text-xs text-fg-muted">
+                Scroll horizontally to see every trade field. Select a row for full details.
+              </span>
+            </div>
+            <Table
+              className="min-w-max table-fixed"
+              containerClassName="journal-table-scroll max-h-[min(72vh,720px)] overflow-auto overscroll-contain"
+            >
+              <colgroup>
+                <col className="w-[90px]" />
+                <col className="w-[170px]" />
+                <col className="w-[130px]" />
+                <col className="w-[110px]" />
+                <col className="w-[110px]" />
+                <col className="w-[120px]" />
+                <col className="w-[120px]" />
+                <col className="w-[140px]" />
+                <col className="w-[120px]" />
+                <col className="w-[110px]" />
+                {tableFields.map((field) => (
+                  <col key={field.key} className="w-[185px]" />
+                ))}
+                <col className="w-[58px]" />
+              </colgroup>
               <THead>
-
                 <TR>
-
-                  <TH className="w-12 text-center">#</TH>
-
-                  <TH>
-
+                  <TH className="sticky left-0 z-20 bg-bg-3 text-center">
                     <SortHeader
-
-                      label="Date"
-
-                      active={sortKey === 'openedAt'}
-
+                      label="Trade #"
+                      active={sortKey === 'number'}
                       dir={sortDir}
-
-                      onClick={() => toggleSort('openedAt')}
-
+                      onClick={() => toggleSort('number')}
                     />
-
                   </TH>
-
-                  <TH>Day</TH>
-
-                  <TH>Pair</TH>
-                  <TH className="text-right">Entry</TH>
-                  <TH className="text-right">Exit</TH>
-                  <TH className="text-right">
+                  <TH className="text-center">
                     <SortHeader
-                      label="P&L"
+                      label="Date"
+                      active={sortKey === 'openedAt'}
+                      dir={sortDir}
+                      onClick={() => toggleSort('openedAt')}
+                    />
+                  </TH>
+                  <TH className="text-center">
+                    <SortHeader
+                      label="Instrument"
+                      active={sortKey === 'instrument'}
+                      dir={sortDir}
+                      onClick={() => toggleSort('instrument')}
+                    />
+                  </TH>
+                  <TH className="text-center">Direction</TH>
+                  <TH className="text-center">
+                    <SortHeader
+                      label="Result"
+                      active={sortKey === 'result'}
+                      dir={sortDir}
+                      onClick={() => toggleSort('result')}
+                    />
+                  </TH>
+                  <TH align="center">Entry</TH>
+                  <TH align="center">Exit</TH>
+                  <TH align="center">
+                    <SortHeader
+                      label="Profit / loss (USD)"
                       active={sortKey === 'pnl'}
                       dir={sortDir}
                       onClick={() => toggleSort('pnl')}
-                      align="right"
+                      align="left"
                     />
                   </TH>
-
-                  <TH>Daily Candle</TH>
-
-                  <TH>Daily Profile</TH>
-
-                  <TH>H4 Candle</TH>
-
-                  <TH>H4 Profile</TH>
-
-                  <TH>M90/H1/M30</TH>
-
-                  <TH>Entry Model</TH>
-
-                  <TH>Alignment</TH>
-
-                  <TH>Module</TH>
-
-                  <TH>Confluence</TH>
-
-                  <TH>Trade Type</TH>
-
-                  <TH>L/S</TH>
-
-                  <TH>
-
+                  <TH align="center">
                     <SortHeader
-
-                      label="W/L"
-
-                      active={sortKey === 'result'}
-
-                      dir={sortDir}
-
-                      onClick={() => toggleSort('result')}
-
-                    />
-
-                  </TH>
-
-                  <TH className="text-right">
-
-                    <SortHeader
-
                       label="Realized R"
-
                       active={sortKey === 'r'}
-
                       dir={sortDir}
-
                       onClick={() => toggleSort('r')}
-
-                      align="right"
-
+                      align="left"
                     />
-
                   </TH>
-
-                  <TH className="text-right">
-
+                  <TH align="center">
                     <SortHeader
-
                       label="Duration"
-
                       active={sortKey === 'durationMin'}
-
                       dir={sortDir}
-
                       onClick={() => toggleSort('durationMin')}
-
-                      align="right"
-
+                      align="left"
                     />
-
                   </TH>
-
-                  <TH>Q Open</TH>
-
-                  <TH>Driver</TH>
-
-                  <TH>Mistake</TH>
-
-                  <TH className="w-10" />
-
+                  {tableFields.map((field) => (
+                    <TH key={field.key} title={field.label} className="text-center">{field.label}</TH>
+                  ))}
+                  <TH aria-label="Open trade" align="center" />
                 </TR>
-
               </THead>
-
-
-
               <TBody>
-
                 {sorted.map((t) => (
-
-                  <TR key={t.id} interactive onClick={() => navigate(`/journal/${t.id}`)}>
-
-                    <TD className="text-fg-dim text-center">
-
-                      {t.number ? String(t.number).padStart(2, '0') : '—'}
-
+                  <TR
+                    key={t.id}
+                    interactive
+                    onClick={() => navigate(`/journal/${t.id}`)}
+                    className="h-[64px] odd:bg-bg-2 even:bg-bg-3/35"
+                  >
+                    <TD align="center" className="sticky left-0 z-[5] whitespace-nowrap bg-bg-2 font-mono font-semibold text-fg group-even:bg-bg-3 group-hover:bg-bg-4">
+                      {t.number != null ? `#${String(t.number).padStart(2, '0')}` : '—'}
                     </TD>
-
-                    <TD className="whitespace-nowrap font-mono">{formatDate(t.openedAt)}</TD>
-
-                    <TD>{readFieldLabel(t, 'dayOfWeek')}</TD>
-
-                    <TD>
-
-                      <span className="font-semibold text-fg">{t.instrument}</span>
-
+                    <TD align="center" className="whitespace-nowrap text-xs text-fg-muted" title={formatDate(t.openedAt)}>
+                      {formatDate(t.openedAt)}
                     </TD>
-                    <TD align="right" className="text-fg-muted font-mono num">
-                      {t.entry != null ? t.entry : '—'}
+                    <TD align="center">
+                      <span className="inline-flex items-center gap-2 font-semibold text-fg">
+                        <InstrumentMark instrument={t.instrument} className="h-7 w-7" />
+                        {t.instrument}
+                      </span>
                     </TD>
-                    <TD align="right" className="text-fg-muted font-mono num">
-                      {t.exit != null ? t.exit : '—'}
+                    <TD align="center"><DirectionPill direction={t.direction} /></TD>
+                    <TD align="center"><ResultPill result={t.result} /></TD>
+                    <TD align="center" className="whitespace-nowrap font-mono num text-xs text-fg-muted">
+                      {t.entry ?? '—'}
                     </TD>
-                    <TD
-                      align="right"
-                      className={
-                        t.pnl == null
-                          ? 'text-fg-dim font-bold num'
-                          : t.pnl > 0
-                            ? 'text-win font-bold num'
-                            : t.pnl < 0
-                              ? 'text-loss font-bold num'
-                              : 'text-be font-bold num'
-                      }
-                    >
-                      {t.pnl == null ? '—' : `${t.pnl > 0 ? '+' : ''}${t.pnl}`}
+                    <TD align="center" className="whitespace-nowrap font-mono num text-xs text-fg-muted">
+                      {t.exit ?? '—'}
                     </TD>
-
-                    <TD>{readFieldLabel(t, 'dailyCandle')}</TD>
-
-                    <TD>{readFieldLabel(t, 'dailyProfile')}</TD>
-
-                    <TD>
-
-                      <Badge tone="accent">{readFieldLabel(t, 'h4Candle')}</Badge>
-
+                    <TD align="center" className="whitespace-nowrap">
+                      {t.pnl == null ? (
+                        <span className="font-mono text-sm text-fg-dim">—</span>
+                      ) : (
+                        <span className={t.pnl > 0 ? 'font-mono text-sm font-semibold text-win' : t.pnl < 0 ? 'font-mono text-sm font-semibold text-loss' : 'font-mono text-sm font-semibold text-be'}>
+                          {formatSignedMoney(t.pnl)}
+                        </span>
+                      )}
                     </TD>
-
-                    <TD>{readFieldLabel(t, 'h4Profile')}</TD>
-
-                    <TD>{readFieldLabel(t, 'itf')}</TD>
-
-                    <TD>
-
-                      <Badge tone="accent">{readFieldLabel(t, 'entry')}</Badge>
-
-                    </TD>
-
-                    <TD>{readFieldLabel(t, 'alignment')}</TD>
-
-                    <TD>{readFieldLabel(t, 'module')}</TD>
-
-                    <TD>
-
-                      <Badge tone="accent">{readFieldLabel(t, 'confluence')}</Badge>
-
-                    </TD>
-
-                    <TD>
-
-                      <Badge tone={readFieldLabel(t, 'tradeType') === 'Reversal' ? 'accent' : 'neutral'}>
-
-                        {readFieldLabel(t, 'tradeType')}
-
-                      </Badge>
-
-                    </TD>
-
-                    <TD>
-
-                      <DirectionPill direction={t.direction} />
-
-                    </TD>
-
-                    <TD>
-
-                      <ResultPill result={t.result} />
-
-                    </TD>
-
-                    <TD
-
-                      align="right"
-
-                      className={
-
-                        t.r > 0
-
-                          ? 'text-win font-bold num'
-
-                          : t.r < 0
-
-                            ? 'text-loss font-bold num'
-
-                            : 'text-be font-bold num'
-
-                      }
-
-                    >
-
+                    <TD align="center" className={cn('whitespace-nowrap font-mono text-sm font-semibold', t.r > 0 ? 'text-win' : t.r < 0 ? 'text-loss' : 'text-be')}>
                       {formatR(t.r)}
-
                     </TD>
-
-                    <TD align="right" className="text-fg-muted num">
-
+                    <TD align="center" className="whitespace-nowrap font-mono num text-xs text-fg-muted">
                       {formatDuration(t.durationMin)}
-
                     </TD>
-
-                    <TD>{readFieldLabel(t, 'quarterOpen')}</TD>
-
-                    <TD>{readFieldLabel(t, 'driver')}</TD>
-
-                    <TD className="max-w-[10rem] truncate text-fg-muted">
-
-                      {readFieldLabel(t, 'mistake')}
-
+                    {tableFields.map((field) => {
+                      const value = readFieldLabel(t, field.key);
+                      return (
+                        <TD key={field.key} align="center" className="max-w-[185px] truncate text-xs text-fg-muted" title={value}>
+                          {value}
+                        </TD>
+                      );
+                    })}
+                    <TD align="center">
+                      <button
+                        type="button"
+                        aria-label={`View trade ${t.number ?? ''} details`}
+                        title="View full trade details"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          navigate(`/journal/${t.id}`);
+                        }}
+                        className="rounded-md p-2 text-fg-dim transition-colors hover:bg-accent/10 hover:text-accent"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </button>
                     </TD>
-
-                    <TD align="center" className="text-fg-dim">
-
-                      <Eye className="h-4 w-4" />
-
-                    </TD>
-
                   </TR>
-
                 ))}
-
               </TBody>
-
             </Table>
+
+            </>
 
           )}
 
@@ -937,7 +843,7 @@ function JournalFilterPanel({
 
     <div
 
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-4 backdrop-blur-[2px]"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-3 backdrop-blur-sm sm:p-6"
 
       role="presentation"
 
@@ -959,13 +865,13 @@ function JournalFilterPanel({
 
         aria-labelledby="journal-filter-title"
 
-        className="flex w-[min(52vw,760px)] min-w-0 max-w-[92vw] flex-col overflow-hidden rounded-2xl border border-line bg-bg-2 shadow-2xl"
+        className="flex max-h-[92dvh] w-full min-w-0 max-w-4xl flex-col overflow-hidden rounded-2xl border border-line bg-bg-2 shadow-2xl"
 
         onMouseDown={(event) => event.stopPropagation()}
 
       >
 
-      <div className="flex items-center justify-between border-b border-line px-6 py-4">
+      <div className="flex shrink-0 items-center justify-between border-b border-line bg-bg-1 px-4 py-4 sm:px-6">
 
         <div>
 
@@ -995,7 +901,9 @@ function JournalFilterPanel({
 
 
 
-      <div className="max-h-[78vh] overflow-y-auto px-6 py-4">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-2 sm:px-6">
+
+        <div className="grid grid-cols-1 gap-x-6 md:grid-cols-2">
 
         <FilterSection title="Date">
 
@@ -1213,7 +1121,9 @@ function JournalFilterPanel({
 
 
 
-        <div className="mt-4 flex items-center justify-between border-t border-line pt-3">
+        </div>
+
+        <div className="sticky bottom-0 mt-2 flex items-center justify-between border-t border-line bg-bg-2 px-1 py-3">
 
           <button
 
@@ -1221,7 +1131,7 @@ function JournalFilterPanel({
 
             onClick={onClear}
 
-            className="inline-flex items-center gap-2 text-xs font-medium text-fg-muted hover:text-fg"
+            className="inline-flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-fg-muted transition-colors hover:bg-bg-3 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
 
           >
 
@@ -1239,7 +1149,7 @@ function JournalFilterPanel({
 
             onClick={onClose}
 
-            className="rounded-lg bg-fg px-4 py-2 text-xs font-semibold text-fg-inverse hover:opacity-90"
+            className="min-h-10 rounded-lg bg-fg px-5 py-2 text-sm font-semibold text-fg-inverse transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
 
           >
 
@@ -1277,9 +1187,9 @@ function FilterSection({
 
   return (
 
-    <section className="border-b border-line py-3 first:pt-0 last:border-b-0">
+    <section className="border-b border-line py-4 first:pt-2 last:border-b-0">
 
-      <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-fg-muted">{title}</div>
+      <div className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-dim">{title}</div>
 
       {children}
 
@@ -1319,13 +1229,13 @@ function CheckOption({
 
       className={
 
-        'flex min-h-8 items-center gap-2 rounded-lg border px-2.5 py-1.5 text-left text-xs transition-colors ' +
+        'flex min-h-10 items-center gap-2.5 rounded-xl border px-3 py-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ' +
 
         (checked
 
-          ? 'border-accent/50 bg-accent/10 text-fg'
+          ? 'border-accent/40 bg-accent/10 text-fg shadow-sm'
 
-          : 'border-line bg-bg-1 text-fg-muted hover:border-line-strong hover:bg-bg-4 hover:text-fg')
+          : 'border-line bg-bg-1 text-fg-muted hover:border-line-strong hover:bg-bg-3 hover:text-fg')
 
       }
 
@@ -1377,7 +1287,7 @@ function DateInput({
 
   return (
 
-    <label className="space-y-1">
+    <label className="block min-w-0 space-y-1.5">
 
       <span className="text-[11px] font-medium text-fg-muted">{label}</span>
 
@@ -1389,7 +1299,7 @@ function DateInput({
 
         onChange={(event) => onChange(event.target.value)}
 
-        className="h-9 w-full rounded-lg border border-line bg-bg-1 px-2 text-xs text-fg outline-none focus:border-accent"
+        className="h-10 w-full rounded-xl border border-line bg-bg-1 px-3 text-sm text-fg outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/15"
 
       />
 

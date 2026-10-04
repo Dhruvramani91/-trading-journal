@@ -4,11 +4,15 @@ import {
   forwardRef,
   isValidElement,
   useEffect,
+  useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type ReactNode,
   type SelectHTMLAttributes,
+  type CSSProperties,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { Check, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
@@ -89,6 +93,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     const selectRef = useRef<HTMLSelectElement | null>(null);
     const triggerRef = useRef<HTMLButtonElement | null>(null);
     const menuRef = useRef<HTMLDivElement | null>(null);
+    const [menuStyle, setMenuStyle] = useState<CSSProperties | null>(null);
 
     const [open, setOpen] = useState(false);
     const [selectedValue, setSelectedValue] = useState(() => {
@@ -108,7 +113,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
 
     const [highlightedIndex, setHighlightedIndex] = useState(0);
 
-    const options = getOptions(children);
+    const options = useMemo(() => getOptions(children), [children]);
 
     const currentValue =
       value !== undefined ? String(value) : selectedValue;
@@ -161,6 +166,65 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
       );
 
       setHighlightedIndex(selectedIndex >= 0 ? selectedIndex : 0);
+    }, [open]);
+
+    const portalContainer = typeof document === 'undefined'
+      ? null
+      : triggerRef.current?.closest<HTMLElement>('[data-select-portal]') ?? document.body;
+
+    useLayoutEffect(() => {
+      if (!open || !triggerRef.current || !portalContainer) {
+        setMenuStyle(null);
+        return;
+      }
+
+      const updatePosition = () => {
+        const trigger = triggerRef.current;
+        if (!trigger) return;
+
+        const rect = trigger.getBoundingClientRect();
+        const desiredHeight = Math.min(options.length * 46 + 16, 360);
+        const spaceBelow = window.innerHeight - rect.bottom - 20;
+        const spaceAbove = rect.top - 20;
+        const opensAbove = spaceBelow < desiredHeight && spaceAbove > spaceBelow;
+        const availableHeight = Math.max(80, opensAbove ? spaceAbove : spaceBelow);
+        const maxHeight = Math.min(360, availableHeight);
+        const menuHeight = Math.min(desiredHeight, maxHeight);
+        const menuWidth = Math.min(Math.max(rect.width, 266), window.innerWidth - 24);
+        const viewportLeft = Math.max(12, Math.min(rect.left, window.innerWidth - menuWidth - 12));
+        const viewportTop = opensAbove ? rect.top - menuHeight - 8 : rect.bottom + 8;
+
+        if (portalContainer === document.body) {
+          setMenuStyle({ position: 'fixed', left: viewportLeft, top: viewportTop, width: menuWidth, maxHeight });
+        } else {
+          const hostRect = portalContainer.getBoundingClientRect();
+          setMenuStyle({
+            position: 'absolute',
+            left: viewportLeft - hostRect.left - portalContainer.clientLeft + portalContainer.scrollLeft,
+            top: viewportTop - hostRect.top - portalContainer.clientTop + portalContainer.scrollTop,
+            width: menuWidth,
+            maxHeight,
+          });
+        }
+      };
+
+      updatePosition();
+      window.addEventListener('resize', updatePosition);
+      window.addEventListener('scroll', updatePosition, true);
+      const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(updatePosition);
+      observer?.observe(triggerRef.current);
+      return () => {
+        window.removeEventListener('resize', updatePosition);
+        window.removeEventListener('scroll', updatePosition, true);
+        observer?.disconnect();
+      };
+    }, [open, options.length, portalContainer]);
+
+    useEffect(() => {
+      if (!open) return;
+      requestAnimationFrame(() => {
+        menuRef.current?.querySelector<HTMLElement>(`#${CSS.escape(`${id ?? 'select'}-option-${highlightedIndex}`)}`)?.focus({ preventScroll: true });
+      });
     }, [open]);
 
     const setSelectRef = (element: HTMLSelectElement | null) => {
@@ -370,13 +434,16 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           />
         </button>
 
-        {open && (
+        {open && portalContainer ? createPortal(
           <div
             ref={menuRef}
+            style={{
+              ...menuStyle,
+              visibility: menuStyle ? 'visible' : 'hidden',
+              zIndex: 60,
+            }}
             className={cn(
-              'absolute left-0 top-full z-20 mt-2',
-              'w-[min(266px,calc(100vw-32px))]',
-              'max-h-80 overflow-y-auto',
+              'overflow-y-auto',
               'rounded-[22px]',
               'border border-line',
               'bg-bg-2',
@@ -442,8 +509,9 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
                 </button>
               );
             })}
-          </div>
-        )}
+          </div>,
+          portalContainer,
+        ) : null}
       </div>
     );
   },
