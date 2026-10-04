@@ -257,7 +257,7 @@ export function LoginPage() {
   }
 
   // --------------------------------------------------
-  // FORGOT PASSWORD — EMAIL RESET LINK ONLY, NO OTP
+  // FORGOT PASSWORD — EMAIL RESET LINK ONLY
   // --------------------------------------------------
 
   async function handlePasswordReset(e: React.FormEvent) {

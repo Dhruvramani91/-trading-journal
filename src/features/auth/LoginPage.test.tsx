@@ -46,7 +46,6 @@ describe('LoginPage authentication feedback', () => {
       user: null,
       loading: false,
       error: null,
-      otpSent: false,
       initialized: false,
     });
   });

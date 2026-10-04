@@ -42,7 +42,6 @@ describe('avatar Storage behavior', () => {
       user: currentUser,
       loading: false,
       error: null,
-      otpSent: false,
       initialized: true,
     });
 

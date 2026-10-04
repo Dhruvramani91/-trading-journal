@@ -5,6 +5,7 @@ import { deleteTradePhotosForTrade } from '@/lib/tradePhotos';
 
 interface TradesState {
   trades: Trade[];
+  authenticatedUserId: string | null;
   ownerId: string | null;
   loadingOwnerId: string | null;
   loaded: boolean;
@@ -12,6 +13,7 @@ interface TradesState {
   error: string | null;
 
   load: (ownerId?: string) => Promise<void>;
+  setAuthenticatedUserId: (userId: string | null) => void;
   refresh: () => Promise<void>;
   clear: () => void;
 
@@ -32,6 +34,7 @@ let inFlightLoad: Promise<void> | null = null;
 
 export const useTradesStore = create<TradesState>((set, get) => ({
   trades: [],
+  authenticatedUserId: null,
   ownerId: null,
   loadingOwnerId: null,
   loaded: false,
@@ -39,13 +42,35 @@ export const useTradesStore = create<TradesState>((set, get) => ({
   error: null,
 
   load(ownerId) {
-    if (get().loading && inFlightLoad) return inFlightLoad;
+    const current = get();
+    const userId = ownerId ?? current.authenticatedUserId;
+
+    // Store identity is set only from a Supabase-authenticated session.
+    if (!userId || userId !== current.authenticatedUserId) {
+      requestVersion++;
+      set({
+        trades: [],
+        ownerId: null,
+        loaded: false,
+        loading: false,
+        loadingOwnerId: null,
+        error: userId ? 'Authenticated user changed; reload the session.' : null,
+      });
+      return Promise.resolve();
+    }
+
+    if (current.loaded && current.ownerId === userId) return Promise.resolve();
+    if (current.loading && current.loadingOwnerId === userId && inFlightLoad) {
+      return inFlightLoad;
+    }
 
     const version = ++requestVersion;
 
     set({
+      trades: [],
+      ownerId: null,
       loading: true,
-      loadingOwnerId: ownerId ?? null,
+      loadingOwnerId: userId,
       error: null,
     });
 
@@ -54,18 +79,18 @@ export const useTradesStore = create<TradesState>((set, get) => ({
         const trades = await tradeRepository.list();
 
         // Ignore results from an older user/session.
-        if (version !== requestVersion) return;
+        if (version !== requestVersion || get().authenticatedUserId !== userId) return;
 
         set({
           trades,
-          ownerId: ownerId ?? null,
+          ownerId: userId,
           loadingOwnerId: null,
           loaded: true,
           loading: false,
           error: null,
         });
       } catch (err) {
-        if (version !== requestVersion) return;
+        if (version !== requestVersion || get().authenticatedUserId !== userId) return;
 
         set({
           error:
@@ -86,24 +111,26 @@ export const useTradesStore = create<TradesState>((set, get) => ({
   },
 
   async refresh() {
+    const userId = get().authenticatedUserId;
+    if (!userId) return;
     const version = ++requestVersion;
 
     try {
       const trades = await tradeRepository.list();
 
       // Ignore stale requests.
-      if (version !== requestVersion) return;
+      if (version !== requestVersion || get().authenticatedUserId !== userId) return;
 
       set({
         trades,
-        ownerId: get().ownerId,
+        ownerId: userId,
         loadingOwnerId: null,
         loaded: true,
         loading: false,
         error: null,
       });
     } catch (err) {
-      if (version !== requestVersion) return;
+      if (version !== requestVersion || get().authenticatedUserId !== userId) return;
 
       set({
         error:
@@ -122,6 +149,22 @@ export const useTradesStore = create<TradesState>((set, get) => ({
 
     set({
       trades: [],
+      authenticatedUserId: null,
+      ownerId: null,
+      loadingOwnerId: null,
+      loaded: false,
+      loading: false,
+      error: null,
+    });
+  },
+
+  setAuthenticatedUserId(userId) {
+    if (get().authenticatedUserId === userId) return;
+
+    requestVersion++;
+    set({
+      trades: [],
+      authenticatedUserId: userId,
       ownerId: null,
       loadingOwnerId: null,
       loaded: false,
@@ -161,23 +204,23 @@ export const useTradesStore = create<TradesState>((set, get) => ({
   },
 }));
 
-let booted = false;
-
 export function bootTradesStore(): void {
-  if (booted) return;
-  booted = true;
-
   const state = useTradesStore.getState();
-  if (state.loaded || state.loading) return;
+  if (state.loaded || state.loading || !state.authenticatedUserId) return;
 
-  void state.load();
+  void state.load(state.authenticatedUserId);
 }
 
 export async function reloadTradesForCurrentUser(userId?: string): Promise<void> {
   const store = useTradesStore.getState();
 
-  store.clear();
-  await store.load(userId);
+  if (!userId) {
+    store.clear();
+    return;
+  }
+
+  store.setAuthenticatedUserId(userId);
+  await useTradesStore.getState().load(userId);
 }
 
 export function clearTradesForCurrentUser(): void {

@@ -18,11 +18,7 @@ interface AuthState {
   user: UserProfile | null;
   loading: boolean;
   error: string | null;
-  otpSent: boolean;
   initialized: boolean;
-
-  sendOtp: (email: string) => Promise<void>;
-  verifyOtp: (email: string, token: string) => Promise<void>;
 
   signUp: (email: string, password: string) => Promise<void>;
 
@@ -46,8 +42,6 @@ interface AuthState {
   signOut: () => Promise<void>;
 
   clearError: () => void;
-
-  resetOtp: () => void;
 
   init: () => Promise<() => void>;
 }
@@ -213,110 +207,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   loading: false,
   error: null,
-  otpSent: false,
   initialized: false,
-
-  /* ------------------------------------------------ */
-  /* OTP — KEPT FOR COMPATIBILITY                     */
-  /* ------------------------------------------------ */
-
-  sendOtp: async (email: string) => {
-    set({
-      loading: true,
-      error: null,
-    });
-
-    try {
-      if (!isSupabaseConfigured || !supabase) {
-        throw new Error('Supabase is not configured.');
-      }
-
-      const { error } =
-        await supabase.auth.signInWithOtp({
-          email: email.trim().toLowerCase(),
-        });
-
-      if (error) {
-        throw error;
-      }
-
-      set({
-        otpSent: true,
-        loading: false,
-      });
-    } catch (err) {
-      set({
-        error:
-          (err as Error).message ||
-          'Failed to send verification code.',
-        loading: false,
-      });
-
-      throw err;
-    }
-  },
-
-  verifyOtp: async (
-    email: string,
-    token: string
-  ) => {
-    set({
-      loading: true,
-      error: null,
-    });
-
-    try {
-      if (!isSupabaseConfigured || !supabase) {
-        throw new Error('Supabase is not configured.');
-      }
-
-      const { data, error } =
-        await supabase.auth.verifyOtp({
-          email: email.trim().toLowerCase(),
-          token,
-          type: 'email',
-        });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data.user) {
-        const profile = profileFromSupabaseUser(
-          data.user
-        );
-
-        set({
-          user: profile,
-          loading: false,
-          otpSent: false,
-        });
-
-        setStoredUser(profile);
-
-        /*
-         * Supabase auth state will also trigger reload,
-         * but loading here makes OTP login responsive
-         * even before the auth event finishes.
-         */
-        void reloadTradesForCurrentUser(profile.id);
-      } else {
-        set({
-          loading: false,
-          otpSent: false,
-        });
-      }
-    } catch (err) {
-      set({
-        error:
-          (err as Error).message ||
-          'Invalid verification code.',
-        loading: false,
-      });
-
-      throw err;
-    }
-  },
 
   /* ------------------------------------------------ */
   /* SIGN UP                                          */
@@ -739,7 +630,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       set({
         user: null,
         loading: false,
-        otpSent: false,
         error: null,
       });
     } catch (err) {
@@ -760,17 +650,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   clearError: () => {
     set({
-      error: null,
-    });
-  },
-
-  /* ------------------------------------------------ */
-  /* RESET OTP                                        */
-  /* ------------------------------------------------ */
-
-  resetOtp: () => {
-    set({
-      otpSent: false,
       error: null,
     });
   },
