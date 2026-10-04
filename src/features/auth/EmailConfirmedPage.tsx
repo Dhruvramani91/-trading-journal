@@ -38,7 +38,7 @@ export function EmailConfirmedPage() {
                 </p>
 
                 <p className="text-sm text-fg-muted">
-                  You can now log in to your PrecisionJournal account.
+                  You can now log in to your ThePrecisionLab account.
                 </p>
               </div>
 

@@ -148,7 +148,7 @@ export function ProfilePage() {
     <div className="space-y-5 sm:space-y-6 animate-fade-in">
       <PageHeader
         title="Profile"
-        description="Your PrecisionJournal account and plan details."
+        description="Your ThePrecisionLab account and plan details."
       />
 
       <Card className="overflow-hidden">
@@ -295,7 +295,7 @@ export function ProfilePage() {
                 <h3 className="text-sm font-bold text-fg">Free Plan</h3>
               </div>
               <p className="mt-1 text-xs text-fg-muted">
-                Your current PrecisionJournal plan.
+                Your current ThePrecisionLab plan.
               </p>
             </div>
 

@@ -91,7 +91,7 @@ export default function PasswordResetPage() {
             </h1>
 
             <p className="mt-3 text-sm leading-6 text-white/60">
-              Your PrecisionJournal password has been updated.
+              Your ThePrecisionLab password has been updated.
               You can now log in using your new password.
             </p>
 
@@ -135,7 +135,7 @@ export default function PasswordResetPage() {
             </h1>
 
             <p className="mt-2 text-sm leading-6 text-white/50">
-              Enter a new password for your PrecisionJournal account.
+              Enter a new password for your ThePrecisionLab account.
             </p>
           </div>
 

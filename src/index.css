@@ -136,7 +136,7 @@
   .data-value { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
 }
 
-/* PrecisionJournal brand logo theme switching */
+/* ThePrecisionLab brand logo theme switching */
 .brand-logo-dark {
   display: none;
 }
@@ -152,6 +152,294 @@
 
 .dark .brand-logo-dark {
   display: block;
+}
+
+/* Scroll morphing navigation on the public landing page */
+.landing-nav-fixed-wrap {
+  position: fixed;
+  z-index: 100;
+  top: 0;
+  right: 0;
+  left: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.landing-nav {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  color: var(--ink);
+  pointer-events: auto;
+}
+
+.landing-nav-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.landing-nav-brand {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+  justify-self: start;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.landing-nav-logo {
+  width: 28px;
+  height: 28px;
+}
+
+.landing-nav-logo img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+.landing-nav-links {
+  align-items: center;
+  justify-self: center;
+  column-gap: 32px;
+  white-space: nowrap;
+}
+
+.landing-nav-link,
+.landing-mobile-link {
+  color: var(--soft);
+  font-size: 14px;
+  font-weight: 500;
+  transition: color 160ms ease;
+}
+
+.landing-nav-link:hover,
+.landing-mobile-link:hover {
+  color: var(--ink);
+}
+
+.landing-nav-link:focus-visible,
+.landing-mobile-link:focus-visible,
+.landing-nav-brand:focus-visible,
+.landing-nav-icon:focus-visible,
+.landing-nav-join:focus-visible,
+.landing-mobile-theme:focus-visible {
+  outline: 2px solid var(--purple);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+.landing-nav-actions {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  gap: 8px;
+}
+
+.landing-nav-icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 0;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--soft);
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.landing-nav-icon:hover {
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
+  color: var(--ink);
+}
+
+.landing-nav-join {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 18px;
+  border: 1px solid color-mix(in srgb, var(--ink) 12%, transparent);
+  border-radius: 9999px;
+  background: var(--ink);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--ink-inv) 18%, transparent), 0 2px 5px rgba(0, 0, 0, 0.12);
+  color: var(--ink-inv);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.landing-nav-join:hover {
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--ink-inv) 18%, transparent), 0 4px 9px rgba(0, 0, 0, 0.15);
+}
+
+.landing-nav-menu-button {
+  display: grid;
+}
+
+.landing-mobile-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--shell);
+  box-shadow: var(--shadow);
+}
+
+.landing-mobile-link {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  padding: 0 12px;
+  border-radius: 11px;
+}
+
+.landing-mobile-link:hover,
+.landing-mobile-theme:hover {
+  background: color-mix(in srgb, var(--ink) 6%, transparent);
+}
+
+.landing-mobile-theme {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 9px;
+  padding: 0 12px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin-top: 4px;
+  border-radius: 0 0 11px 11px;
+  background: transparent;
+  color: var(--soft);
+  font-size: 13px;
+  text-align: left;
+}
+
+.landing-nav-spacer {
+  height: 72px;
+}
+
+html[data-theme='dark'] .landing-nav-logo .brand-logo-light {
+  display: none;
+}
+
+html[data-theme='dark'] .landing-nav-logo .brand-logo-dark {
+  display: block;
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme='light']) .landing-nav-logo .brand-logo-light {
+    display: none;
+  }
+
+  html:not([data-theme='light']) .landing-nav-logo .brand-logo-dark {
+    display: block;
+  }
+}
+
+@media (max-width: 1023px) {
+  .landing-nav-content {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+@media (max-width: 639px) {
+  .landing-nav-actions > .landing-nav-icon:first-child {
+    display: none;
+  }
+
+  .landing-nav-content {
+    display: flex;
+    justify-content: center;
+  }
+
+  .landing-nav-brand {
+    justify-self: center;
+    gap: 0;
+  }
+
+  .landing-nav-brand > span {
+    display: none;
+  }
+
+  .landing-nav-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .landing-nav-brand {
+    justify-self: start;
+  }
+
+  .landing-nav-actions {
+    display: flex;
+  }
+
+  .landing-nav-logo {
+    width: 32px;
+    height: 32px;
+  }
+
+  .landing-nav-logo img {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+@media (max-width: 380px) {
+  .landing-nav-brand {
+    gap: 6px;
+    font-size: 12px;
+  }
+
+  .landing-nav-logo,
+  .landing-nav-logo img {
+    width: 24px;
+    height: 24px;
+  }
+
+  .landing-nav-actions {
+    gap: 4px;
+  }
+
+  .landing-nav-join {
+    min-height: 36px;
+    padding-right: 9px;
+    padding-left: 9px;
+    font-size: 12px;
+  }
+
+  .landing-nav-menu-button {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-nav-menu-button {
+    display: none;
+  }
 }
 
 @keyframes loader-spin {

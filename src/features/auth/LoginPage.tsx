@@ -341,12 +341,12 @@ export function LoginPage() {
           >
             <img
               src="/logo-white.png"
-              alt="PrecisionJournal"
+              alt="ThePrecisionLab"
               className="h-12 w-12 object-contain"
             />
 
             <span className="text-3xl font-bold tracking-tight text-white">
-              PrecisionJournal
+              ThePrecisionLab
             </span>
           </Link>
 
@@ -379,7 +379,7 @@ export function LoginPage() {
           >
             <BrandLogo size="md" />
             <span className="text-lg font-bold tracking-tight text-fg">
-              PrecisionJournal
+              ThePrecisionLab
             </span>
           </Link>
 
@@ -624,7 +624,7 @@ export function LoginPage() {
                   </>
                 ) : (
                   <>
-                    New to PrecisionJournal?{' '}
+                    New to ThePrecisionLab?{' '}
                     <button
                       type="button"
                       onClick={() => {

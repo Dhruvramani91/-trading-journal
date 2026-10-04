@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/cn';
 
-export const BRAND_NAME = 'PrecisionJournal';
+export const BRAND_NAME = 'ThePrecisionLab';
 export const BRAND_TAGLINE = 'Journal your trades';
 
 export function BrandLogo({
