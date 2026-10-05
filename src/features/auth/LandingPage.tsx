@@ -751,7 +751,7 @@ try{var t=localStorage.getItem("theme");if(t==="dark"||t==="light")document.docu
   --shadow:0 30px 80px rgba(0,0,0,.5);
   --shot-shadow:0 0 0 1px rgba(255,255,255,.08),0 0 70px rgba(139,60,246,.20),0 34px 90px rgba(0,0,0,.70);
 }
-html{scroll-padding-top:calc(88px + env(safe-area-inset-top,0px));scroll-behavior:smooth}
+html{scroll-padding-top:calc(88px + env(safe-area-inset-top,0px))}
 *,*::before,*::after{box-sizing:border-box}
 body{
   margin:0; background:var(--page); color:var(--ink);
@@ -1973,7 +1973,7 @@ footer a:hover{transform:translateY(-1px)}
             >
               <div className="shot">
               <div className="app journal-preview">
-  <aside className="side" aria-label="Journal preview navigation">
+  <aside className="side" data-lenis-prevent aria-label="Journal preview navigation">
     <div className="ap-brand"><BrandLogo size="sm" className="landing-nav-logo" /><span><b>ThePrecisionLab</b><small>My Journal</small></span></div>
     <button type="button" className="nav-i" data-active="true" aria-disabled="true"><span aria-hidden="true">▤</span>Journal</button>
     <button type="button" className="nav-i" aria-disabled="true"><span aria-hidden="true">▦</span>Accounts</button>
@@ -1999,7 +1999,7 @@ footer a:hover{transform:translateY(-1px)}
         <div className="journal-kpi"><small>Win rate</small><strong>62.5%</strong></div>
         <div className="journal-kpi"><small>Total P&amp;L</small><strong className="pos">+$1,240</strong></div>
       </div>
-      <div className="journal-table-wrap">
+      <div className="journal-table-wrap" data-lenis-prevent>
         <table className="journal-table">
           <thead><tr><th>Trade #</th><th>Date</th><th>Instrument</th><th>Direction</th><th>Result</th><th>Entry</th><th>Exit</th><th>Profit / loss</th><th>Realized R</th></tr></thead>
           <tbody>

@@ -381,6 +381,7 @@ function AttachTradesModal({
       ref={overlayRef}
       role="dialog"
       aria-modal="true"
+      data-lenis-prevent
       aria-labelledby="attach-title"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-auto"
       onClick={(e) => {
@@ -474,7 +475,7 @@ function AttachTradesModal({
         ) : null}
 
         {phase === 'select' ? (
-        <div className="min-w-0 flex-1 overflow-x-auto overflow-y-auto px-2">
+        <div data-lenis-prevent className="min-w-0 flex-1 overflow-x-auto overflow-y-auto px-2">
           {saveError ? (
             <div
               role="alert"
@@ -790,14 +791,14 @@ function AttachResultStep({
 }: AttachResultStepProps) {
   if (!trade) {
     return (
-      <div className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-5 py-6 text-center text-sm text-fg-muted">
+      <div data-lenis-prevent className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-5 py-6 text-center text-sm text-fg-muted">
         Trade no longer available.
       </div>
     );
   }
 
   return (
-    <div className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-5 py-4">
+    <div data-lenis-prevent className="min-w-0 flex-1 overflow-x-hidden overflow-y-auto px-5 py-4">
       {(fieldError || saveError) && (
         <div
           role="alert"

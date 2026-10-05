@@ -460,7 +460,7 @@ export function AccountForm({
           </div>
 
           <form onSubmit={handleSubmit} noValidate className="flex flex-1 flex-col overflow-hidden">
-            <div className="flex-1 overflow-y-auto px-5 py-4 sm:px-6">
+            <div data-lenis-prevent className="flex-1 overflow-y-auto px-5 py-4 sm:px-6">
               {submitError ? (
                 <div
                   role="alert"

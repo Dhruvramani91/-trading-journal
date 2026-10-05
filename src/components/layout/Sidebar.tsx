@@ -91,7 +91,7 @@ export function Sidebar() {
         </button>
       </div>
 
-      <nav className={cn('min-h-0 flex-1 space-y-7 overflow-y-auto py-6', collapsed ? 'px-2' : 'px-3')}>
+      <nav data-lenis-prevent className={cn('min-h-0 flex-1 space-y-7 overflow-y-auto py-6', collapsed ? 'px-2' : 'px-3')}>
         {GROUPS.map((group) => (
           <div key={group.label}>
             {!collapsed && <h2 className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-fg-dim">{group.label}</h2>}
