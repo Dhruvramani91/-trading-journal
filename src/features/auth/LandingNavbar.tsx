@@ -1,6 +1,5 @@
-import { useEffect, useState, type MouseEvent } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { useLenis } from 'lenis/react';
 import { Link } from 'react-router-dom';
 import { Menu, Moon, Sun, X } from 'lucide-react';
 import { BrandLogo, BRAND_NAME } from '@/components/layout/Brand';
@@ -24,7 +23,6 @@ export function LandingNavbar({ isAuthenticated }: { isAuthenticated: boolean })
   const [darkMode, setDarkMode] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth);
   const prefersReducedMotion = useReducedMotion();
-  const lenis = useLenis();
 
   useEffect(() => {
     setDarkMode(readDarkMode());
@@ -96,22 +94,8 @@ export function LandingNavbar({ isAuthenticated }: { isAuthenticated: boolean })
     setMobileMenuOpen(false);
   }
 
-  function navigateToAnchor(event: MouseEvent<HTMLAnchorElement>, href: string) {
-    const target = document.getElementById(href.slice(1));
-    if (!target || !lenis) return;
-
-    event.preventDefault();
+  function closeMenuOnNavigate() {
     closeMenu();
-
-    // Measure the live fixed header, including its collapsed top offset.
-    const header = document.querySelector<HTMLElement>('.landing-nav');
-    const headerBottom = header ? Math.ceil(header.getBoundingClientRect().bottom) : 0;
-    if (window.location.hash !== href) window.history.pushState(null, '', href);
-    lenis.scrollTo(target, {
-      offset: -headerBottom,
-      immediate: Boolean(prefersReducedMotion),
-      duration: prefersReducedMotion ? 0 : 1.2,
-    });
   }
 
   const glassBackground = darkMode
@@ -167,7 +151,7 @@ export function LandingNavbar({ isAuthenticated }: { isAuthenticated: boolean })
             transition={transition}
           >
             {NAV_LINKS.map((link) => (
-              <a key={link.href} href={link.href} className="landing-nav-link" onClick={(event) => navigateToAnchor(event, link.href)}>
+              <a key={link.href} href={link.href} className="landing-nav-link" onClick={closeMenuOnNavigate}>
                 {link.label}
               </a>
             ))}
@@ -214,7 +198,7 @@ export function LandingNavbar({ isAuthenticated }: { isAuthenticated: boolean })
               transition={{ duration: prefersReducedMotion ? 0.1 : 0.18, ease: [0.22, 1, 0.36, 1] }}
             >
               {NAV_LINKS.map((link) => (
-                <a key={link.href} href={link.href} className="landing-mobile-link" onClick={(event) => navigateToAnchor(event, link.href)}>
+                <a key={link.href} href={link.href} className="landing-mobile-link" onClick={closeMenuOnNavigate}>
                   {link.label}
                 </a>
               ))}

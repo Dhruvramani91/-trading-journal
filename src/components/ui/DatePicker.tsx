@@ -506,7 +506,7 @@ export function DatePicker({
               </header>
               <div
                 role="listbox"
-                data-lenis-prevent
+
                 aria-label={view === 'month' ? 'Months' : 'Years'}
                 className={cn('max-h-[260px] overflow-y-auto', view === 'month' ? 'grid grid-cols-3 gap-1' : 'grid grid-cols-3 gap-1')}
               >

@@ -1,10 +1,8 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './app/App';
-import { SmoothScroll } from './components/layout/SmoothScroll';
 import { installNumberInputWheelGuard } from './lib/numberInputWheel';
 import './index.css';
-import 'lenis/dist/lenis.css';
 
 /*
  * Global guard: the mouse wheel must never change a number input's value
@@ -18,8 +16,6 @@ if (!rootEl) throw new Error('Root element #root not found');
 
 createRoot(rootEl).render(
   <StrictMode>
-    <SmoothScroll>
-      <App />
-    </SmoothScroll>
+    <App />
   </StrictMode>,
 );

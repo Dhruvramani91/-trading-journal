@@ -179,7 +179,7 @@ export function Dropdown({
           aria-label={ariaLabel ?? placeholder}
           aria-activedescendant={activeValue ? `${id}-${activeValue}` : undefined}
           onKeyDown={onListKeyDown}
-          data-lenis-prevent
+
           className="max-h-[min(320px,60vh)] overflow-y-auto outline-none"
         >
           {options.map((item, index) => {

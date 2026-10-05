@@ -8,7 +8,7 @@ export function AppShell() {
       <Sidebar />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-bg-0">
         <MobileNav />
-        <main data-lenis-prevent className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
+        <main className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-7 lg:px-8">
           <div className="mx-auto w-full max-w-[1600px] animate-fade-in">
             <Outlet />
           </div>

@@ -454,7 +454,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
               'origin-top',
             )}
             role="listbox"
-            data-lenis-prevent
+
             aria-activedescendant={
               options[highlightedIndex]
                 ? `${id ?? 'select'}-option-${highlightedIndex}`

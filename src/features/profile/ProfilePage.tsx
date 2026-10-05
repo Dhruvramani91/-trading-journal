@@ -322,7 +322,7 @@ export function ProfilePage() {
             className="w-full max-w-md rounded-2xl border border-line bg-bg-1 shadow-2xl animate-fade-in"
             role="dialog"
             aria-modal="true"
-            data-lenis-prevent
+
             aria-labelledby="edit-profile-title"
           >
             <div className="flex items-center justify-between border-b border-line px-5 py-4">

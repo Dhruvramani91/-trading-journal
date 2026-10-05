@@ -548,7 +548,7 @@ export function JournalPage() {
                 Scroll horizontally to see every trade field. Select a row for full details.
               </span>
             </div>
-            <div data-lenis-prevent>
+            <div>
             <Table
               className="min-w-max table-fixed"
               containerClassName="journal-table-scroll max-h-[min(72vh,720px)] overflow-auto overscroll-contain"
@@ -866,7 +866,7 @@ function JournalFilterPanel({
 
         aria-modal="true"
 
-        data-lenis-prevent
+
 
         aria-labelledby="journal-filter-title"
 
@@ -906,7 +906,7 @@ function JournalFilterPanel({
 
 
 
-      <div data-lenis-prevent className="min-h-0 flex-1 overflow-y-auto px-4 py-2 sm:px-6">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-2 sm:px-6">
 
         <div className="grid grid-cols-1 gap-x-6 md:grid-cols-2">
 

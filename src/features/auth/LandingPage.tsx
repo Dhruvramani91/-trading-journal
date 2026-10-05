@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Fragment, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import { motion, useMotionTemplate, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform, type MotionStyle, type MotionValue } from 'framer-motion';
+import { Plus, ShieldCheck } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { ContainerScroll } from '@/components/ui/container-scroll-animation';
 import { TextScrollAnimation } from '@/components/ui/text-scroll-animation';
@@ -85,7 +86,7 @@ const landingFaqs = [
   },
   {
     question: 'How much does ThePrecisionLab cost?',
-    answer: <>ThePrecisionLab is <strong>free to use while it's in testing</strong>. Pricing will be announced soon.</>,
+    answer: <>Choose <strong>$4 per month</strong>, or pay <strong>$40 once for lifetime access</strong>.</>,
   },
   {
     question: 'Can I journal trades from different markets?',
@@ -167,6 +168,21 @@ function CometPricingCard({
       <motion.div className="pricing-comet-glow" aria-hidden="true" style={{ background: glow }} />
       {children}
     </motion.article>
+  );
+}
+
+function PricingBorderTrail({ reducedMotion }: { reducedMotion: boolean }) {
+  if (reducedMotion) return null;
+
+  return (
+    <div className="pricing-border-trail" aria-hidden="true">
+      <motion.div
+        className="pricing-border-trail-beam"
+        style={{ offsetPath: 'rect(0 auto auto 0 round 26px)' }}
+        animate={{ offsetDistance: ['0%', '100%'] }}
+        transition={{ repeat: Infinity, duration: 5, ease: 'linear' }}
+      />
+    </div>
   );
 }
 
@@ -1116,11 +1132,22 @@ h2 .g{color:var(--gray-word)}
 
 /* pricing */
 .dots{background-image:radial-gradient(var(--dot) 1.1px,transparent 1.2px);background-size:12px 12px}
-.plans{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;max-width:820px;margin:0 auto;perspective:1000px}
+.plans{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;max-width:900px;margin:0 auto;perspective:1000px}
+.pricing-frame{padding:14px;border:1px solid var(--line);border-radius:24px;background:color-mix(in srgb,var(--card) 75%,transparent)}
 .plan{border-radius:28px;padding:32px;background:var(--card);box-shadow:inset 0 0 0 1px var(--line);display:flex;flex-direction:column;gap:20px;position:relative;overflow:hidden;transform-style:preserve-3d}
 .pricing-comet-glow{position:absolute;inset:0;z-index:0;pointer-events:none}
-.plan>*:not(.pricing-comet-glow){position:relative;z-index:1}
+.plan>*:not(.pricing-comet-glow):not(.pricing-border-trail){position:relative;z-index:1}
 .plan.feat{background:var(--ink);color:var(--ink-inv);box-shadow:none}
+.pricing-frame-mark{position:absolute;z-index:3;width:20px;height:20px;color:var(--soft);stroke-width:1.5;pointer-events:none}
+.pricing-frame-mark.top-left{top:-11px;left:-11px}.pricing-frame-mark.top-right{top:-11px;right:-11px}.pricing-frame-mark.bottom-left{bottom:-11px;left:-11px}.pricing-frame-mark.bottom-right{right:-11px;bottom:-11px}
+.pricing-plan-kicker{color:var(--soft);font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+.plan.feat .pricing-plan-kicker{color:color-mix(in srgb,var(--ink-inv) 65%,var(--ink))}
+.pricing-plan-description{margin:-10px 0 0;color:var(--text);font-size:14px;line-height:1.55}
+.plan.feat .pricing-plan-description{color:color-mix(in srgb,var(--ink-inv) 70%,var(--ink))}
+.pricing-border-trail{position:absolute;z-index:0;inset:0;overflow:hidden;border-radius:inherit;border:1px solid transparent;pointer-events:none;mask-clip:padding-box,border-box;mask-composite:intersect;mask-image:linear-gradient(transparent,transparent),linear-gradient(#000,#000)}
+.pricing-border-trail-beam{position:absolute;aspect-ratio:1;width:76px;background:var(--purple);box-shadow:0 0 24px 8px color-mix(in srgb,var(--purple) 60%,transparent);offset-path:rect(0 auto auto 0 round 26px)}
+.pricing-payment-note{display:flex;align-items:center;justify-content:center;gap:8px;margin:20px 0 0;color:var(--soft);font-size:13px;text-align:center}
+.pricing-payment-note svg{width:16px;height:16px;color:var(--purple)}
 .plan h3{margin:0;font-size:16px;font-weight:500;display:flex;justify-content:space-between;align-items:center}
 .price.sm{font-size:clamp(30px,4vw,38px);line-height:1.1;letter-spacing:-.05em}
 .soonp{margin:0;font-size:14.5px;color:color-mix(in srgb,var(--ink-inv) 70%,var(--ink))}
@@ -1973,7 +2000,7 @@ footer a:hover{transform:translateY(-1px)}
             >
               <div className="shot">
               <div className="app journal-preview">
-  <aside className="side" data-lenis-prevent aria-label="Journal preview navigation">
+  <aside className="side" aria-label="Journal preview navigation">
     <div className="ap-brand"><BrandLogo size="sm" className="landing-nav-logo" /><span><b>ThePrecisionLab</b><small>My Journal</small></span></div>
     <button type="button" className="nav-i" data-active="true" aria-disabled="true"><span aria-hidden="true">▤</span>Journal</button>
     <button type="button" className="nav-i" aria-disabled="true"><span aria-hidden="true">▦</span>Accounts</button>
@@ -1999,7 +2026,7 @@ footer a:hover{transform:translateY(-1px)}
         <div className="journal-kpi"><small>Win rate</small><strong>62.5%</strong></div>
         <div className="journal-kpi"><small>Total P&amp;L</small><strong className="pos">+$1,240</strong></div>
       </div>
-      <div className="journal-table-wrap" data-lenis-prevent>
+      <div className="journal-table-wrap">
         <table className="journal-table">
           <thead><tr><th>Trade #</th><th>Date</th><th>Instrument</th><th>Direction</th><th>Result</th><th>Entry</th><th>Exit</th><th>Profit / loss</th><th>Realized R</th></tr></thead>
           <tbody>
@@ -2106,38 +2133,52 @@ footer a:hover{transform:translateY(-1px)}
             </div>
           </section>
 
-          {/* PRICING: free during testing, price to be announced */}
+          {/* PRICING */}
           <section className="sec pad" id="pricing">
             <div className="head">
               <TextRevealByWord
                 className="pricing-text-reveal"
                 segments={[
-                  { text: 'Free to use, ' },
-                  { text: 'while we test', className: 'g' },
+                  { text: 'Simple pricing, ' },
+                  { text: 'built for traders', className: 'g' },
                 ]}
               />
-              <p>ThePrecisionLab is still in testing. Use everything for free while we shape it with your feedback.</p>
+              <p>Choose monthly flexibility or pay once for lifetime access. Every plan includes the complete journal.</p>
             </div>
-            <div className="plans" ref={plansRef}>
+            <div className="plans pricing-frame" ref={plansRef}>
+              <Plus className="pricing-frame-mark top-left" aria-hidden="true" />
+              <Plus className="pricing-frame-mark top-right" aria-hidden="true" />
+              <Plus className="pricing-frame-mark bottom-left" aria-hidden="true" />
+              <Plus className="pricing-frame-mark bottom-right" aria-hidden="true" />
               <CometPricingCard className="plan" style={{ x: prefersReducedMotion ? 0 : firstPlanX, rotateY: prefersReducedMotion ? 0 : firstPlanRotate, opacity: prefersReducedMotion ? 1 : plansOpacity, transformOrigin: 'center center' }} scrollRotateY={firstPlanRotate} reducedMotion={!!prefersReducedMotion}>
-                <h3>Right now <span className="tag">In testing</span></h3>
-                <div className="price">Free<small>during testing</small></div>
+                <span className="pricing-plan-kicker">Monthly</span>
+                <h3>Flexible plan</h3>
+                <p className="pricing-plan-description">Try it free for 7 days, then $4/month. Cancel whenever you need.</p>
+                <div className="price">$4<small>/ month</small></div>
                 <ul>
                   <li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg>Unlimited journal entries</li>
                   <li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg>Discipline score and streaks</li>
                   <li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg>Performance analytics</li>
                   <li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg>Weekly review prompts</li>
                 </ul>
-                <Link className="btn ghost" to="/login">Start for free</Link>
+                <Link className="btn ghost" to="/login?mode=signup">Choose monthly</Link>
               </CometPricingCard>
               <CometPricingCard className="plan feat" style={{ x: prefersReducedMotion ? 0 : secondPlanX, rotateY: prefersReducedMotion ? 0 : secondPlanRotate, opacity: prefersReducedMotion ? 1 : plansOpacity, transformOrigin: 'center center' }} scrollRotateY={secondPlanRotate} reducedMotion={!!prefersReducedMotion}>
-                <h3>Later</h3>
-                <div className="price sm">Pricing revealing soon</div>
-                <p className="soonp">We're still testing ThePrecisionLab with traders like you. Pricing will be announced here soon.</p>
-                <p className="soonp">Nothing to pay while ThePrecisionLab is in testing.</p>
+                <PricingBorderTrail reducedMotion={!!prefersReducedMotion} />
+                <span className="pricing-plan-kicker">Pay once</span>
+                <h3>Forever access <span className="tag">Best value</span></h3>
+                <p className="pricing-plan-description">One payment gives you lifetime access to the complete journal.</p>
+                <div className="price">$40<small>one time</small></div>
+                <ul>
+                  <li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg>Unlimited journal entries</li>
+                  <li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg>Discipline score and streaks</li>
+                  <li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg>Performance analytics</li>
+                  <li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg>Weekly review prompts</li>
+                </ul>
+                <Link className="btn" to="/login?mode=signup">Get lifetime access</Link>
               </CometPricingCard>
             </div>
-            <p className="fine">Pricing to be announced.</p>
+            <p className="pricing-payment-note"><ShieldCheck aria-hidden="true" />The same full feature set is included with both options.</p>
           </section>
 
           {/* FAQ */}
