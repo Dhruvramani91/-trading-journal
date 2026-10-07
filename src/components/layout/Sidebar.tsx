@@ -3,6 +3,8 @@ import {
   CalendarDays,
   LayoutDashboard,
   LogOut,
+  PanelLeftClose,
+  PanelLeftOpen,
   ScrollText,
   UserRound,
   Wallet,
@@ -39,7 +41,7 @@ const GROUPS = [
 
 export function Sidebar() {
   const navigate = useNavigate();
-  const { width, setWidth } = useSidebarStore();
+  const { width, setWidth, toggleCollapse } = useSidebarStore();
   const collapsed = width < 128;
   const { user, signOut } = useAuthStore();
   const [logoutOpen, setLogoutOpen] = useState(false);
@@ -90,6 +92,16 @@ export function Sidebar() {
           )}
         </button>
       </div>
+
+      <button
+        type="button"
+        onClick={toggleCollapse}
+        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        className="absolute right-[-11px] top-[4.5rem] z-40 flex h-6 w-6 items-center justify-center rounded-full border border-line bg-bg-1 text-fg-dim shadow-sm transition-colors hover:bg-bg-3 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+      >
+        {collapsed ? <PanelLeftOpen className="h-3.5 w-3.5" /> : <PanelLeftClose className="h-3.5 w-3.5" />}
+      </button>
 
       <nav className={cn('min-h-0 flex-1 space-y-7 overflow-y-auto py-6', collapsed ? 'px-2' : 'px-3')}>
         {GROUPS.map((group) => (
@@ -150,7 +162,7 @@ export function Sidebar() {
           showLabel={!collapsed}
           className={cn(
             'mb-1 h-9 border-0 bg-transparent shadow-none hover:bg-bg-3',
-            collapsed ? 'w-full' : 'w-full justify-start px-3 text-[13px]',
+            collapsed ? 'w-full' : 'w-full justify-start gap-2 whitespace-nowrap px-2 text-[11px]',
           )}
         />
         <button

@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Calendar, TrendingUp } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Loader } from '@/components/ui/Loader';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { Switch } from '@/components/ui/switch';
 import { Stat } from '@/components/ui/Stat';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useTradesStore, bootTradesStore } from '@/store/tradesStore';
@@ -75,7 +76,11 @@ export function CalendarPage() {
 
   // ON by default so the existing calendar behavior is preserved.
   const [showWeekends, setShowWeekends] = useState(true);
-  const [showCalendarValues, setShowCalendarValues] = useState(true);
+  const [showR, setShowR] = useState(true);
+  const [showPnl, setShowPnl] = useState(true);
+  const weekendsSwitchId = useId();
+  const rSwitchId = useId();
+  const pnlSwitchId = useId();
 
   useEffect(() => {
     bootTradesStore();
@@ -123,6 +128,11 @@ export function CalendarPage() {
 
   const totalDays = daysInMonth(year, month);
   const offset = firstDayOffset(year, month, showWeekends);
+  const visibleDayCount = showWeekends
+    ? totalDays
+    : Array.from({ length: totalDays }, (_, index) => new Date(year, month, index + 1))
+        .filter((date) => date.getDay() !== 0 && date.getDay() !== 6).length;
+  const calendarRows = Math.ceil((offset + visibleDayCount) / (showWeekends ? 7 : 5));
 
   const visibleWeekdays = showWeekends
     ? WEEKDAY_LABELS
@@ -160,13 +170,15 @@ export function CalendarPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6 animate-fade-in">
-      <PageHeader
-        title="Monthly Performance"
-        description="A calendar view of your daily R, with each day colored by performance."
-      />
+      <div className="lg:flex lg:h-[calc(100dvh-3.5rem)] lg:flex-col">
+        <PageHeader
+          title="Monthly Performance"
+          description="A calendar view of your daily R, with each day colored by performance."
+          className="lg:shrink-0 lg:pb-3"
+        />
 
-      <Card>
-        <CardHeader className="flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <Card className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+        <CardHeader className="flex-col sm:flex-row items-stretch sm:items-center gap-3 lg:shrink-0 lg:px-4 lg:py-2.5">
           <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
             <Button
               variant="secondary"
@@ -193,56 +205,20 @@ export function CalendarPage() {
 
           <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 w-full sm:w-auto sm:ml-auto">
             {/* Weekend visibility toggle */}
-            <button
-              type="button"
-              role="switch"
-              aria-checked={showWeekends}
-              aria-label="Show weekends"
-              onClick={() => setShowWeekends((current) => !current)}
-              className="inline-flex items-center gap-2 rounded-lg border border-line bg-bg-2 px-2.5 py-1.5 text-xs font-medium text-fg-muted transition-colors hover:bg-bg-3 hover:text-fg"
-            >
-              <span>Weekends</span>
+            <div className="inline-flex items-center gap-2 rounded-lg border border-line bg-bg-2 px-2.5 py-1.5 text-xs font-medium text-fg-muted transition-colors hover:bg-bg-3 hover:text-fg">
+              <label htmlFor={weekendsSwitchId} className="cursor-pointer">Weekends</label>
+              <Switch id={weekendsSwitchId} checked={showWeekends} onCheckedChange={setShowWeekends} aria-label="Show weekends" />
+            </div>
 
-              <span
-                aria-hidden="true"
-                className={cn(
-                  'relative block h-5 w-9 shrink-0 rounded-full p-0.5 transition-colors',
-                  showWeekends ? 'bg-accent' : 'bg-bg-4 border border-line',
-                )}
-              >
-                <span
-                  className={cn(
-                    'block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200',
-                    showWeekends ? 'translate-x-4' : 'translate-x-0',
-                  )}
-                />
-              </span>
-            </button>
+            <div className="inline-flex items-center gap-2 rounded-lg border border-line bg-bg-2 px-2.5 py-1.5 text-xs font-medium text-fg-muted transition-colors hover:bg-bg-3 hover:text-fg">
+              <label htmlFor={rSwitchId} className="cursor-pointer">R</label>
+              <Switch id={rSwitchId} checked={showR} onCheckedChange={setShowR} aria-label="Show R values" />
+            </div>
 
-            <button
-              type="button"
-              role="switch"
-              aria-checked={showCalendarValues}
-              aria-label="Show R and P&L on calendar"
-              onClick={() => setShowCalendarValues((current) => !current)}
-              className="inline-flex items-center gap-2 rounded-lg border border-line bg-bg-2 px-2.5 py-1.5 text-xs font-medium text-fg-muted transition-colors hover:bg-bg-3 hover:text-fg"
-            >
-              <span>Show R &amp; P&amp;L</span>
-              <span
-                aria-hidden="true"
-                className={cn(
-                  'relative block h-5 w-9 shrink-0 rounded-full p-0.5 transition-colors',
-                  showCalendarValues ? 'bg-accent' : 'bg-bg-4 border border-line',
-                )}
-              >
-                <span
-                  className={cn(
-                    'block h-4 w-4 rounded-full bg-white shadow-sm transition-transform duration-200',
-                    showCalendarValues ? 'translate-x-4' : 'translate-x-0',
-                  )}
-                />
-              </span>
-            </button>
+            <div className="inline-flex items-center gap-2 rounded-lg border border-line bg-bg-2 px-2.5 py-1.5 text-xs font-medium text-fg-muted transition-colors hover:bg-bg-3 hover:text-fg">
+              <label htmlFor={pnlSwitchId} className="cursor-pointer">P&amp;L</label>
+              <Switch id={pnlSwitchId} checked={showPnl} onCheckedChange={setShowPnl} aria-label="Show P&L values" />
+            </div>
 
             {!isCurrentMonth && (
               <Button variant="outline" size="sm" onClick={goToday}>
@@ -252,7 +228,7 @@ export function CalendarPage() {
           </div>
         </CardHeader>
 
-        <CardBody className="p-2 sm:p-4 md:p-5">
+        <CardBody className="p-2 sm:p-4 md:p-5 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:p-3">
           {trades.length === 0 ? (
             <EmptyState
               icon={<Calendar className="h-6 w-6" />}
@@ -261,8 +237,8 @@ export function CalendarPage() {
             />
           ) : (
             <>
-              <div className="w-full overflow-x-auto pb-2 pr-1 xl:overflow-visible">
-              <div className="min-w-[980px] xl:min-w-0">
+              <div className="w-full overflow-x-auto pb-2 pr-1 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden">
+              <div className="min-w-[980px] lg:min-w-0 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
               {/* Weekday header */}
               <div
                 className={cn(
@@ -283,9 +259,10 @@ export function CalendarPage() {
               {/* Day cells grid */}
               <div
                 className={cn(
-                  'grid gap-2',
+                  'grid min-h-0 flex-1 gap-1.5 lg:gap-1',
                   showWeekends ? 'grid-cols-7' : 'grid-cols-5',
                 )}
+                style={{ gridTemplateRows: `repeat(${calendarRows}, minmax(0, 1fr))` }}
               >
                 {Array.from({ length: totalDays }, (_, i) => {
                   const day = i + 1;
@@ -314,7 +291,7 @@ export function CalendarPage() {
                         if (perf) navigate('/journal');
                       }}
                       className={cn(
-                        'relative flex flex-col items-stretch justify-between p-3 rounded-xl border transition-all min-h-[112px]',
+                        'relative flex min-h-[112px] flex-col items-stretch justify-between rounded-xl border p-3 transition-all lg:min-h-0 lg:rounded-lg lg:p-2',
                         perf
                           ? cn(
                               rBg(perf.totalR),
@@ -324,41 +301,45 @@ export function CalendarPage() {
                         isToday && 'ring-2 ring-accent shadow-sm',
                       )}
                     >
-                      <span
-                        className={cn(
-                          'text-xs font-semibold self-start',
-                          perf ? 'text-fg' : 'text-fg-dim',
-                          isToday && 'text-accent font-bold',
+                      <div className="flex w-full items-center justify-between gap-1">
+                        <span
+                          className={cn(
+                            'self-start text-xs font-semibold lg:text-[11px]',
+                            perf ? 'text-fg' : 'text-fg-dim',
+                            isToday && 'text-accent font-bold',
+                          )}
+                        >
+                          {day}
+                        </span>
+                        {perf && (
+                          <span className="truncate text-[10px] font-medium text-fg-dim lg:text-[9px]">
+                            {perf.count} trade{perf.count === 1 ? '' : 's'}
+                          </span>
                         )}
-                      >
-                        {day}
-                      </span>
+                      </div>
 
                       {perf && (
-                        <div className="mt-2 flex w-full flex-col gap-1.5">
-                          {showCalendarValues ? (
+                        <div className="mt-2 flex w-full flex-col gap-1.5 lg:mt-1 lg:gap-0.5">
+                          {(showR || showPnl) ? (
                             <>
-                              <div className="flex items-baseline justify-between gap-2">
-                                <span className="text-[10px] font-medium uppercase tracking-wide text-fg-dim">R</span>
-                                <span className={cn('text-sm font-bold tabular-nums', rTone(perf.totalR))}>
-                                  {formatR(perf.totalR, 1)}
-                                </span>
-                              </div>
-                              <div className="flex items-baseline justify-between gap-2">
-                                <span className="text-[10px] font-medium uppercase tracking-wide text-fg-dim">P&amp;L</span>
-                                <span className={cn('text-[13px] font-bold tabular-nums', perf.totalPnl == null ? 'text-fg-dim' : perf.totalPnl > 0 ? 'text-win' : perf.totalPnl < 0 ? 'text-loss' : 'text-be')}>
-                                  {perf.totalPnl == null ? '—' : formatSignedMoney(perf.totalPnl)}
-                                </span>
-                              </div>
+                              {showR && (
+                                <div className="flex items-baseline justify-between gap-2">
+                                  <span className="text-[10px] font-medium uppercase tracking-wide text-fg-dim">R</span>
+                                  <span className={cn('text-sm font-bold tabular-nums lg:text-xs', rTone(perf.totalR))}>
+                                    {formatR(perf.totalR, 1)}
+                                  </span>
+                                </div>
+                              )}
+                              {showPnl && (
+                                <div className="flex items-baseline justify-between gap-2">
+                                  <span className="text-[10px] font-medium uppercase tracking-wide text-fg-dim">P&amp;L</span>
+                                  <span className={cn('text-[13px] font-bold tabular-nums lg:text-xs', perf.totalPnl == null ? 'text-fg-dim' : perf.totalPnl > 0 ? 'text-win' : perf.totalPnl < 0 ? 'text-loss' : 'text-be')}>
+                                    {perf.totalPnl == null ? '—' : formatSignedMoney(perf.totalPnl)}
+                                  </span>
+                                </div>
+                              )}
                             </>
-                          ) : (
-                            <span className="self-end text-xs text-fg-dim">{perf.count} trade{perf.count === 1 ? '' : 's'}</span>
-                          )}
-                          {showCalendarValues && (
-                            <span className="text-right text-[10px] font-medium text-fg-dim">
-                              {perf.count} trade{perf.count === 1 ? '' : 's'}
-                            </span>
-                          )}
+                          ) : null}
                         </div>
                       )}
                     </button>
@@ -370,7 +351,8 @@ export function CalendarPage() {
             </>
           )}
         </CardBody>
-      </Card>
+        </Card>
+      </div>
 
       {/* Month summary */}
       {monthSummary && (

@@ -1,7 +1,5 @@
-import { PanelLeftOpen } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
-import { useSidebarStore } from '@/store/sidebarStore';
 
 const TITLES: Record<string, { title: string; subtitle?: string }> = {
   '/dashboard': { title: 'Dashboard', subtitle: 'A focused view of your trading performance.' },
@@ -22,22 +20,9 @@ export function Topbar() {
         ? { title: 'Trade Details', subtitle: 'Review this trade.' }
         : { title: 'The Precision Lab' }
   );
-  const { collapsed, toggleCollapse } = useSidebarStore();
-
   return (
     <header className="hidden h-[68px] shrink-0 items-center justify-between border-b border-line bg-bg-1 px-6 lg:px-8 md:flex">
       <div className="flex min-w-0 items-center gap-3">
-        {collapsed && (
-          <button
-            type="button"
-            onClick={toggleCollapse}
-            title="Expand sidebar"
-            aria-label="Expand sidebar"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-fg-muted transition-colors hover:bg-bg-3 hover:text-fg"
-          >
-            <PanelLeftOpen className="h-4 w-4" />
-          </button>
-        )}
         <div className="min-w-0">
           <h1 className="truncate text-[15px] font-semibold tracking-tight text-fg">{meta.title}</h1>
           {meta.subtitle && <p className="mt-0.5 truncate text-xs text-fg-muted">{meta.subtitle}</p>}
