@@ -49,7 +49,7 @@ function getPlanDetails(currency: 'INR' | 'USD'): Record<BillingPlan, { name: st
   const monthly = formatBillingPrice(currency, 'monthly');
   const quarterly = formatBillingPrice(currency, 'quarterly');
   return {
-    monthly: { name: 'Monthly', amount: monthly, cycle: 'per month', summary: currency === 'INR' ? `7-day free trial, then ${monthly} every month.` : `${monthly} billed every month.` },
+    monthly: { name: 'Monthly', amount: monthly, cycle: 'per month', summary: `7-day free trial if eligible, then ${monthly} every month.` },
     quarterly: { name: 'Quarterly', amount: quarterly, cycle: 'every 3 months', summary: `${quarterly} billed every 3 months.` },
   };
 }
@@ -108,14 +108,22 @@ export function CheckoutPage() {
 
     try {
       if (billingRegion.currency === 'USD') {
-        const { data, error: createError } = await client.functions.invoke<{ checkoutUrl: string; amount: number; currency: 'USD' }>('create-dodo-checkout', {
+        const { data, error: createError } = await client.functions.invoke<{ checkoutUrl: string; amount: number; currency: 'USD'; trialDays: number }>('create-dodo-checkout', {
           body: { plan, regionToken: billingRegion.regionToken },
         });
         if (createError) throw new Error(createError.message || 'Could not start international checkout.');
         const expectedAmount = plan === 'monthly' ? 450 : 1_000;
-        if (typeof data?.checkoutUrl !== 'string' || data.currency !== 'USD' || data.amount !== expectedAmount) {
+        if (typeof data?.checkoutUrl !== 'string' || data.currency !== 'USD' || data.amount !== expectedAmount
+          || !Number.isInteger(data.trialDays) || data.trialDays < 0 || data.trialDays > 7) {
           throw new Error('Dodo Payments returned an incomplete checkout session. Refresh the page and try again.');
         }
+        if (plan === 'monthly' && data.trialDays === 0 && actualTrialDays !== 0) {
+          setActualTrialDays(0);
+          setNotice(`Your monthly trial has already been used. The first ${details.amount} charge will be due today. Review the updated amount and continue again to proceed.`);
+          setLoading(false);
+          return;
+        }
+        setActualTrialDays(data.trialDays);
         window.location.assign(data.checkoutUrl);
         return;
       }
@@ -215,7 +223,7 @@ export function CheckoutPage() {
                   >
                     <span className="flex items-center justify-between text-sm font-semibold">{optionDetails.name}{selected && <Check className="h-4 w-4 text-accent" />}</span>
                     <span className="mt-3 block text-2xl font-bold">{optionDetails.amount}<span className="ml-1 text-xs font-medium text-fg-muted">{optionDetails.cycle}</span></span>
-                    <span className="mt-2 block text-xs leading-5 text-fg-muted">{billingRegion.currency === 'INR' && option === 'monthly' && actualTrialDays === null ? 'Trial eligibility confirmed before checkout.' : billingRegion.currency === 'INR' && option === 'monthly' && actualTrialDays === 0 ? `${optionDetails.amount} billed monthly; trial already used.` : optionDetails.summary}</span>
+                    <span className="mt-2 block text-xs leading-5 text-fg-muted">{option === 'monthly' && actualTrialDays === 0 ? `${optionDetails.amount} billed monthly; trial already used.` : optionDetails.summary}</span>
                   </Link>
                 );
               }) : <p className="rounded-xl border border-line bg-bg-1 p-4 text-sm leading-6 text-fg-muted">{!billingRegion.ready ? 'Checking regional pricing…' : manualInternationalUnavailable || billingRegion.currency === 'USD' ? 'International recurring billing is not available yet.' : 'No billing plan is currently available for this region.'}</p>}
@@ -231,11 +239,19 @@ export function CheckoutPage() {
           <aside className="rounded-3xl border border-line bg-bg-2 p-6 shadow-pop sm:p-8">
             <h2 className="text-lg font-semibold">Order summary</h2>
             <div className="mt-6 flex items-start justify-between gap-4 border-b border-line pb-5">
-              <div><p className="font-medium">ThePrecisionLab {details.name}</p><p className="mt-1 text-sm text-fg-muted">{!billingAvailable ? 'Billing unavailable for this region' : plan === 'monthly' ? (billingRegion.currency === 'USD' ? 'Monthly recurring billing' : actualTrialDays === null ? 'Trial eligibility is checked before checkout' : hasMonthlyTrial ? '7 days free, then monthly billing' : 'Monthly recurring billing · trial already used') : 'Quarterly recurring billing'}</p></div>
+              <div><p className="font-medium">ThePrecisionLab {details.name}</p><p className="mt-1 text-sm text-fg-muted">{!billingAvailable ? 'Billing unavailable for this region' : plan === 'monthly' ? (actualTrialDays === 0 ? 'Monthly recurring billing · trial already used' : '7-day free trial if eligible, then monthly billing') : 'Quarterly recurring billing'}</p></div>
               <strong className="text-lg">{!billingRegion.ready ? 'Checking…' : billingAvailable ? details.amount : 'Unavailable'}</strong>
             </div>
-            <div className="flex justify-between py-5 text-sm"><span className="text-fg-muted">Due today</span><strong>{!billingRegion.ready ? 'Checking…' : !billingAvailable ? 'Unavailable' : billingRegion.currency === 'INR' && plan === 'monthly' && actualTrialDays === null ? 'Confirmed before checkout' : billingRegion.currency === 'INR' && plan === 'monthly' && hasMonthlyTrial ? '₹0' : details.amount}</strong></div>
-            {billingAvailable && billingRegion.currency === 'INR' && plan === 'monthly' && <p className="-mt-2 mb-5 text-xs leading-5 text-fg-dim">{actualTrialDays === null ? 'Your trial eligibility and first charge date are confirmed before Razorpay opens.' : hasMonthlyTrial ? `Your 7-day trial begins after subscription authorization. Your first ${details.amount} charge is scheduled after the trial.` : `Your trial has already been used. The ${details.amount} monthly charge will begin when you authorize.`}</p>}
+            <div className="flex justify-between py-5 text-sm"><span className="text-fg-muted">Due today</span><strong>{!billingRegion.ready ? 'Checking…' : !billingAvailable ? 'Unavailable' : plan === 'monthly' && actualTrialDays === null ? `${billingRegion.currency === 'USD' ? '$0' : '₹0'} if eligible · ${details.amount} otherwise` : plan === 'monthly' && hasMonthlyTrial ? billingRegion.currency === 'USD' ? '$0' : '₹0' : details.amount}</strong></div>
+            {billingAvailable && plan === 'monthly' && (
+              <div className="-mt-2 mb-5 rounded-xl border border-accent/20 bg-accent/5 p-3 text-xs leading-5 text-fg-muted">
+                {actualTrialDays === 0 ? (
+                  <><p className="font-semibold text-fg">Trial already used</p><p className="mt-1">{details.amount} is due today, then billed every month.</p></>
+                ) : (
+                  <><p className="font-semibold text-fg">7-day free trial · then {details.amount}/month</p><p className="mt-1">If eligible, you pay {billingRegion.currency === 'USD' ? '$0' : '₹0'} today. Your first {details.amount} payment is taken automatically after the 7-day trial. The trial is available once per account; if you already used it, {details.amount} is due today.</p></>
+                )}
+              </div>
+            )}
 
             {notice && <div role="status" className="mb-4 rounded-xl border border-accent/30 bg-accent/5 px-3 py-2.5 text-sm text-fg-muted">{notice}</div>}
             {error && <div role="alert" className="mb-4 rounded-xl border border-loss/30 bg-loss/10 px-3 py-2.5 text-sm text-loss">{error}</div>}
@@ -247,7 +263,7 @@ export function CheckoutPage() {
               </div>
             ) : (
               <Button onClick={() => void startCheckout()} disabled={loading || !billingRegion.ready || !billingAvailable} variant="primary" size="lg" className="w-full">
-                {loading ? <><LoaderCircle className="h-4 w-4 animate-spin" />Connecting…</> : <><CreditCard className="h-4 w-4" />{billingRegion.currency === 'USD' ? 'Continue with Dodo Payments' : plan === 'monthly' && actualTrialDays === 0 ? 'Continue without free trial' : 'Continue with Razorpay'}</>}
+                {loading ? <><LoaderCircle className="h-4 w-4 animate-spin" />Connecting…</> : <><CreditCard className="h-4 w-4" />{plan === 'monthly' && actualTrialDays === 0 ? 'Continue without free trial' : plan === 'monthly' ? 'Review trial & continue' : `Continue with ${billingRegion.currency === 'USD' ? 'Dodo Payments' : 'Razorpay'}`}</>}
               </Button>
             )}
             <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-fg-dim"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />Payments are securely processed by {billingRegion.currency === 'USD' ? 'Dodo Payments' : 'Razorpay'}. Your card details are not stored by ThePrecisionLab.</p>

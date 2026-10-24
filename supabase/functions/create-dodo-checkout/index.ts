@@ -39,7 +39,7 @@ Deno.serve(async (request) => {
     const admin = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
     cleanupAdmin = admin;
     const { data: existing, error: existingError } = await admin.from('billing_subscriptions')
-      .select('id, payment_provider, plan_key, currency, status, dodo_checkout_url')
+      .select('id, payment_provider, plan_key, currency, status, dodo_checkout_url, trial_days')
       .eq('user_id', userData.user.id)
       .in('status', ['created', 'authenticated', 'active', 'pending', 'paused'])
       .limit(1)
@@ -51,9 +51,23 @@ Deno.serve(async (request) => {
     if (existing) {
       if (existing.payment_provider === 'dodo' && existing.status === 'created'
         && existing.plan_key === plan && existing.currency === 'USD' && existing.dodo_checkout_url) {
-        return jsonResponse({ checkoutUrl: existing.dodo_checkout_url, amount: dodo.products[plan].amount, currency: 'USD' });
+        return jsonResponse({ checkoutUrl: existing.dodo_checkout_url, amount: dodo.products[plan].amount, currency: 'USD', trialDays: existing.trial_days || 0 });
       }
       return jsonResponse({ error: 'You already have a subscription or checkout in progress. Manage it from your Profile page.' }, 409);
+    }
+
+    let trialDays = 0;
+    if (plan === 'monthly') {
+      const { data: previousTrial, error: trialError } = await admin.from('billing_subscriptions')
+        .select('id')
+        .not('trial_claimed_at', 'is', null)
+        .limit(1)
+        .maybeSingle();
+      if (trialError) {
+        console.error('Could not check Dodo trial eligibility:', trialError.message);
+        return jsonResponse({ error: 'Could not check trial eligibility. Please try again.' }, 500);
+      }
+      if (!previousTrial) trialDays = 7;
     }
 
     const product = dodo.products[plan];
@@ -82,7 +96,7 @@ Deno.serve(async (request) => {
       currency: 'USD',
       dodo_product_id: product.id,
       status: 'created',
-      trial_days: 0,
+      trial_days: trialDays,
     }).select('id').single();
     if (insertError || !localSubscription?.id) {
       console.error('Could not reserve Dodo checkout:', insertError?.message);
@@ -106,6 +120,7 @@ Deno.serve(async (request) => {
       headers: { Authorization: `Bearer ${dodo.apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         product_cart: [{ product_id: product.id, quantity: 1 }],
+        ...(trialDays > 0 ? { subscription_data: { trial_period_days: trialDays } } : {}),
         customer: { email: userData.user.email, name: userData.user.user_metadata?.full_name || userData.user.email },
         return_url: `${appOrigin}/profile?checkout=dodo`,
         metadata: { billing_subscription_id: localSubscription.id, user_id: userData.user.id, plan_key: plan },
@@ -154,7 +169,7 @@ Deno.serve(async (request) => {
     }
 
     reservedSubscriptionId = null;
-    return jsonResponse({ checkoutUrl: session.checkout_url, amount: product.amount, currency: 'USD' });
+    return jsonResponse({ checkoutUrl: session.checkout_url, amount: product.amount, currency: 'USD', trialDays });
   } catch (error) {
     if (reservedSubscriptionId && cleanupAdmin) {
       const { error: cleanupError } = await cleanupAdmin.from('billing_subscriptions').delete().eq('id', reservedSubscriptionId);

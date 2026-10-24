@@ -107,6 +107,18 @@ Deno.serve(async (request) => {
       console.error('Could not apply Dodo subscription event:', error.message);
       return new Response('Could not apply subscription event.', { status: 500 });
     }
+    if (type === 'subscription.active' || type === 'subscription.renewed') {
+      const { error: trialClaimError } = await supabase.from('billing_subscriptions')
+        .update({ trial_claimed_at: new Date().toISOString() })
+        .eq('payment_provider', 'dodo')
+        .eq('dodo_subscription_id', subscriptionId)
+        .eq('trial_days', 7)
+        .is('trial_claimed_at', null);
+      if (trialClaimError) {
+        console.error('Could not record Dodo trial claim:', trialClaimError.message);
+        return new Response('Could not save trial status.', { status: 500 });
+      }
+    }
     return new Response(JSON.stringify({ received: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (error) {
     console.error('Dodo webhook processing failed:', error);
