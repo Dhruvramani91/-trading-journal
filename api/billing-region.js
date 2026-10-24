@@ -18,22 +18,24 @@ export default function billingRegion(request, response) {
   // Without a platform country signal and shared signing secret, the system
   // intentionally falls back to INR. A browser cannot choose its own currency.
   if (!country || !tokenSecret || tokenSecret.length < 32) {
-    return response.status(200).json({ country: 'IN', currency: 'INR', regionToken: null, usdEnabled: false });
+    return response.status(200).json({ country: 'IN', currency: 'INR', regionToken: null, usdEnabled: false, paymentMode: process.env.BILLING_PUBLIC_PAYMENT_MODE === 'test_mode' ? 'test_mode' : 'live_mode' });
   }
 
   const expiresAt = Math.floor(Date.now() / 1000) + 10 * 60;
   const signedValue = `${country}.${expiresAt}`;
   const signature = createHmac('sha256', tokenSecret).update(signedValue).digest('hex');
-  const usdLiveEnabled = process.env.VERCEL_ENV !== 'production'
+  const usdProductionEnabled = process.env.VERCEL_ENV !== 'production'
+    || process.env.BILLING_USD_PRODUCTION_ENABLED === 'true'
     || process.env.BILLING_USD_LIVE_ENABLED === 'true';
   const usdEnabled = country !== 'IN'
     && process.env.BILLING_USD_PUBLIC_ENABLED === 'true'
-    && usdLiveEnabled;
+    && usdProductionEnabled;
 
   return response.status(200).json({
     country,
     currency: country === 'IN' ? 'INR' : 'USD',
     regionToken: `${signedValue}.${signature}`,
     usdEnabled,
+    paymentMode: process.env.BILLING_PUBLIC_PAYMENT_MODE === 'test_mode' ? 'test_mode' : 'live_mode',
   });
 }

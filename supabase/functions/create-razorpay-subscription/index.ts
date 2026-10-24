@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders, jsonResponse, verifiedBillingCountry } from '../_shared/http.ts';
 import { getConfiguredBillingPlan, razorpayPlanMatches, storedSubscriptionUsesConfiguredPlan, subscriptionStartAt, type BillingPlanKey } from '../_shared/billingPlans.ts';
+import { readRazorpayCredentials, testBillingUserAllowed } from '../_shared/razorpayConfig.ts';
 
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -11,12 +12,12 @@ Deno.serve(async (request) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    const keyId = Deno.env.get('RAZORPAY_KEY_ID');
-    const keySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
+    const credentials = readRazorpayCredentials((name) => Deno.env.get(name));
     if (!authorization?.startsWith('Bearer ') || !supabaseUrl || !anonKey || !serviceRoleKey) {
       return jsonResponse({ error: 'Sign in is required.' }, 401);
     }
-    if (!keyId || !keySecret) return jsonResponse({ error: 'Razorpay is not configured yet.' }, 503);
+    if (!credentials) return jsonResponse({ error: 'Razorpay is not configured yet.' }, 503);
+    const { keyId, keySecret } = credentials;
 
     const userClient = createClient(supabaseUrl, anonKey, {
       auth: { persistSession: false },
@@ -24,6 +25,9 @@ Deno.serve(async (request) => {
     });
     const { data: userData, error: userError } = await userClient.auth.getUser();
     if (userError || !userData.user) return jsonResponse({ error: 'Your session has expired. Sign in again.' }, 401);
+    if (!testBillingUserAllowed(userData.user.email, (name) => Deno.env.get(name))) {
+      return jsonResponse({ error: 'Test checkout is currently limited to approved test accounts.' }, 403);
+    }
 
     const body = await request.json().catch(() => null);
     const plan = body?.plan as BillingPlanKey;

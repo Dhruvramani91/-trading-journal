@@ -6,6 +6,7 @@ export type BillingRegion = {
   currency: BillingCurrency;
   regionToken: string | null;
   usdEnabled: boolean;
+  paymentMode: 'test_mode' | 'live_mode';
 };
 
 const indiaFallback: BillingRegion = {
@@ -13,6 +14,7 @@ const indiaFallback: BillingRegion = {
   currency: 'INR',
   regionToken: null,
   usdEnabled: false,
+  paymentMode: 'live_mode',
 };
 
 export function useBillingRegion() {
@@ -34,6 +36,7 @@ export function useBillingRegion() {
           currency: validCurrency,
           regionToken: typeof result.regionToken === 'string' ? result.regionToken : null,
           usdEnabled: validCurrency === 'USD' && result.usdEnabled === true && typeof result.regionToken === 'string',
+          paymentMode: result.paymentMode === 'test_mode' ? 'test_mode' : 'live_mode',
         });
         setReady(true);
       })

@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders, jsonResponse } from '../_shared/http.ts';
+import { readRazorpayCredentials } from '../_shared/razorpayConfig.ts';
 
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -10,10 +11,10 @@ Deno.serve(async (request) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    const keyId = Deno.env.get('RAZORPAY_KEY_ID');
-    const keySecret = Deno.env.get('RAZORPAY_KEY_SECRET');
+    const credentials = readRazorpayCredentials((name) => Deno.env.get(name));
     if (!authorization?.startsWith('Bearer ') || !supabaseUrl || !anonKey || !serviceRoleKey) return jsonResponse({ error: 'Sign in is required.' }, 401);
-    if (!keyId || !keySecret) return jsonResponse({ error: 'Razorpay is not configured.' }, 503);
+    if (!credentials) return jsonResponse({ error: 'Razorpay is not configured.' }, 503);
+    const { keyId, keySecret } = credentials;
 
     const userClient = createClient(supabaseUrl, anonKey, {
       auth: { persistSession: false },

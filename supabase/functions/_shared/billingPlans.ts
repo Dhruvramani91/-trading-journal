@@ -1,3 +1,5 @@
+import { razorpayEnvironmentName } from './razorpayConfig.ts';
+
 export type BillingPlanKey = 'monthly' | 'quarterly';
 export type BillingCurrency = 'INR' | 'USD';
 
@@ -25,9 +27,10 @@ const planDefaults: Record<BillingCurrency, Record<BillingPlanKey, Omit<BillingP
 };
 
 function configuredPlanId(currency: BillingCurrency, plan: BillingPlanKey, readEnv: EnvReader) {
-  const explicit = readEnv(`RAZORPAY_PLAN_${plan.toUpperCase()}_${currency}_ID`)?.trim();
+  const prefix = razorpayEnvironmentName(readEnv);
+  const explicit = readEnv(`${prefix}_PLAN_${plan.toUpperCase()}_${currency}_ID`)?.trim();
   if (explicit) return explicit;
-  if (currency === 'INR') return readEnv(`RAZORPAY_PLAN_${plan.toUpperCase()}_ID`)?.trim() || '';
+  if (currency === 'INR') return readEnv(`${prefix}_PLAN_${plan.toUpperCase()}_ID`)?.trim() || '';
   return '';
 }
 

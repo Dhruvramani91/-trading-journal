@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { hmacSha256Hex, jsonResponse, safeEqualHex } from '../_shared/http.ts';
+import { readRazorpayWebhookSecret } from '../_shared/razorpayConfig.ts';
 
 const handledEvents = new Set([
   'subscription.authenticated',
@@ -36,7 +37,7 @@ Deno.serve(async (request) => {
   if (request.method !== 'POST') return jsonResponse({ error: 'Method not allowed.' }, 405, false);
 
   try {
-    const webhookSecret = Deno.env.get('RAZORPAY_WEBHOOK_SECRET');
+    const webhookSecret = readRazorpayWebhookSecret((name) => Deno.env.get(name));
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     if (!webhookSecret || !supabaseUrl || !serviceRoleKey) return jsonResponse({ error: 'Webhook is not configured.' }, 503, false);
