@@ -4,6 +4,7 @@ import {
   reloadTradesForCurrentUser,
   clearTradesForCurrentUser,
 } from '@/store/tradesStore';
+import { invalidateBillingEntitlement } from '@/lib/billingEntitlementCache';
 
 export interface UserProfile {
   id: string;
@@ -609,6 +610,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
      * This prevents User A's trades from remaining
      * visible while User B is logging in.
      */
+    invalidateBillingEntitlement(get().user?.id);
     clearTradesForCurrentUser();
 
     set({

@@ -3,6 +3,7 @@ import { useAuthStore } from '@/store/authStore';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { Loader } from '@/components/ui/Loader';
 import { useEffect, useState } from 'react';
+import { getCachedBillingEntitlement, cacheBillingEntitlement } from '@/lib/billingEntitlementCache';
 
 /**
  * Guards every workspace route (everything rendered under AppShell).
@@ -32,61 +33,68 @@ export function RequireAuth() {
   return <Outlet />;
 }
 
-type EntitlementCheck = { userId: string; pathname: string; loading: boolean; entitled: boolean; error: boolean };
+type EntitlementCheck = { userId: string; loading: boolean; entitled: boolean; error: boolean };
 
 /** Workspace access is derived from the server-owned billing row, never client storage. */
 export function RequireSubscription() {
   const { user } = useAuthStore();
   const location = useLocation();
-  const [check, setCheck] = useState<EntitlementCheck>({ userId: '', pathname: '', loading: true, entitled: false, error: false });
+  const [check, setCheck] = useState<EntitlementCheck>({ userId: '', loading: true, entitled: false, error: false });
 
   useEffect(() => {
     let active = true;
+    let requestPending = false;
     const userId = user?.id;
     const client = supabase;
     if (!userId || !client) return () => { active = false; };
 
-    const refreshEntitlement = () => {
-      setCheck((previous) => ({
-        ...previous,
-        userId,
-        pathname: location.pathname,
-        loading: true,
-      }));
+    const refreshEntitlement = (force = false) => {
+      const cached = !force ? getCachedBillingEntitlement(userId) : null;
+      if (cached) {
+        setCheck({ userId, loading: false, entitled: cached.entitled, error: false });
+        return;
+      }
+      if (requestPending) return;
+      requestPending = true;
+
+      setCheck((previous) => previous.userId === userId
+        ? { ...previous, loading: false }
+        : { userId, loading: true, entitled: false, error: false });
 
       void client.rpc('current_user_has_billing_entitlement')
         .then(({ data, error }) => {
+          requestPending = false;
           if (!active) return;
           if (error) {
-            setCheck({ userId, pathname: location.pathname, loading: false, entitled: false, error: true });
+            setCheck({ userId, loading: false, entitled: false, error: true });
             return;
           }
-          setCheck({ userId, pathname: location.pathname, loading: false, entitled: data === true, error: false });
+          cacheBillingEntitlement(userId, data === true);
+          setCheck({ userId, loading: false, entitled: data === true, error: false });
         }, () => {
-          if (active) setCheck({ userId, pathname: location.pathname, loading: false, entitled: false, error: true });
+          requestPending = false;
+          if (active) setCheck({ userId, loading: false, entitled: false, error: true });
         });
     };
 
     const refreshWhenVisible = () => {
-      if (document.visibilityState === 'visible') refreshEntitlement();
+      if (document.visibilityState === 'visible' && !getCachedBillingEntitlement(userId)) refreshEntitlement(true);
     };
 
     refreshEntitlement();
-    window.addEventListener('focus', refreshEntitlement);
+    window.addEventListener('focus', refreshWhenVisible);
     document.addEventListener('visibilitychange', refreshWhenVisible);
-    const refreshInterval = window.setInterval(refreshWhenVisible, 60_000);
 
     return () => {
       active = false;
-      window.removeEventListener('focus', refreshEntitlement);
+      window.removeEventListener('focus', refreshWhenVisible);
       document.removeEventListener('visibilitychange', refreshWhenVisible);
-      window.clearInterval(refreshInterval);
     };
-  }, [user?.id, location.pathname]);
+  }, [user?.id]);
 
   // Keep profile accessible for billing recovery and subscription management.
   if (location.pathname === '/profile') return <Outlet />;
-  if (check.userId !== user?.id || check.pathname !== location.pathname || check.loading) return <Loader title="Checking subscription…" className="min-h-screen bg-bg-0" />;
+  if (check.userId !== user?.id || check.loading) return <Loader title="Checking subscription…" className="min-h-screen bg-bg-0" />;
   if (check.error) return <Navigate to="/profile?billing=unavailable" replace />;
   if (!check.entitled) return <Navigate to="/checkout?plan=monthly" replace state={{ from: location.pathname }} />;
   return <Outlet />;

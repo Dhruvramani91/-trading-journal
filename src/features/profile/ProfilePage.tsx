@@ -22,6 +22,8 @@ import { formatR, formatPct } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { supabase } from '@/lib/supabase';
 import { subscriptionEntitled } from '@/lib/billingEntitlement';
+import { formatBillingPrice } from '@/lib/billingRegion';
+import { cacheBillingEntitlement, invalidateBillingEntitlement } from '@/lib/billingEntitlementCache';
 
 type BillingSubscription = {
   id: string;
@@ -69,12 +71,16 @@ function trialTimeRemaining(chargeAt: number, nowSeconds: number) {
 }
 
 function hasTrialAccess(subscription: BillingSubscription, nowSeconds = Math.floor(Date.now() / 1000)) {
+  const claimedAtSeconds = subscription.trial_claimed_at
+    ? Math.floor(Date.parse(subscription.trial_claimed_at) / 1000)
+    : Number.NaN;
+  const trialWindowEndsAt = claimedAtSeconds + subscription.trial_days * 86_400;
   return subscription.plan_key === 'monthly'
     && subscription.trial_days === 7
     && Boolean(subscription.trial_claimed_at)
-    && subscription.current_start === null
-    && subscription.current_end === null
-    && ['authenticated', 'cancelled'].includes(subscription.status)
+    && Number.isFinite(claimedAtSeconds)
+    && trialWindowEndsAt > nowSeconds
+    && ['active', 'authenticated', 'cancelled'].includes(subscription.status)
     && subscription.charge_at !== null
     && subscription.charge_at > nowSeconds;
 }
@@ -127,6 +133,7 @@ export function ProfilePage() {
 
   const loadBilling = useCallback(async () => {
     if (!user || !supabase) {
+      invalidateBillingEntitlement(user?.id);
       setBillingSubscription(null);
       setLegacyAccess(false);
       setBillingCheckedAt(Math.floor(Date.now() / 1000));
@@ -147,10 +154,12 @@ export function ProfilePage() {
       supabase.rpc('current_user_has_billing_entitlement'),
     ]);
     if (loadError || entitlementResult.error) {
+      invalidateBillingEntitlement(user.id);
       setBillingSubscription(null);
       setLegacyAccess(false);
       setBillingError('Could not load billing details right now.');
     } else {
+      cacheBillingEntitlement(user.id, entitlementResult.data === true);
       const subscriptions = (data || []) as BillingSubscription[];
       const nowSeconds = Math.floor(Date.now() / 1000);
       const entitledSubscription = subscriptions.find((subscription) => subscriptionEntitled(
@@ -477,7 +486,7 @@ export function ProfilePage() {
                 <p className="mt-2 text-xs text-fg-muted">Your account existed before subscriptions launched. Your existing workspace access is grandfathered.</p>
               ) : billingSubscription ? (
                 <div className="mt-2 space-y-1 text-xs text-fg-muted">
-                  <p><span className="font-semibold text-fg">{billingSubscription.plan_key === 'monthly' ? (billingSubscription.currency === 'INR' ? '₹400 monthly' : '$4.50 monthly') : (billingSubscription.currency === 'INR' ? '₹1,000 quarterly' : '$10 quarterly')}</span> · {billingStatusLabel(billingSubscription.status)}</p>
+                  <p><span className="font-semibold text-fg">{billingSubscription.plan_key === 'monthly' ? (billingSubscription.currency === 'INR' ? '₹400 monthly' : '$4.50 monthly') : (billingSubscription.currency === 'INR' ? '₹1,000 quarterly' : '$10 quarterly')}</span> · {hasTrialAccess(billingSubscription, billingCheckedAt ?? 0) ? '7-day free trial' : billingStatusLabel(billingSubscription.status)}</p>
                   {billingSubscription.cancel_at_cycle_end ? (
                     <p>Your plan ends {billingDate(billingSubscription.current_end) || 'at the end of this billing period'}.</p>
                   ) : billingSubscription.status === 'cancelled' && hasTrialAccess(billingSubscription, billingCheckedAt ?? 0) ? (
@@ -487,10 +496,10 @@ export function ProfilePage() {
                     </>
                   ) : ['cancelled', 'completed', 'expired'].includes(billingSubscription.status) ? (
                     <p>No further billing is scheduled.</p>
-                  ) : billingSubscription.status === 'authenticated' && hasTrialAccess(billingSubscription, billingCheckedAt ?? 0) ? (
+                  ) : ['active', 'authenticated'].includes(billingSubscription.status) && hasTrialAccess(billingSubscription, billingCheckedAt ?? 0) ? (
                     <>
                       <p role="timer" aria-live="polite" className="font-semibold text-accent">7-day trial: {trialTimeRemaining(billingSubscription.charge_at!, billingCheckedAt ?? 0)}</p>
-                      <p>Trial ends {billingDate(billingSubscription.charge_at)}. The first ₹400 charge is scheduled then.</p>
+                      <p>Trial ends {billingDate(billingSubscription.charge_at)}. The first {formatBillingPrice(billingSubscription.currency, 'monthly')} charge is scheduled then.</p>
                     </>
                   ) : billingSubscription.charge_at ? (
                     <p>Next billing date: {billingDate(billingSubscription.charge_at)}.</p>

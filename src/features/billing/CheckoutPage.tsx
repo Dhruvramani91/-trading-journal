@@ -200,16 +200,16 @@ export function CheckoutPage() {
   }
 
   return (
-    <main className="min-h-screen w-full overflow-x-hidden bg-bg-0 px-4 py-10 text-fg sm:px-6">
+    <main className="min-h-screen w-full overflow-x-hidden bg-bg-0 px-4 py-10 text-fg sm:px-6 lg:py-5">
       <div className="mx-auto w-full min-w-0 max-w-5xl">
-        <Link to="/" className="mb-10 inline-flex items-center gap-2 text-sm text-fg-muted transition hover:text-fg">
+        <Link to="/" className="mb-10 inline-flex items-center gap-2 text-sm text-fg-muted transition hover:text-fg lg:mb-5">
           <ArrowLeft className="h-4 w-4" /> Back to ThePrecisionLab
         </Link>
 
-        <div className="grid min-w-0 items-start gap-6 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-          <section className="min-w-0 rounded-3xl border border-line bg-bg-2 p-6 shadow-pop sm:p-8">
+        <div className="grid min-w-0 items-start gap-6 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-4">
+          <section className="min-w-0 rounded-3xl border border-line bg-bg-2 p-6 shadow-pop sm:p-8 lg:p-6">
             <BrandLogo size="md" />
-            <p className="mt-8 text-xs font-semibold uppercase tracking-[0.18em] text-fg-dim">Secure checkout</p>
+            <p className="mt-8 text-xs font-semibold uppercase tracking-[0.18em] text-fg-dim lg:mt-5">Secure checkout</p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight">Choose your plan</h1>
             <p className="mt-2 max-w-lg text-sm leading-6 text-fg-muted">Get the complete trading journal, discipline tracking, and performance analytics.</p>
             {!billingRegion.regionToken && (
@@ -224,7 +224,7 @@ export function CheckoutPage() {
             <p className="mt-2 text-xs text-fg-dim">{!billingRegion.ready ? 'Detecting billing region…' : manualInternationalUnavailable ? 'International location could not be verified. Only India billing is available for this session.' : `Billing region: ${billingRegion.country} · ${billingRegion.currency}${billingRegion.currency === 'USD' && !billingRegion.usdEnabled ? ' · International checkout is not available yet' : ''}`}</p>
             {billingRegion.ready && billingRegion.paymentMode === 'test_mode' && <p role="status" className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">Test payment mode is active. No real payment will be taken.</p>}
 
-            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:mt-5">
               {billingAvailable ? (Object.keys(getPlanDetails(billingRegion.currency)) as BillingPlan[]).map((option) => {
                 const selected = option === plan;
                 const optionDetails = getPlanDetails(billingRegion.currency)[option];
@@ -243,20 +243,20 @@ export function CheckoutPage() {
               }) : <p className="rounded-xl border border-line bg-bg-1 p-4 text-sm leading-6 text-fg-muted">{!billingRegion.ready ? 'Checking regional pricing…' : manualInternationalUnavailable || billingRegion.currency === 'USD' ? 'International recurring billing is not available yet.' : 'No billing plan is currently available for this region.'}</p>}
             </div>
 
-            <ul className="mt-7 space-y-3 text-sm text-fg-muted">
+            <ul className="mt-7 space-y-3 text-sm text-fg-muted lg:mt-5 lg:space-y-2">
               {['Unlimited journal entries', 'Discipline score and performance analytics', 'Weekly review prompts'].map((item) => (
                 <li key={item} className="flex items-center gap-2"><Check className="h-4 w-4 shrink-0 text-win" />{item}</li>
               ))}
             </ul>
           </section>
 
-          <aside className="min-w-0 rounded-3xl border border-line bg-bg-2 p-6 shadow-pop sm:p-8">
+          <aside className="min-w-0 rounded-3xl border border-line bg-bg-2 p-6 shadow-pop sm:p-8 lg:p-6">
             <h2 className="text-lg font-semibold">Order summary</h2>
-            <div className="mt-6 flex items-start justify-between gap-4 border-b border-line pb-5">
+            <div className="mt-6 flex items-start justify-between gap-4 border-b border-line pb-5 lg:mt-4 lg:pb-4">
               <div><p className="font-medium">ThePrecisionLab {details.name}</p><p className="mt-1 text-sm text-fg-muted">{!billingAvailable ? 'Billing unavailable for this region' : plan === 'monthly' ? (actualTrialDays === 0 ? 'Monthly recurring billing · trial already used' : '7-day free trial if eligible, then monthly billing') : 'Quarterly recurring billing'}</p></div>
               <strong className="text-lg">{!billingRegion.ready ? 'Checking…' : billingAvailable ? details.amount : 'Unavailable'}</strong>
             </div>
-            <div className="flex justify-between py-5 text-sm"><span className="text-fg-muted">Due today</span><strong>{!billingRegion.ready ? 'Checking…' : !billingAvailable ? 'Unavailable' : plan === 'monthly' && actualTrialDays === null ? `${billingRegion.currency === 'USD' ? '$0' : '₹0'} if eligible · ${details.amount} otherwise` : plan === 'monthly' && hasMonthlyTrial ? billingRegion.currency === 'USD' ? '$0' : '₹0' : details.amount}</strong></div>
+            <div className="flex justify-between py-5 text-sm lg:py-3"><span className="text-fg-muted">Due today</span><strong>{!billingRegion.ready ? 'Checking…' : !billingAvailable ? 'Unavailable' : plan === 'monthly' && actualTrialDays === null ? `${billingRegion.currency === 'USD' ? '$0' : '₹0'} if eligible · ${details.amount} otherwise` : plan === 'monthly' && hasMonthlyTrial ? billingRegion.currency === 'USD' ? '$0' : '₹0' : details.amount}</strong></div>
             {billingAvailable && plan === 'monthly' && (
               <div className="-mt-2 mb-5 rounded-xl border border-accent/20 bg-accent/5 p-3 text-xs leading-5 text-fg-muted">
                 {actualTrialDays === 0 ? (

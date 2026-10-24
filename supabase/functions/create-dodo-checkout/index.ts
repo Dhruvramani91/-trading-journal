@@ -60,6 +60,7 @@ Deno.serve(async (request) => {
     if (plan === 'monthly') {
       const { data: previousTrial, error: trialError } = await admin.from('billing_subscriptions')
         .select('id')
+        .eq('user_id', userData.user.id)
         .not('trial_claimed_at', 'is', null)
         .limit(1)
         .maybeSingle();
