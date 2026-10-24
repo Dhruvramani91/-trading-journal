@@ -16,7 +16,8 @@ import { ProfilePage } from '@/features/profile/ProfilePage';
 import { AccountSummaryPage } from '@/features/accounts/AccountSummaryPage';
 import { AccountsPage } from '@/features/accounts/AccountsPage';
 import { UIComponentsDemoPage } from '@/features/uiComponentsDemo/UIComponentsDemoPage';
-import { RequireAuth } from './RequireAuth';
+import { RequireAuth, RequireSubscription } from './RequireAuth';
+import { CheckoutPage } from '@/features/billing/CheckoutPage';
 
 export const router = createBrowserRouter([
   // Public Routes
@@ -32,21 +33,27 @@ export const router = createBrowserRouter([
     element: <RequireAuth />,
     children: [
       {
-        element: <AppShell />,
+        element: <RequireSubscription />,
         children: [
-          { path: 'dashboard', element: <DashboardPage /> },
-          { path: 'journal', element: <JournalPage /> },
-          { path: 'journal/new', element: <TradeFormPage /> },
-          { path: 'journal/:id', element: <TradeDetailsPage /> },
-          { path: 'journal/:id/edit', element: <TradeFormPage /> },
-          { path: 'statistics', element: <StatisticsPage /> },
-          { path: 'calendar', element: <CalendarPage /> },
-          { path: 'mistakes', element: <MistakesPage /> },
-          { path: 'profile', element: <ProfilePage /> },
-          { path: 'accounts', element: <AccountsPage /> },
-          { path: 'accounts/:id', element: <AccountSummaryPage /> },
+          {
+            element: <AppShell />,
+            children: [
+              { path: 'dashboard', element: <DashboardPage /> },
+              { path: 'journal', element: <JournalPage /> },
+              { path: 'journal/new', element: <TradeFormPage /> },
+              { path: 'journal/:id', element: <TradeDetailsPage /> },
+              { path: 'journal/:id/edit', element: <TradeFormPage /> },
+              { path: 'statistics', element: <StatisticsPage /> },
+              { path: 'calendar', element: <CalendarPage /> },
+              { path: 'mistakes', element: <MistakesPage /> },
+              { path: 'profile', element: <ProfilePage /> },
+              { path: 'accounts', element: <AccountsPage /> },
+              { path: 'accounts/:id', element: <AccountSummaryPage /> },
+            ],
+          },
         ],
       },
+      { path: 'checkout', element: <CheckoutPage /> },
     ],
   },
 

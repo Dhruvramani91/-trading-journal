@@ -1,7 +1,9 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
-import { isSupabaseConfigured } from '@/lib/supabase';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { Loader } from '@/components/ui/Loader';
+import { useEffect, useState } from 'react';
+import { subscriptionEntitled } from '@/lib/billingEntitlement';
 
 /**
  * Guards every workspace route (everything rendered under AppShell).
@@ -28,5 +30,82 @@ export function RequireAuth() {
     return <Navigate to="/login" replace />;
   }
 
+  return <Outlet />;
+}
+
+type EntitlementCheck = { userId: string; pathname: string; loading: boolean; entitled: boolean; error: boolean };
+
+/** Workspace access is derived from the server-owned billing row, never client storage. */
+export function RequireSubscription() {
+  const { user } = useAuthStore();
+  const location = useLocation();
+  const [check, setCheck] = useState<EntitlementCheck>({ userId: '', pathname: '', loading: true, entitled: false, error: false });
+
+  useEffect(() => {
+    let active = true;
+    const userId = user?.id;
+    const client = supabase;
+    if (!userId || !client) return () => { active = false; };
+
+    const refreshEntitlement = () => {
+      setCheck((previous) => ({
+        ...previous,
+        userId,
+        pathname: location.pathname,
+        loading: true,
+      }));
+
+      void client.from('billing_subscriptions')
+        .select('plan_key, status, charge_at, current_start, current_end, cancel_at_cycle_end, trial_days, trial_claimed_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .then(({ data, error }) => {
+          if (!active) return;
+          if (error) {
+            setCheck({ userId, pathname: location.pathname, loading: false, entitled: false, error: true });
+            return;
+          }
+          const nowSeconds = Math.floor(Date.now() / 1000);
+          const entitled = (data || []).some((subscription) =>
+            (subscription.plan_key === 'monthly' || subscription.plan_key === 'quarterly')
+              && subscriptionEntitled(
+                subscription.plan_key,
+                subscription.status,
+                subscription.charge_at,
+                subscription.current_end,
+                subscription.cancel_at_cycle_end,
+                nowSeconds,
+                subscription.trial_days,
+                Boolean(subscription.trial_claimed_at),
+                subscription.current_start,
+              ));
+          setCheck({ userId, pathname: location.pathname, loading: false, entitled, error: false });
+        }, () => {
+          if (active) setCheck({ userId, pathname: location.pathname, loading: false, entitled: false, error: true });
+        });
+    };
+
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') refreshEntitlement();
+    };
+
+    refreshEntitlement();
+    window.addEventListener('focus', refreshEntitlement);
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    const refreshInterval = window.setInterval(refreshWhenVisible, 60_000);
+
+    return () => {
+      active = false;
+      window.removeEventListener('focus', refreshEntitlement);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+      window.clearInterval(refreshInterval);
+    };
+  }, [user?.id, location.pathname]);
+
+  // Keep profile accessible for billing recovery and subscription management.
+  if (location.pathname === '/profile') return <Outlet />;
+  if (check.userId !== user?.id || check.pathname !== location.pathname || check.loading) return <Loader title="Checking subscription…" className="min-h-screen bg-bg-0" />;
+  if (check.error) return <Navigate to="/profile?billing=unavailable" replace />;
+  if (!check.entitled) return <Navigate to="/checkout?plan=monthly" replace state={{ from: location.pathname }} />;
   return <Outlet />;
 }

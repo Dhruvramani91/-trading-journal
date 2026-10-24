@@ -9,6 +9,7 @@ import { WordPullUp } from '@/components/ui/word-pull-up';
 import { TextRevealByWord } from '@/components/ui/text-reveal';
 import { BrandLogo } from '@/components/layout/Brand';
 import { LandingNavbar } from './LandingNavbar';
+import { formatBillingPrice, useBillingRegion } from '@/lib/billingRegion';
 
 const MotionRouterLink = motion.create(Link);
 
@@ -75,7 +76,7 @@ function ScrollFeatureCard({
   );
 }
 
-const landingFaqs = [
+const landingFaqs = (currency: 'INR' | 'USD', available: boolean, ready: boolean) => [
   {
     question: 'What does the discipline score measure?',
     answer: <>It shows how closely you followed the GXT or Lathyrus model on each trade. It rewards process, so a losing trade you handled well still counts.</>,
@@ -86,7 +87,11 @@ const landingFaqs = [
   },
   {
     question: 'How much does ThePrecisionLab cost?',
-    answer: <>Choose <strong>$4 per month</strong>, or pay <strong>$40 once for lifetime access</strong>.</>,
+    answer: !ready
+      ? <>Checking the available billing region…</>
+      : available
+      ? <>{currency === 'USD' ? <>Choose <strong>{formatBillingPrice(currency, 'monthly')} per month</strong> or <strong>{formatBillingPrice(currency, 'quarterly')} every 3 months</strong> through Dodo Payments.</> : <>Choose <strong>{formatBillingPrice(currency, 'monthly')} per month</strong> or <strong>{formatBillingPrice(currency, 'quarterly')} every 3 months</strong>. Eligible new monthly subscribers get a 7-day free trial.</>}</>
+      : <>International recurring billing is not available yet.</>,
   },
   {
     question: 'Can I journal trades from different markets?',
@@ -284,6 +289,11 @@ function MagneticFooterAnchor({
 }
 
 export function LandingPage() {
+  const billingRegion = useBillingRegion();
+  const billingAvailable = billingRegion.ready && (billingRegion.currency === 'INR' || billingRegion.usdEnabled);
+  const monthlyPrice = formatBillingPrice(billingRegion.currency, 'monthly');
+  const quarterlyPrice = formatBillingPrice(billingRegion.currency, 'quarterly');
+  const faqItems = landingFaqs(billingRegion.currency, billingAvailable, billingRegion.ready);
   const [activeFaq, setActiveFaq] = useState(0);
   const faqPointerX = useMotionValue(0);
   const faqPointerY = useMotionValue(0);
@@ -2143,7 +2153,7 @@ footer a:hover{transform:translateY(-1px)}
                   { text: 'built for traders', className: 'g' },
                 ]}
               />
-              <p>Choose monthly flexibility or pay once for lifetime access. Every plan includes the complete journal.</p>
+              <p>Choose monthly flexibility or save with quarterly billing. Every plan includes the complete journal.</p>
             </div>
             <div className="plans pricing-frame" ref={plansRef}>
               <Plus className="pricing-frame-mark top-left" aria-hidden="true" />
@@ -2153,29 +2163,29 @@ footer a:hover{transform:translateY(-1px)}
               <CometPricingCard className="plan" style={{ x: prefersReducedMotion ? 0 : firstPlanX, rotateY: prefersReducedMotion ? 0 : firstPlanRotate, opacity: prefersReducedMotion ? 1 : plansOpacity, transformOrigin: 'center center' }} scrollRotateY={firstPlanRotate} reducedMotion={!!prefersReducedMotion}>
                 <span className="pricing-plan-kicker">Monthly</span>
                 <h3>Flexible plan</h3>
-                <p className="pricing-plan-description">Try it free for 7 days, then $4/month. Cancel whenever you need.</p>
-                <div className="price">$4<small>/ month</small></div>
+                <p className="pricing-plan-description">{!billingRegion.ready ? 'Checking billing region…' : billingAvailable ? billingRegion.currency === 'USD' ? `${monthlyPrice}/month, billed monthly through Dodo Payments.` : `Eligible new subscribers get 7 days free, then ${monthlyPrice}/month.` : 'International recurring billing is not available yet.'}</p>
+                <div className="price">{!billingRegion.ready ? '…' : billingAvailable ? monthlyPrice : 'Unavailable'}{billingAvailable && <small>/ month</small>}</div>
                 <ul>
                   <li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg>Unlimited journal entries</li>
                   <li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg>Discipline score and streaks</li>
                   <li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg>Performance analytics</li>
                   <li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg>Weekly review prompts</li>
                 </ul>
-                <Link className="btn ghost" to="/login?mode=signup">Choose monthly</Link>
+                  {billingAvailable && billingRegion.ready && <Link className="btn ghost" to="/login?mode=signup&plan=monthly">Choose monthly</Link>}
               </CometPricingCard>
               <CometPricingCard className="plan feat" style={{ x: prefersReducedMotion ? 0 : secondPlanX, rotateY: prefersReducedMotion ? 0 : secondPlanRotate, opacity: prefersReducedMotion ? 1 : plansOpacity, transformOrigin: 'center center' }} scrollRotateY={secondPlanRotate} reducedMotion={!!prefersReducedMotion}>
                 <PricingBorderTrail reducedMotion={!!prefersReducedMotion} />
-                <span className="pricing-plan-kicker">Pay once</span>
-                <h3>Forever access <span className="tag">Best value</span></h3>
-                <p className="pricing-plan-description">One payment gives you lifetime access to the complete journal.</p>
-                <div className="price">$40<small>one time</small></div>
+                <span className="pricing-plan-kicker">Quarterly</span>
+                <h3>Three-month plan <span className="tag">Save more</span></h3>
+                <p className="pricing-plan-description">One simple recurring payment every 3 months.</p>
+                <div className="price">{!billingRegion.ready ? '…' : billingAvailable ? quarterlyPrice : 'Unavailable'}{billingAvailable && <small>/ 3 months</small>}</div>
                 <ul>
                   <li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg>Unlimited journal entries</li>
                   <li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg>Discipline score and streaks</li>
                   <li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg>Performance analytics</li>
                   <li><svg viewBox="0 0 16 16"><path d="M3 8.5l3.2 3L13 4.5"/></svg>Weekly review prompts</li>
                 </ul>
-                <Link className="btn" to="/login?mode=signup">Get lifetime access</Link>
+                  {billingAvailable && billingRegion.ready && <Link className="btn" to="/login?mode=signup&plan=quarterly">Choose quarterly</Link>}
               </CometPricingCard>
             </div>
             <p className="pricing-payment-note"><ShieldCheck aria-hidden="true" />The same full feature set is included with both options.</p>
@@ -2203,7 +2213,7 @@ footer a:hover{transform:translateY(-1px)}
                 viewport={{ once: true, amount: 0.25 }}
                 transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
               >
-                {landingFaqs.map((item, index) => (
+                {faqItems.map((item, index) => (
                   <motion.button
                     key={item.question}
                     type="button"
@@ -2262,13 +2272,13 @@ footer a:hover{transform:translateY(-1px)}
                   animate={{ opacity: 1, clipPath: 'inset(0 0% 0 0)' }}
                   transition={{ duration: prefersReducedMotion ? 0 : 0.7, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  {landingFaqs[activeFaq]!.answer}
+                  {faqItems[activeFaq]!.answer}
                 </motion.p>
                 <div className="faq-answer-footer">
                   <span className="faq-brand-mark" aria-label="ThePrecisionLab"><BrandLogo size="lg" /></span>
                   <div className="faq-controls">
-                    <button type="button" aria-label="Previous question" onClick={() => setActiveFaq((activeFaq + landingFaqs.length - 1) % landingFaqs.length)}>‹</button>
-                    <button type="button" aria-label="Next question" onClick={() => setActiveFaq((activeFaq + 1) % landingFaqs.length)}>›</button>
+                    <button type="button" aria-label="Previous question" onClick={() => setActiveFaq((activeFaq + faqItems.length - 1) % faqItems.length)}>‹</button>
+                    <button type="button" aria-label="Next question" onClick={() => setActiveFaq((activeFaq + 1) % faqItems.length)}>›</button>
                   </div>
                 </div>
               </motion.div>

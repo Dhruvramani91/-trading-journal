@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/Input';
 import { FormField } from '@/components/ui/Select';
 import { MIN_PASSWORD_LENGTH, useAuthStore } from '@/store/authStore';
 import { isSupabaseConfigured } from '@/lib/supabase';
+import { checkoutPath, isBillingPlan, saveBillingPlanIntent } from '@/lib/billing';
 
 type AuthMode = 'login' | 'signup';
 
@@ -107,6 +108,14 @@ export function LoginPage() {
   const [reduceMotion, setReduceMotion] = useState(false);
 
   const emailConfirmed = window.location.search.includes('confirmed=1');
+  const requestedPlan = new URLSearchParams(window.location.search).get('plan');
+
+  useEffect(() => {
+    if (isBillingPlan(requestedPlan)) {
+      saveBillingPlanIntent(requestedPlan);
+      setMode('signup');
+    }
+  }, [requestedPlan]);
 
   // --------------------------------------------------
   // MOUNT — trigger the hero chart's one-time grow-in
@@ -144,7 +153,7 @@ export function LoginPage() {
       return;
     }
 
-    navigate('/dashboard', { replace: true });
+    navigate(checkoutPath(), { replace: true });
   }, [user, signupSuccess, signOut, clearError, navigate]);
 
   // --------------------------------------------------
@@ -215,7 +224,7 @@ export function LoginPage() {
       await signUp(email, password);
 
       if (!isSupabaseConfigured) {
-        navigate('/dashboard');
+        navigate(checkoutPath());
         return;
       }
 
@@ -250,7 +259,7 @@ export function LoginPage() {
 
     try {
       await signInWithPassword(email, password);
-      navigate('/dashboard');
+      navigate(checkoutPath());
     } catch {
       setLocalError('Invalid email or password.');
     }
@@ -306,7 +315,7 @@ export function LoginPage() {
       await signInWithGoogle();
 
       if (!isSupabaseConfigured) {
-        navigate('/dashboard');
+      navigate(checkoutPath());
       }
     } catch (err) {
       setLocalError((err as Error).message || 'Google sign-in failed.');

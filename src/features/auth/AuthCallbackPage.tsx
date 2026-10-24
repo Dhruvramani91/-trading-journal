@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { BrandLogo } from '@/components/layout/Brand';
 import { Loader } from '@/components/ui/Loader';
 import { useAuthStore } from '@/store/authStore';
+import { checkoutPath } from '@/lib/billing';
 
 export function AuthCallbackPage() {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ export function AuthCallbackPage() {
         await init();
         // Small delay to ensure session is processed
         setTimeout(() => {
-          navigate('/dashboard', { replace: true });
+          navigate(checkoutPath(), { replace: true });
         }, 500);
       } catch (err) {
         console.error('Auth callback error:', err);
