@@ -27,7 +27,7 @@ const planDefaults: Record<BillingCurrency, Record<BillingPlanKey, Omit<BillingP
 };
 
 function configuredPlanId(currency: BillingCurrency, plan: BillingPlanKey, readEnv: EnvReader) {
-  const prefix = razorpayEnvironmentName(readEnv);
+  const prefix = razorpayEnvironmentName();
   const explicit = readEnv(`${prefix}_PLAN_${plan.toUpperCase()}_${currency}_ID`)?.trim();
   if (explicit) return explicit;
   if (currency === 'INR') return readEnv(`${prefix}_PLAN_${plan.toUpperCase()}_ID`)?.trim() || '';

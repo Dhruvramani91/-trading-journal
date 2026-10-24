@@ -14,20 +14,18 @@ function selectedEnvironment(readEnv: EnvReader): RazorpayEnvironment {
 
 export function readRazorpayCredentials(readEnv: EnvReader): RazorpayCredentials | null {
   const environment = selectedEnvironment(readEnv);
-  const prefix = environment === 'test_mode' ? 'RAZORPAY_TEST_' : 'RAZORPAY_';
-  const keyId = readEnv(`${prefix}KEY_ID`)?.trim();
-  const keySecret = readEnv(`${prefix}KEY_SECRET`)?.trim();
+  const keyId = readEnv('RAZORPAY_KEY_ID')?.trim();
+  const keySecret = readEnv('RAZORPAY_KEY_SECRET')?.trim();
   if (!keyId || !keySecret) return null;
   return { environment, keyId, keySecret };
 }
 
-export function razorpayEnvironmentName(readEnv: EnvReader) {
-  return selectedEnvironment(readEnv) === 'test_mode' ? 'RAZORPAY_TEST' : 'RAZORPAY';
+export function razorpayEnvironmentName() {
+  return 'RAZORPAY';
 }
 
 export function readRazorpayWebhookSecret(readEnv: EnvReader) {
-  const prefix = selectedEnvironment(readEnv) === 'test_mode' ? 'RAZORPAY_TEST_' : 'RAZORPAY_';
-  return readEnv(`${prefix}WEBHOOK_SECRET`)?.trim() || null;
+  return readEnv('RAZORPAY_WEBHOOK_SECRET')?.trim() || null;
 }
 
 export function testBillingUserAllowed(email: string | undefined, readEnv: EnvReader) {
