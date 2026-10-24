@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders, jsonResponse } from '../_shared/http.ts';
+import { readDodoApiConfig } from '../_shared/dodoConfig.ts';
 
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -9,9 +10,9 @@ Deno.serve(async (request) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    const apiKey = Deno.env.get('DODO_PAYMENTS_API_KEY');
+    const dodo = readDodoApiConfig((name) => Deno.env.get(name) ?? undefined);
     if (!authorization?.startsWith('Bearer ') || !supabaseUrl || !anonKey || !serviceRoleKey) return jsonResponse({ error: 'Sign in is required.' }, 401);
-    if (!apiKey) return jsonResponse({ error: 'Dodo Payments is not configured.' }, 503);
+    if (!dodo) return jsonResponse({ error: 'Dodo Payments is not fully configured for this environment.' }, 503);
 
     const userClient = createClient(supabaseUrl, anonKey, {
       auth: { persistSession: false },
@@ -33,9 +34,9 @@ Deno.serve(async (request) => {
     if (!saved.dodo_subscription_id) return jsonResponse({ error: 'Finish or close the Dodo checkout before cancelling this subscription.' }, 409);
 
     const cancelAtCycleEnd = saved.status === 'active' && saved.current_end !== null && saved.current_end > Math.floor(Date.now() / 1000);
-    const response = await fetch(`https://test.dodopayments.com/subscriptions/${encodeURIComponent(saved.dodo_subscription_id)}`, {
+    const response = await fetch(`${dodo.baseUrl}/subscriptions/${encodeURIComponent(saved.dodo_subscription_id)}`, {
       method: 'PATCH',
-      headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      headers: { Authorization: `Bearer ${dodo.apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify(cancelAtCycleEnd ? { cancel_at_next_billing_date: true } : {}),
     });
     const subscription = await response.json().catch(() => null);

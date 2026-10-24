@@ -48,13 +48,33 @@ Razorpay INR plan IDs are configured by `RAZORPAY_PLAN_MONTHLY_ID` and `RAZORPAY
 
 ### Region verification and feature flags
 
-The Vercel `/api/billing-region` function signs a short-lived country assertion using Vercel's country header. Supabase verifies the assertion; the browser cannot enable USD by manually choosing a region. Configure the same `BILLING_REGION_TOKEN_SECRET` (at least 32 characters) in Vercel and Supabase Edge Function secrets.
+The Vercel `/api/billing-region` function signs a short-lived country assertion using Vercel's country header. Supabase verifies the assertion; the browser cannot enable USD by manually choosing a region. Configure the same `BILLING_REGION_TOKEN_SECRET` (at least 32 characters) in Vercel and the matching Supabase project's Edge Function secrets.
 
-For a test deployment, set `BILLING_USD_ENABLED=true` in the test Supabase project's Edge Function secrets and `BILLING_USD_PUBLIC_ENABLED=true` in Vercel's Preview environment. Keep the Production flag off until the live Dodo integration is ready. A local Vite server does not provide Vercel's `/api/billing-region` endpoint, so use a Vercel Preview URL to test region detection.
+Test and Live are separate Dodo environments. Each has its own API key, product IDs, and webhook signing key. This app selects the Dodo API host from `DODO_PAYMENTS_ENVIRONMENT`, so use `test_mode` only with test credentials/products and `live_mode` only with live credentials/products. The test and live API hosts are `https://test.dodopayments.com` and `https://live.dodopayments.com`, respectively. Never copy test product IDs or test credentials into Production. [Dodo's official TypeScript SDK documents the environment names and hosts](https://github.com/dodopayments/dodopayments-typescript).
+
+For Preview testing, configure these secrets in the **test Supabase project** and Preview Vercel environment:
+
+| Setting | Where | Preview value |
+| --- | --- | --- |
+| `DODO_PAYMENTS_ENVIRONMENT` | Supabase Edge Function secrets | `test_mode` |
+| `DODO_PAYMENTS_API_KEY` | Supabase Edge Function secrets | Dodo Test Mode API key |
+| `DODO_PAYMENTS_WEBHOOK_KEY` | Supabase Edge Function secrets | Dodo Test Mode webhook signing key |
+| `DODO_PRODUCT_MONTHLY_ID` | Supabase Edge Function secrets | Test product ID for USD 4.50/month |
+| `DODO_PRODUCT_QUARTERLY_ID` | Supabase Edge Function secrets | Test product ID for USD 10/3 months |
+| `APP_BASE_URL` | Supabase Edge Function secrets | The deployed Preview origin, e.g. `https://<preview-host>` |
+| `BILLING_USD_ENABLED` | Supabase Edge Function secrets | `true` |
+| `BILLING_REGION_TOKEN_SECRET` | Supabase Edge Function secrets and Vercel Preview | The same random secret in both services |
+| `BILLING_USD_PUBLIC_ENABLED` | Vercel Preview | `true` |
+
+For the real site, first create or activate the **Live Mode** USD 4.50 monthly and USD 10 quarterly products in Dodo and create a Live API key and Live webhook. Then configure the same settings in the **production Supabase project** and **Vercel Production**, using Live values and `DODO_PAYMENTS_ENVIRONMENT=live_mode`; set `APP_BASE_URL` to `https://www.theprecisionlab.in`. Apply the Dodo migration and deploy the Dodo Edge Functions to the production Supabase project. Set `BILLING_USD_PUBLIC_ENABLED=true` in Vercel Production only after the production settings, migration, functions, and Live webhook are in place. Keep Preview on Test Mode and keep the two projects' credentials separate. Do not enable real checkout until the Live Dodo account and products are ready; Live checkout charges real customers.
+
+When moving billing to an existing production Supabase project, retain that project's existing Auth users and application data. Do not copy the test database over it or run `supabase db reset`. First inspect the production project's migration history and compare its actual schema with the required migrations. Apply only reviewed, missing schema changes; if production was created outside this migration history, reconcile or baseline that history before using `supabase db push` so old migrations are not replayed against populated tables. Keep the existing production Razorpay Live credentials and plan IDs; configure Dodo Live credentials/products alongside them. Test-mode credentials and product IDs belong only to Preview.
+
+A local Vite server does not provide Vercel's `/api/billing-region` endpoint, so use a Vercel Preview URL to test region detection.
 
 ### Webhooks and function secrets
 
-Configure Test Mode webhooks to:
+Configure a separate webhook in each Dodo environment, both pointing at that environment's Supabase project:
 
 - Razorpay: `https://<project-ref>.supabase.co/functions/v1/razorpay-webhook`. Subscribe to the subscription lifecycle events listed in the Razorpay dashboard integration.
 - Dodo: `https://<project-ref>.supabase.co/functions/v1/dodo-webhook`. Subscribe to `subscription.active`, `subscription.renewed`, `subscription.updated`, `subscription.cancelled`, `subscription.expired`, `subscription.on_hold`, `subscription.failed`, `subscription.past_due`, `subscription.paused`, `subscription.unpaused`, and `subscription.update_payment_method`.
@@ -69,13 +89,13 @@ Review migration history before applying schema changes:
 npx supabase migration list
 ```
 
-After confirming the target is a test project and the migration list is expected, apply the migration and deploy the relevant Edge Functions:
+After confirming the target project and reviewing its migration list, apply migrations and deploy the relevant Edge Functions. Use the test project for Preview and the production project for the live site:
 
 ```powershell
-npx supabase db push --project-ref <test-project-ref>
-npx supabase functions deploy create-dodo-checkout --project-ref <test-project-ref> --use-api
-npx supabase functions deploy cancel-dodo-subscription --project-ref <test-project-ref> --use-api
-npx supabase functions deploy dodo-webhook --project-ref <test-project-ref> --use-api --no-verify-jwt
+npx supabase db push --project-ref <target-project-ref>
+npx supabase functions deploy create-dodo-checkout --project-ref <target-project-ref> --use-api
+npx supabase functions deploy cancel-dodo-subscription --project-ref <target-project-ref> --use-api
+npx supabase functions deploy dodo-webhook --project-ref <target-project-ref> --use-api --no-verify-jwt
 ```
 
-The billing migrations add subscription state and restrict paid data access through database RLS. The React route guard only controls the user experience; database RLS remains the access enforcement boundary. Test checkout, cancellation, and webhook delivery in provider Test Mode before configuring Live Mode.
+The billing migrations add subscription state and restrict paid data access through database RLS. The React route guard only controls the user experience; database RLS remains the access enforcement boundary. Verify checkout, cancellation, and webhook delivery in Test Mode before enabling Production Live Mode.

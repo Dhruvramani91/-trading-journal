@@ -103,6 +103,7 @@ export function ProfilePage() {
   const [preview, setPreview] = useState<string | undefined>();
   const [saving, setSaving] = useState(false);
   const [billingSubscription, setBillingSubscription] = useState<BillingSubscription | null>(null);
+  const [legacyAccess, setLegacyAccess] = useState(false);
   const [billingCheckedAt, setBillingCheckedAt] = useState<number | null>(null);
   const [billingLoading, setBillingLoading] = useState(true);
   const [billingBusy, setBillingBusy] = useState(false);
@@ -110,7 +111,7 @@ export function ProfilePage() {
   const [billingError, setBillingError] = useState('');
   const [billingNotice, setBillingNotice] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const canViewTradingSnapshot = billingSubscription
+  const canViewTradingSnapshot = legacyAccess || (billingSubscription
     ? subscriptionEntitled(
       billingSubscription.plan_key,
       billingSubscription.status,
@@ -122,23 +123,32 @@ export function ProfilePage() {
       Boolean(billingSubscription.trial_claimed_at),
       billingSubscription.current_start,
     )
-    : false;
+    : false);
 
   const loadBilling = useCallback(async () => {
     if (!user || !supabase) {
       setBillingSubscription(null);
+      setLegacyAccess(false);
       setBillingCheckedAt(Math.floor(Date.now() / 1000));
       setBillingLoading(false);
       return;
     }
     setBillingLoading(true);
-    const { data, error: loadError } = await supabase
+    setBillingSubscription(null);
+    setLegacyAccess(false);
+    setBillingError('');
+    const [{ data, error: loadError }, entitlementResult] = await Promise.all([
+      supabase
       .from('billing_subscriptions')
       .select('id, payment_provider, razorpay_subscription_id, dodo_subscription_id, dodo_checkout_url, plan_key, currency, status, current_start, current_end, charge_at, cancel_at_cycle_end, trial_days, trial_claimed_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
-      .limit(20);
-    if (loadError) {
+      .limit(20),
+      supabase.rpc('current_user_has_billing_entitlement'),
+    ]);
+    if (loadError || entitlementResult.error) {
+      setBillingSubscription(null);
+      setLegacyAccess(false);
       setBillingError('Could not load billing details right now.');
     } else {
       const subscriptions = (data || []) as BillingSubscription[];
@@ -155,6 +165,7 @@ export function ProfilePage() {
         subscription.current_start,
       ));
       setBillingSubscription(entitledSubscription || subscriptions[0] || null);
+      setLegacyAccess(entitlementResult.data === true && !entitledSubscription);
       setBillingError('');
     }
     setBillingCheckedAt(Math.floor(Date.now() / 1000));
@@ -393,7 +404,7 @@ export function ProfilePage() {
                 <span className="text-sm text-fg-muted">Current plan</span>
               </div>
               <span className="inline-flex items-center rounded-full bg-accent/10 px-2.5 py-1 text-xs font-semibold text-accent">
-                {billingLoading ? 'Loading…' : billingError ? 'Unavailable' : billingSubscription ? `${billingSubscription.plan_key === 'monthly' ? 'Monthly' : 'Quarterly'} plan` : 'Free Plan'}
+                {billingLoading ? 'Loading…' : billingError ? 'Unavailable' : legacyAccess ? 'Legacy access' : billingSubscription ? `${billingSubscription.plan_key === 'monthly' ? 'Monthly' : 'Quarterly'} plan` : 'Free Plan'}
               </span>
             </div>
           </CardBody>
@@ -462,6 +473,8 @@ export function ProfilePage() {
               </div>
               {billingLoading ? (
                 <p className="mt-2 text-xs text-fg-muted">Loading your subscription…</p>
+              ) : legacyAccess ? (
+                <p className="mt-2 text-xs text-fg-muted">Your account existed before subscriptions launched. Your existing workspace access is grandfathered.</p>
               ) : billingSubscription ? (
                 <div className="mt-2 space-y-1 text-xs text-fg-muted">
                   <p><span className="font-semibold text-fg">{billingSubscription.plan_key === 'monthly' ? (billingSubscription.currency === 'INR' ? '₹400 monthly' : '$4.50 monthly') : (billingSubscription.currency === 'INR' ? '₹1,000 quarterly' : '$10 quarterly')}</span> · {billingStatusLabel(billingSubscription.status)}</p>

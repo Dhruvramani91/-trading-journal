@@ -3,7 +3,6 @@ import { useAuthStore } from '@/store/authStore';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { Loader } from '@/components/ui/Loader';
 import { useEffect, useState } from 'react';
-import { subscriptionEntitled } from '@/lib/billingEntitlement';
 
 /**
  * Guards every workspace route (everything rendered under AppShell).
@@ -55,31 +54,14 @@ export function RequireSubscription() {
         loading: true,
       }));
 
-      void client.from('billing_subscriptions')
-        .select('plan_key, status, charge_at, current_start, current_end, cancel_at_cycle_end, trial_days, trial_claimed_at')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
+      void client.rpc('current_user_has_billing_entitlement')
         .then(({ data, error }) => {
           if (!active) return;
           if (error) {
             setCheck({ userId, pathname: location.pathname, loading: false, entitled: false, error: true });
             return;
           }
-          const nowSeconds = Math.floor(Date.now() / 1000);
-          const entitled = (data || []).some((subscription) =>
-            (subscription.plan_key === 'monthly' || subscription.plan_key === 'quarterly')
-              && subscriptionEntitled(
-                subscription.plan_key,
-                subscription.status,
-                subscription.charge_at,
-                subscription.current_end,
-                subscription.cancel_at_cycle_end,
-                nowSeconds,
-                subscription.trial_days,
-                Boolean(subscription.trial_claimed_at),
-                subscription.current_start,
-              ));
-          setCheck({ userId, pathname: location.pathname, loading: false, entitled, error: false });
+          setCheck({ userId, pathname: location.pathname, loading: false, entitled: data === true, error: false });
         }, () => {
           if (active) setCheck({ userId, pathname: location.pathname, loading: false, entitled: false, error: true });
         });

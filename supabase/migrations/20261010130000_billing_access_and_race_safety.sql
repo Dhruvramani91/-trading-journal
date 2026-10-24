@@ -13,6 +13,10 @@ set search_path = ''
 as $$
   select exists (
     select 1
+    from public.billing_legacy_access as legacy
+    where legacy.user_id = auth.uid()
+  ) or exists (
+    select 1
     from public.billing_subscriptions as subscription
     where subscription.user_id = auth.uid()
       and (

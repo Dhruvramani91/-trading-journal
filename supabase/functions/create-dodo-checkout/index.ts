@@ -1,11 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders, jsonResponse, verifiedBillingCountry } from '../_shared/http.ts';
 import type { BillingPlanKey } from '../_shared/billingPlans.ts';
-
-const products: Record<BillingPlanKey, { id: string; amount: number }> = {
-  monthly: { id: 'pdt_0NqNTDIgk3h06oiRXqgmB', amount: 450 },
-  quarterly: { id: 'pdt_0NqNTOIb8Xm2BdqJiuYg9', amount: 1_000 },
-};
+import { readDodoConfig } from '../_shared/dodoConfig.ts';
 
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -18,11 +14,11 @@ Deno.serve(async (request) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
-    const dodoApiKey = Deno.env.get('DODO_PAYMENTS_API_KEY');
+    const dodo = readDodoConfig((name) => Deno.env.get(name) ?? undefined);
     if (!authorization?.startsWith('Bearer ') || !supabaseUrl || !anonKey || !serviceRoleKey) {
       return jsonResponse({ error: 'Sign in is required.' }, 401);
     }
-    if (!dodoApiKey) return jsonResponse({ error: 'Dodo Payments is not configured yet.' }, 503);
+    if (!dodo) return jsonResponse({ error: 'Dodo Payments is not fully configured for this environment.' }, 503);
     if (Deno.env.get('BILLING_USD_ENABLED')?.trim().toLowerCase() !== 'true') {
       return jsonResponse({ error: 'International subscriptions are not enabled yet.' }, 503);
     }
@@ -55,18 +51,18 @@ Deno.serve(async (request) => {
     if (existing) {
       if (existing.payment_provider === 'dodo' && existing.status === 'created'
         && existing.plan_key === plan && existing.currency === 'USD' && existing.dodo_checkout_url) {
-        return jsonResponse({ checkoutUrl: existing.dodo_checkout_url, amount: products[plan].amount, currency: 'USD' });
+        return jsonResponse({ checkoutUrl: existing.dodo_checkout_url, amount: dodo.products[plan].amount, currency: 'USD' });
       }
       return jsonResponse({ error: 'You already have a subscription or checkout in progress. Manage it from your Profile page.' }, 409);
     }
 
-    const product = products[plan];
-    const productResponse = await fetch(`https://test.dodopayments.com/products/${encodeURIComponent(product.id)}`, {
-      headers: { Authorization: `Bearer ${dodoApiKey}` },
+    const product = dodo.products[plan];
+    const productResponse = await fetch(`${dodo.baseUrl}/products/${encodeURIComponent(product.id)}`, {
+      headers: { Authorization: `Bearer ${dodo.apiKey}` },
     });
     const configuredProduct = await productResponse.json().catch(() => null);
     const recurringPrice = configuredProduct?.price;
-    const expectedFrequency = plan === 'monthly' ? 1 : 3;
+    const expectedFrequency = product.intervalCount;
     if (!productResponse.ok || configuredProduct?.product_id !== product.id
       || configuredProduct?.is_recurring !== true
       || recurringPrice?.type !== 'recurring_price'
@@ -94,22 +90,54 @@ Deno.serve(async (request) => {
     }
     reservedSubscriptionId = localSubscription.id;
 
-    const appUrl = Deno.env.get('APP_BASE_URL')?.replace(/\/$/, '') || 'http://localhost:5176';
-    const response = await fetch('https://test.dodopayments.com/checkout-sessions', {
+    const appBaseUrl = Deno.env.get('APP_BASE_URL')?.trim().replace(/\/+$/, '');
+    let appOrigin: string;
+    try {
+      const parsedAppUrl = new URL(appBaseUrl || '');
+      if (parsedAppUrl.protocol !== 'https:' || /^(localhost|127\.0\.0\.1)$/i.test(parsedAppUrl.hostname)) throw new Error('Invalid app URL');
+      appOrigin = parsedAppUrl.origin;
+    } catch {
+      await admin.from('billing_subscriptions').delete().eq('id', localSubscription.id);
+      reservedSubscriptionId = null;
+      return jsonResponse({ error: 'Dodo return URL is not configured for this environment.' }, 503);
+    }
+    const response = await fetch(`${dodo.baseUrl}/checkouts`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${dodoApiKey}`, 'Content-Type': 'application/json' },
+      headers: { Authorization: `Bearer ${dodo.apiKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         product_cart: [{ product_id: product.id, quantity: 1 }],
         customer: { email: userData.user.email, name: userData.user.user_metadata?.full_name || userData.user.email },
-        return_url: `${appUrl}/profile?checkout=dodo`,
+        return_url: `${appOrigin}/profile?checkout=dodo`,
         metadata: { billing_subscription_id: localSubscription.id, user_id: userData.user.id, plan_key: plan },
       }),
     });
-    const session = await response.json().catch(() => null);
+    const responseText = await response.text();
+    let session: Record<string, unknown> | null = null;
+    try {
+      session = JSON.parse(responseText) as Record<string, unknown>;
+    } catch {
+      // Keep non-JSON provider responses out of logs; status and content type are enough to diagnose them.
+    }
     if (!response.ok || typeof session?.checkout_url !== 'string' || typeof session?.session_id !== 'string') {
       await admin.from('billing_subscriptions').delete().eq('id', localSubscription.id);
       reservedSubscriptionId = null;
-      console.error('Dodo checkout session creation failed:', response.status, session?.message || session?.error);
+      const nestedError = session?.error && typeof session.error === 'object'
+        ? session.error as Record<string, unknown>
+        : null;
+      const providerMessage = [
+        session?.message,
+        session?.detail,
+        session?.code,
+        nestedError?.message,
+        nestedError?.detail,
+        nestedError?.code,
+      ].find((value): value is string => typeof value === 'string' && value.length > 0);
+      console.error('Dodo checkout session creation failed:', JSON.stringify({
+        status: response.status,
+        contentType: response.headers.get('content-type'),
+        code: typeof session?.code === 'string' ? session.code : nestedError?.code,
+        message: providerMessage,
+      }));
       return jsonResponse({ error: 'Dodo Payments could not start checkout. Please try again.' }, 502);
     }
 
