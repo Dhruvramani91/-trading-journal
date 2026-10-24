@@ -18,6 +18,10 @@ import { cn } from '@/lib/cn';
 
 export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   invalid?: boolean;
+  /** Raise the portaled option menu above modal backdrops when needed. */
+  portalZIndex?: number;
+  /** Optional action displayed beside each option (for example, preview). */
+  renderOptionAction?: (option: SelectOption, closeMenu: () => void) => ReactNode;
 }
 
 type SelectOption = {
@@ -78,6 +82,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     {
       className,
       invalid,
+      portalZIndex,
+      renderOptionAction,
       children,
       value,
       defaultValue,
@@ -440,7 +446,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             style={{
               ...menuStyle,
               visibility: menuStyle ? 'visible' : 'hidden',
-              zIndex: 60,
+              zIndex: portalZIndex ?? 60,
             }}
             className={cn(
               'overflow-y-auto',
@@ -465,7 +471,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
               const isSelected = option.value === currentValue;
               const isHighlighted = index === highlightedIndex;
 
-              return (
+              const optionButton = (
                 <button
                   key={`${option.value}-${index}`}
                   id={`${id ?? 'select'}-option-${index}`}
@@ -481,7 +487,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
                   }}
                   onClick={() => chooseOption(option)}
                   className={cn(
-                    'flex w-full items-center gap-3',
+                    'flex min-w-0 items-center gap-3',
+                    renderOptionAction ? 'flex-1' : 'w-full',
                     'rounded-xl px-3.5 py-2.5',
                     'text-left text-[16.5px]',
                     'transition-colors duration-100',
@@ -508,6 +515,15 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
                     <Check className="h-4 w-4 shrink-0 text-accent" />
                   )}
                 </button>
+              );
+
+              return renderOptionAction ? (
+                <div key={`${option.value}-${index}`} role="presentation" className="flex items-center gap-1">
+                  {optionButton}
+                  <span className="shrink-0">{renderOptionAction(option, () => setOpen(false))}</span>
+                </div>
+              ) : (
+                optionButton
               );
             })}
           </div>,

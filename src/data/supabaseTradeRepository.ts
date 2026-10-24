@@ -6,6 +6,7 @@ type SupabaseTradeRow = {
   id: string;
   user_id: string;
   template_id: string;
+  template_snapshot?: Trade['templateSnapshot'] | null;
   number: number | null;
   opened_at: string;
   closed_at: string | null;
@@ -70,6 +71,7 @@ function toTrade(row: SupabaseTradeRow): Trade {
     id: row.id,
 
     templateId: row.template_id,
+    templateSnapshot: row.template_snapshot ?? undefined,
 
     number: row.number ?? undefined,
 
@@ -115,6 +117,7 @@ function toRow(
 ) {
   return {
     template_id: input.templateId,
+    template_snapshot: input.templateSnapshot ?? null,
 
     number: input.number ?? null,
 
@@ -154,6 +157,7 @@ function toPatchRow(patch: Partial<Trade>): Record<string, unknown> {
   const row: Record<string, unknown> = {};
 
   if ('templateId' in patch) row.template_id = patch.templateId;
+  if ('templateSnapshot' in patch) row.template_snapshot = patch.templateSnapshot ?? null;
   if ('number' in patch) row.number = patch.number ?? null;
   if ('openedAt' in patch) row.opened_at = patch.openedAt;
   if ('closedAt' in patch) row.closed_at = patch.closedAt ?? null;

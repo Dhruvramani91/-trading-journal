@@ -16,6 +16,7 @@ import { useTradesStore } from '@/store/tradesStore';
 import { useAuthStore } from '@/store/authStore';
 import { tradeRepository } from '@/data/supabaseTradeRepository';
 import { readFieldLabel } from '@/domain/templates/resolve';
+import { getTemplate } from '@/domain/templates/registry';
 import { formatDateLong, formatR, formatDuration } from '@/lib/format';
 import { resolveTradePhotoUrl } from '@/lib/tradePhotos';
 
@@ -31,9 +32,7 @@ export function TradeDetailsPage() {
   const [trade, setTrade] = useState<Trade | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
-  const [resolvedPhotoUrls, setResolvedPhotoUrls] = useState<
-    Partial<Record<'htf' | 'itf' | 'ltf', string>>
-  >({});
+  const [resolvedPhotoUrls, setResolvedPhotoUrls] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -87,12 +86,14 @@ export function TradeDetailsPage() {
     let cancelled = false;
 
     async function resolvePhotos() {
-      const next: Partial<
-        Record<'htf' | 'itf' | 'ltf', string>
-      > = {};
+      const next: Record<string, string> = {};
+      const photos = trade?.photos;
+      const entries: [string, string | undefined][] = photos ? [
+        ['htf', photos.htf], ['itf', photos.itf], ['ltf', photos.ltf],
+        ...(photos.additional ?? []).map((value, index) => [`image${index + 4}`, value] as [string, string]),
+      ] : [];
 
-      for (const tf of ['htf', 'itf', 'ltf'] as const) {
-        const value = trade?.photos?.[tf];
+      for (const [slot, value] of entries) {
 
         if (!value) {
           continue;
@@ -102,11 +103,11 @@ export function TradeDetailsPage() {
           const resolved = await resolveTradePhotoUrl(value);
 
           if (resolved) {
-            next[tf] = resolved;
+            next[slot] = resolved;
           }
         } catch (error) {
           console.error(
-            `Unable to resolve ${tf} trade screenshot:`,
+            `Unable to resolve ${slot} trade screenshot:`,
             error,
           );
         }
@@ -169,6 +170,14 @@ export function TradeDetailsPage() {
     trade.pnl == null
       ? '—'
       : `${trade.pnl > 0 ? '+' : ''}${trade.pnl}`;
+
+  const template = trade.templateSnapshot ?? getTemplate();
+  const templateGroups = Array.from(template.fields.filter((field) => field.key !== 'mistake').reduce((groups, field) => {
+    const group = groups.get(field.group) ?? [];
+    group.push(field);
+    groups.set(field.group, group);
+    return groups;
+  }, new Map<string, typeof template.fields[number][]>()));
 
   return (
     <div className="space-y-6">
@@ -311,194 +320,20 @@ export function TradeDetailsPage() {
         </Card>
       </div>
 
-      {/* =========================================================
-          CONTEXT + SETUP
-      ========================================================= */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* -------------------------------------------------------
-            CONTEXT
-        ------------------------------------------------------- */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Context</CardTitle>
-          </CardHeader>
-
-          <CardBody>
-            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3.5 text-sm">
-              <div>
-                <dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
-                  Daily Candle
-                </dt>
-                <dd className="font-medium text-fg">
-                  {readFieldLabel(trade, 'dailyCandle')}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
-                  Daily Profile
-                </dt>
-                <dd className="font-medium text-fg">
-                  {readFieldLabel(trade, 'dailyProfile')}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
-                  H4 Candle
-                </dt>
-                <dd className="font-medium text-fg">
-                  {readFieldLabel(trade, 'h4Candle')}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
-                  H4 Profile
-                </dt>
-                <dd className="font-medium text-fg">
-                  {readFieldLabel(trade, 'h4Profile')}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
-                  M90 / H1 / M30
-                </dt>
-                <dd className="font-medium text-fg">
-                  {readFieldLabel(trade, 'itf')}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
-                  Day
-                </dt>
-                <dd className="font-medium text-fg">
-                  {readFieldLabel(trade, 'dayOfWeek')}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
-                  Trade Type
-                </dt>
-                <dd className="font-medium text-fg">
-                  {readFieldLabel(trade, 'tradeType')}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
-                  Quarter Open
-                </dt>
-                <dd className="font-medium text-fg">
-                  {readFieldLabel(trade, 'quarterOpen')}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
-                  Driver
-                </dt>
-                <dd className="font-medium text-fg">
-                  {readFieldLabel(trade, 'driver')}
-                </dd>
-              </div>
-            </dl>
-          </CardBody>
-        </Card>
-
-        {/* -------------------------------------------------------
-            SETUP
-        ------------------------------------------------------- */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Setup</CardTitle>
-          </CardHeader>
-
-          <CardBody>
-            <dl className="space-y-3.5 text-sm">
-              <div>
-                <dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
-                  Entry Model
-                </dt>
-
-                <dd className="font-medium text-fg">
-                  {readFieldLabel(trade, 'entry')}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
-                  Alignment
-                </dt>
-
-                <dd className="font-medium text-fg">
-                  {readFieldLabel(trade, 'alignment')}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
-                  Module
-                </dt>
-
-                <dd className="font-medium text-fg">
-                  {readFieldLabel(trade, 'module')}
-                </dd>
-              </div>
-
-              <div>
-                <dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
-                  Confluence
-                </dt>
-
-                <dd className="font-medium text-fg">
-                  {readFieldLabel(trade, 'confluence')}
-                </dd>
-              </div>
-            </dl>
-          </CardBody>
-        </Card>
-
-        {/* =======================================================
-            MISTAKES / NOTES
-        ======================================================= */}
-        <Card className="lg:col-span-3">
-          <CardHeader>
-            <CardTitle>Mistakes / Notes</CardTitle>
-          </CardHeader>
-
-          <CardBody className="space-y-4">
-            <div>
-              <dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
-                Mistake / Filter
-              </dt>
-
-              <dd className="font-medium text-fg mt-0.5">
-                {readFieldLabel(trade, 'mistake')}
-              </dd>
-            </div>
-
-            {trade.notes ? (
-              <div className="rounded-lg border border-line bg-bg-3 p-3.5 text-sm text-fg whitespace-pre-wrap">
-                {trade.notes}
-              </div>
-            ) : (
-              <p className="text-sm text-fg-dim">
-                No notes recorded.
-              </p>
-            )}
-          </CardBody>
-        </Card>
+      <div className="space-y-4">
+        <h2 className="text-sm font-semibold text-fg-muted">{template.name} strategy details</h2>
+        {templateGroups.map(([group, fields]) => <Card key={group}><CardHeader><CardTitle>{group}</CardTitle></CardHeader><CardBody><dl className="grid grid-cols-1 gap-x-6 gap-y-3.5 text-sm sm:grid-cols-2 lg:grid-cols-3">{fields.map((field) => {
+          const value = trade.templateData[field.key];
+          return <div key={field.key}><dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">{field.label}</dt><dd className="font-medium text-fg">{value === undefined || value === null || value === '' ? '—' : readFieldLabel(trade, field.key)}</dd></div>;
+        })}</dl></CardBody></Card>)}
+        <Card><CardHeader><CardTitle>Mistakes</CardTitle></CardHeader><CardBody>{trade.templateData.mistake ? <p className="text-sm text-fg">{String(trade.templateData.mistake)}</p> : <p className="text-sm text-fg-dim">No mistake recorded.</p>}</CardBody></Card>
+        <Card><CardHeader><CardTitle>Notes</CardTitle></CardHeader><CardBody>{trade.notes ? <div className="rounded-lg border border-line bg-bg-3 p-3.5 text-sm text-fg whitespace-pre-wrap">{trade.notes}</div> : <p className="text-sm text-fg-dim">No notes recorded.</p>}</CardBody></Card>
+      </div>
 
         {/* =======================================================
             SCREENSHOTS
         ======================================================= */}
-        {(trade.photos?.htf ||
-          trade.photos?.itf ||
-          trade.photos?.ltf) && (
+        {trade.photos && Object.values(trade.photos).some((value) => Array.isArray(value) ? value.some(Boolean) : Boolean(value)) && (
           <Card className="lg:col-span-3">
             <CardHeader>
               <CardTitle>Screenshots</CardTitle>
@@ -506,18 +341,16 @@ export function TradeDetailsPage() {
 
             <CardBody>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {(
-                  ['htf', 'itf', 'ltf'] as const
-                ).map((tf) => {
-                  const src = resolvedPhotoUrls[tf];
+                {Object.entries(resolvedPhotoUrls).map(([slot, src]) => {
+                  const label = slot === 'htf' ? 'Image 1' : slot === 'itf' ? 'Image 2' : slot === 'ltf' ? 'Image 3' : `Image ${Number(slot.slice(5))}`;
 
                   return (
                     <div
-                      key={tf}
+                      key={slot}
                       className="flex flex-col gap-2"
                     >
                       <span className="text-xs font-bold uppercase tracking-wider text-fg-dim">
-                        {tf}
+                        {label}
                       </span>
 
                       {src ? (
@@ -529,7 +362,7 @@ export function TradeDetailsPage() {
                         >
                           <img
                             src={src}
-                            alt={tf.toUpperCase()}
+                            alt={label}
                             className="w-full h-full object-contain"
                           />
                         </a>
@@ -545,7 +378,6 @@ export function TradeDetailsPage() {
             </CardBody>
           </Card>
         )}
-      </div>
     </div>
   );
 }

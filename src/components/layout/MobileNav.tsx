@@ -8,6 +8,7 @@ import {
   Menu,
   Plus,
   ScrollText,
+  Settings,
   TriangleAlert,
   UserRound,
   Wallet,
@@ -26,6 +27,7 @@ const ITEMS = [
   { to: '/statistics', label: 'Statistics', icon: BarChart3 },
   { to: '/calendar', label: 'Calendar', icon: CalendarDays },
   { to: '/mistakes', label: 'Mistakes', icon: TriangleAlert },
+  { to: '/settings', label: 'Settings', icon: Settings },
 ] as const;
 
 export function MobileNav() {

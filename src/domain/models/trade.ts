@@ -59,6 +59,8 @@ export interface TemplateDefinition {
   name: string;
   description?: string;
   fields: readonly TemplateField[];
+  /** Number of common image slots shown in the trade form (0–10, default 3). */
+  photoCount?: number;
 }
 
 /** A single trade as stored in the repository. */
@@ -67,6 +69,9 @@ export interface Trade {
 
   /** Template id, e.g. "default-ict-2026". */
   templateId: string;
+
+  /** Immutable definition captured when the trade was created. */
+  templateSnapshot?: TemplateDefinition;
 
   /** Trade number — sequential within a journal. */
   number?: number;
@@ -148,6 +153,7 @@ export interface Trade {
     htf?: string;
     itf?: string;
     ltf?: string;
+    additional?: string[];
   };
 
   /** Audit timestamps. */

@@ -17,6 +17,8 @@ import {
 
 import { useTradesStore, bootTradesStore } from '@/store/tradesStore';
 import { getTemplate } from '@/domain/templates/registry';
+import type { TemplateDefinition } from '@/domain/models/trade';
+import { getDefaultTemplateId, listJournalTemplates } from '@/data/journalTemplateRepository';
 import type {
   Trade,
   TradeGrade,
@@ -48,11 +50,7 @@ interface FormState {
   durationMin: string;
   templateData: Record<string, string>;
   notes: string;
-  photos: {
-    htf: string;
-    itf: string;
-    ltf: string;
-  };
+  photos: TradePhotos;
 }
 
 type FieldErrors = Partial<
@@ -85,12 +83,26 @@ const DEFAULTS: FormState = {
   durationMin: '',
   templateData: {},
   notes: '',
-  photos: {
-    htf: '',
-    itf: '',
-    ltf: '',
-  },
+  photos: {},
 };
+
+const COMMON_MISTAKES = ['No mistake', 'Early entry', 'Late entry', 'Counter-trend', 'No plan', 'Revenge trade', 'Oversize', 'Moved stop', 'Exited early', 'Held loser', 'FOMO', 'Other'];
+
+function photoAt(photos: TradePhotos, index: number): string {
+  if (index === 0) return photos.htf ?? '';
+  if (index === 1) return photos.itf ?? '';
+  if (index === 2) return photos.ltf ?? '';
+  return photos.additional?.[index - 3] ?? '';
+}
+
+function withPhoto(photos: TradePhotos, index: number, value: string): TradePhotos {
+  if (index === 0) return { ...photos, htf: value };
+  if (index === 1) return { ...photos, itf: value };
+  if (index === 2) return { ...photos, ltf: value };
+  const additional = [...(photos.additional ?? [])];
+  additional[index - 3] = value;
+  return { ...photos, additional };
+}
 
 function nowLocalIso(): string {
   const d = new Date();
@@ -148,11 +160,7 @@ function tradeToForm(t: Trade): FormState {
 
     notes: t.notes ?? '',
 
-    photos: {
-      htf: t.photos?.htf ?? '',
-      itf: t.photos?.itf ?? '',
-      ltf: t.photos?.ltf ?? '',
-    },
+    photos: { ...t.photos, additional: t.photos?.additional ? [...t.photos.additional] : [] },
   };
 }
 
@@ -226,7 +234,7 @@ export function TradeFormPage() {
     trades,
   } = useTradesStore();
 
-  const template = useMemo(() => getTemplate(), []);
+  const [template, setTemplate] = useState<TemplateDefinition>(() => getTemplate());
 
   const [form, setForm] =
     useState<FormState>(DEFAULTS);
@@ -255,6 +263,15 @@ export function TradeFormPage() {
     bootTradesStore();
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    if (isEdit) return;
+    void Promise.all([getDefaultTemplateId(), listJournalTemplates()]).then(([defaultId, templates]) => {
+      if (!cancelled) setTemplate(templates.find((item) => item.id === defaultId) ?? getTemplate());
+    }).catch((cause) => { if (!cancelled) setError(cause instanceof Error ? cause.message : 'Could not load your journal template.'); });
+    return () => { cancelled = true; };
+  }, [isEdit]);
+
   /*
    * Load existing trade in edit mode.
    *
@@ -274,6 +291,9 @@ export function TradeFormPage() {
       if (cancelled) return;
 
       if (trade) {
+        const definitions = await listJournalTemplates().catch(() => []);
+        const definition = trade.templateSnapshot ?? definitions.find((item) => item.id === trade.templateId) ?? getTemplate();
+        setTemplate(definition);
         setForm(tradeToForm(trade));
         setOriginalPhotos(trade.photos ?? {});
       }
@@ -465,8 +485,8 @@ export function TradeFormPage() {
     }
 
     if (
-      !form.templateData.entry ||
-      form.templateData.entry.trim() === ''
+      template.fields.some((field) => field.key === 'entry') &&
+      (!form.templateData.entry || form.templateData.entry.trim() === '')
     ) {
       errors.setup =
         'Setup is required.';
@@ -520,6 +540,7 @@ export function TradeFormPage() {
     try {
       const payload = {
         templateId: template.id,
+        templateSnapshot: template,
 
         number: nextNumber(),
 
@@ -582,11 +603,7 @@ export function TradeFormPage() {
         await persistEditedTradePhotos(
           id,
           originalPhotos,
-          {
-            htf: form.photos.htf || undefined,
-            itf: form.photos.itf || undefined,
-            ltf: form.photos.ltf || undefined,
-          },
+          form.photos,
           async (photos) => {
             await update(id, {
               ...payload,
@@ -605,11 +622,7 @@ export function TradeFormPage() {
         });
 
         const persistedPhotos =
-          await persistTradePhotos(created.id, {
-            htf: form.photos.htf || undefined,
-            itf: form.photos.itf || undefined,
-            ltf: form.photos.ltf || undefined,
-          });
+          await persistTradePhotos(created.id, form.photos);
 
         await update(created.id, {
           photos: persistedPhotos,
@@ -675,6 +688,7 @@ export function TradeFormPage() {
     >();
 
     for (const field of template.fields) {
+      if (field.key === 'mistake') continue;
       if (!map.has(field.group)) {
         map.set(
           field.group,
@@ -691,6 +705,8 @@ export function TradeFormPage() {
       map.entries(),
     );
   }, [template]);
+
+  const photoSlotCount = Math.max(template.photoCount ?? 3, (form.photos.additional?.length ?? 0) + ((form.photos.additional?.length ?? 0) > 0 ? 3 : 0));
 
   return (
     <form
@@ -1259,78 +1275,26 @@ export function TradeFormPage() {
             ),
           )}
 
-          {/* =========================
-              SCREENSHOTS
-          ========================== */}
           <Card>
-            <CardHeader>
-              <CardTitle>
-                Screenshots
-              </CardTitle>
-            </CardHeader>
-
-            <CardBody>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <PhotoUploadSlot
-                  label="HTF"
-                  value={form.photos.htf}
-                  onChange={(value) =>
-                    patch('photos', {
-                      ...form.photos,
-                      htf: value,
-                    })
-                  }
-                />
-
-                <PhotoUploadSlot
-                  label="ITF"
-                  value={form.photos.itf}
-                  onChange={(value) =>
-                    patch('photos', {
-                      ...form.photos,
-                      itf: value,
-                    })
-                  }
-                />
-
-                <PhotoUploadSlot
-                  label="LTF"
-                  value={form.photos.ltf}
-                  onChange={(value) =>
-                    patch('photos', {
-                      ...form.photos,
-                      ltf: value,
-                    })
-                  }
-                />
-              </div>
-            </CardBody>
+            <CardHeader><CardTitle>Mistakes</CardTitle></CardHeader>
+            <CardBody><FormSection title="Mistake / filter"><FormField label="Mistake / filter" hint="Track execution mistakes consistently across every strategy.">
+              <Select value={form.templateData.mistake ?? ''} onChange={(event) => patchTemplate('mistake', event.target.value)}>
+                <option value="">Select…</option>
+                {COMMON_MISTAKES.map((mistake) => <option key={mistake} value={mistake}>{mistake}</option>)}
+              </Select>
+            </FormField></FormSection></CardBody>
           </Card>
 
-          {/* =========================
-              NOTES
-          ========================== */}
           <Card>
-            <CardHeader>
-              <CardTitle>
-                Notes
-              </CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>Notes</CardTitle></CardHeader>
+            <CardBody><textarea value={form.notes} onChange={(e) => patch('notes', e.target.value)} rows={4} placeholder="What did you see? What worked, what didn’t?" className="w-full rounded-md border border-line bg-bg-1 px-3 py-2 text-sm text-fg placeholder:text-fg-dim focus:border-accent/40 focus:outline-none focus:ring-2 focus:ring-accent/60" /></CardBody>
+          </Card>
 
-            <CardBody>
-              <textarea
-                value={form.notes}
-                onChange={(e) =>
-                  patch(
-                    'notes',
-                    e.target.value,
-                  )
-                }
-                rows={4}
-                placeholder="What did you see? What worked, what didn’t?"
-                className="w-full rounded-md border border-line bg-bg-1 px-3 py-2 text-sm text-fg placeholder:text-fg-dim focus:border-accent/40 focus:outline-none focus:ring-2 focus:ring-accent/60"
-              />
-            </CardBody>
+          <Card>
+            <CardHeader><CardTitle>Images</CardTitle></CardHeader>
+            <CardBody><div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+              {Array.from({ length: photoSlotCount }, (_, index) => <PhotoUploadSlot key={index} label={`Image ${index + 1}`} value={photoAt(form.photos, index)} onChange={(value) => patch('photos', withPhoto(form.photos, index, value))} />)}
+            </div></CardBody>
           </Card>
 
           {/* =========================

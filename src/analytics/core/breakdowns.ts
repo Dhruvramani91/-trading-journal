@@ -1,4 +1,4 @@
-import type { Trade } from '@/domain/models/trade';
+import type { Trade, TemplateDefinition } from '@/domain/models/trade';
 import type { CategoryBreakdown, CategoryBucket } from './types';
 import type { DashboardMetric } from './metrics';
 import { getTemplate } from '@/domain/templates/registry';
@@ -69,10 +69,10 @@ function buildBucket(group: Trade[]): CategoryBucket {
 export function byCategory(
   trades: readonly Trade[],
   fieldKey: string,
-  templateId: string = ACTIVE_TEMPLATE_ID,
+  templateId: string | TemplateDefinition = ACTIVE_TEMPLATE_ID,
   metric: DashboardMetric = 'r',
 ): CategoryBreakdown {
-  const tpl = getTemplate(templateId);
+  const tpl = typeof templateId === 'string' ? getTemplate(templateId) : templateId;
   const field = tpl.fields.find((f) => f.key === fieldKey);
   const fieldLabel = field?.label ?? fieldKey;
 
@@ -115,8 +115,9 @@ export function byCategory(
  */
 export function allBreakdowns(
   trades: readonly Trade[],
-  templateId: string = ACTIVE_TEMPLATE_ID,
+  templateId: string | TemplateDefinition = ACTIVE_TEMPLATE_ID,
 ): CategoryBreakdown[] {
-  const tpl = getTemplate(templateId);
-  return tpl.fields.filter((f) => f.inStats).map((f) => byCategory(trades, f.key, templateId));
+  const tpl = typeof templateId === 'string' ? getTemplate(templateId) : templateId;
+  const scopedTrades = trades.filter((trade) => trade.templateId === tpl.id);
+  return tpl.fields.filter((f) => f.inStats).map((f) => byCategory(scopedTrades, f.key, tpl));
 }

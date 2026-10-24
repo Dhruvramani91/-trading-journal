@@ -8,8 +8,9 @@ import type { TemplateDefinition } from '@/domain/models/trade';
  */
 export const DEFAULT_TEMPLATE: TemplateDefinition = {
   id: 'default-ict-2026',
-  name: 'Default ICT Journal',
-  description: 'Daily/H4 context, alignment, confluence, and mistake tracking.',
+  name: 'GXT / Lathyrus',
+  description: 'GXT / Lathyrus strategy journal with daily/H4 context and execution analysis.',
+  photoCount: 3,
   fields: [
     // ---------- Date / Day ----------
     {

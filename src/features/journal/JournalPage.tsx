@@ -47,7 +47,8 @@ import { cn } from '@/lib/cn';
 
 import { readFieldLabel } from '@/domain/templates/resolve';
 
-import { ACTIVE_TEMPLATE_ID, getTemplate } from '@/domain/templates/registry';
+import { getTemplate, listTemplates } from '@/domain/templates/registry';
+import { listJournalTemplates, getDefaultTemplateId } from '@/data/journalTemplateRepository';
 
 import type { Trade, TemplateField } from '@/domain/models/trade';
 
@@ -211,11 +212,30 @@ export function JournalPage() {
 
 
 
-  const template = useMemo(() => getTemplate(ACTIVE_TEMPLATE_ID), []);
+  const [templateFields, setTemplateFields] = useState<TemplateField[]>(() => listTemplates().flatMap((item) => [...item.fields]));
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.all([listJournalTemplates(), getDefaultTemplateId()]).then(([items, defaultId]) => {
+      if (cancelled) return;
+      const selected = items.find((item) => item.id === defaultId) ?? getTemplate();
+      const union = [...items.flatMap((item) => [...item.fields])];
+      const unique = new Map<string, TemplateField>();
+      for (const field of union) unique.set(field.key, field);
+      // Selected strategy fields appear first in the journal controls.
+      setTemplateFields([...selected.fields, ...Array.from(unique.values()).filter((field) => !selected.fields.some((active) => active.key === field.key))]);
+    }).catch(() => undefined);
+    return () => { cancelled = true; };
+  }, []);
+
+  const journalFields = useMemo(() => {
+    const unique = new Map<string, TemplateField>();
+    for (const field of [...templateFields, ...trades.flatMap((trade) => [...(trade.templateSnapshot?.fields ?? [])])]) unique.set(field.key, field);
+    return Array.from(unique.values());
+  }, [templateFields, trades]);
 
   const tableFields = useMemo(
-    () => template.fields.filter((field) => !['quarterOpen', 'driver', 'mistake'].includes(field.key)),
-    [template],
+    () => journalFields.filter((field) => !['quarterOpen', 'driver', 'mistake'].includes(field.key)),
+    [journalFields],
   );
 
 
@@ -224,13 +244,13 @@ export function JournalPage() {
 
     () =>
 
-      template.fields.filter(
+        journalFields.filter(
 
         (field) => field.key !== 'mistake' && (field.type === 'enum' || field.type === 'boolean'),
 
       ),
 
-    [template],
+    [journalFields],
 
   );
 
@@ -447,10 +467,6 @@ export function JournalPage() {
             </Button>
 
 
-
-            <Button asChild variant="secondary" leftIcon={<Eye className="h-4 w-4" />}>
-              <Link to="/journal/template-preview/am">Preview AM template</Link>
-            </Button>
 
             <Button asChild variant="primary" leftIcon={<Plus className="h-4 w-4" />}>
 

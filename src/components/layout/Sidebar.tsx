@@ -6,6 +6,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   ScrollText,
+  Settings,
   UserRound,
   Wallet,
   TriangleAlert,
@@ -35,6 +36,12 @@ const GROUPS = [
       { to: '/statistics', label: 'Statistics', icon: BarChart3 },
       { to: '/calendar', label: 'Calendar', icon: CalendarDays },
       { to: '/mistakes', label: 'Mistakes', icon: TriangleAlert },
+    ],
+  },
+  {
+    label: 'Workspace',
+    links: [
+      { to: '/settings', label: 'Settings', icon: Settings },
     ],
   },
 ] as const;

@@ -3,12 +3,33 @@ import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 const BUCKET = 'trade-photos';
 const SIGNED_URL_EXPIRES_IN = 60 * 60; // 1 hour
 
-export type TradePhotoSlot = 'htf' | 'itf' | 'ltf';
+export type TradePhotoSlot = 'htf' | 'itf' | 'ltf' | `image${number}`;
 
 export interface TradePhotos {
   htf?: string;
   itf?: string;
   ltf?: string;
+  /** Additional image slots after the original three. */
+  additional?: string[];
+}
+
+const BASE_PHOTO_SLOTS = ['htf', 'itf', 'ltf'] as const;
+
+function photoEntries(photos: TradePhotos | undefined): [TradePhotoSlot, string | undefined][] {
+  if (!photos) return [];
+  return [
+    ...BASE_PHOTO_SLOTS.map((slot) => [slot, photos[slot]] as [TradePhotoSlot, string | undefined]),
+    ...(photos.additional ?? []).map((value, index) => [`image${index + 4}`, value] as [TradePhotoSlot, string | undefined]),
+  ];
+}
+
+function setPhoto(photos: TradePhotos, slot: TradePhotoSlot, value: string): void {
+  if (slot === 'htf' || slot === 'itf' || slot === 'ltf') photos[slot] = value;
+  else {
+    const index = Number(slot.slice(5)) - 4;
+    photos.additional ??= [];
+    photos.additional[index] = value;
+  }
 }
 
 function assertConfigured() {
@@ -60,7 +81,7 @@ function isOwnedTradePhotoPath(
     ownerId === userId &&
     (expectedTradeId === undefined || tradeId === expectedTradeId) &&
     new RegExp(`^${uuid}$`, 'i').test(tradeId ?? '') &&
-    new RegExp(`^(htf|itf|ltf)-${uuid}\\.(jpg|png|webp|gif|bmp)$`, 'i').test(fileName ?? '')
+    new RegExp(`^(htf|itf|ltf|image[4-9][0-9]*)-${uuid}\\.(jpg|png|webp|gif|bmp)$`, 'i').test(fileName ?? '')
   );
 }
 
@@ -160,23 +181,18 @@ export async function persistTradePhotos(
 
   const result: TradePhotos = {};
 
-  for (const slot of ['htf', 'itf', 'ltf'] as const) {
-    const value = photos[slot];
+  for (const [slot, value] of photoEntries(photos)) {
 
     if (!value) {
       continue;
     }
 
     if (isDataUrl(value)) {
-      result[slot] = await uploadTradePhoto(
-        tradeId,
-        slot,
-        value,
-      );
+      setPhoto(result, slot, await uploadTradePhoto(tradeId, slot, value));
       continue;
     }
 
-    result[slot] = value;
+    setPhoto(result, slot, value);
   }
 
   return result;
@@ -219,8 +235,8 @@ export async function deleteTradePhotosForTrade(
 ): Promise<void> {
   if (!photos) return;
 
-  const candidates = (['htf', 'itf', 'ltf'] as const)
-    .map((slot) => photos[slot])
+  const candidates = photoEntries(photos)
+    .map(([, value]) => value)
     .filter(
       (value): value is string =>
         typeof value === 'string' && value.length > 0 && isStoragePath(value),
@@ -256,24 +272,24 @@ export async function persistEditedTradePhotos(
   let saveStarted = false;
 
   try {
-    for (const slot of ['htf', 'itf', 'ltf'] as const) {
-      const previous = previousPhotos?.[slot] || undefined;
-      const next = nextPhotos?.[slot] || undefined;
+    const slots = new Set(photoEntries(previousPhotos).concat(photoEntries(nextPhotos)).map(([slot]) => slot));
+    for (const slot of slots) {
+      const previous = photoEntries(previousPhotos).find(([candidate]) => candidate === slot)?.[1] || undefined;
+      const next = photoEntries(nextPhotos).find(([candidate]) => candidate === slot)?.[1] || undefined;
 
       if (previous === next) {
-        if (previous) persisted[slot] = previous;
+        if (previous) setPhoto(persisted, slot, previous);
         continue;
       }
 
       if (!next) continue;
 
-      const saved = await persistTradePhotos(tradeId, {
-        [slot]: next,
-      });
-      const savedValue = saved[slot];
+      const savedValue = isDataUrl(next)
+        ? await uploadTradePhoto(tradeId, slot, next)
+        : next;
 
       if (savedValue) {
-        persisted[slot] = savedValue;
+        setPhoto(persisted, slot, savedValue);
         if (isDataUrl(next)) uploadedPaths.push(savedValue);
       }
     }
@@ -290,9 +306,9 @@ export async function persistEditedTradePhotos(
     throw error;
   }
 
-  for (const slot of ['htf', 'itf', 'ltf'] as const) {
-    const previous = previousPhotos?.[slot] || undefined;
-    if (previous && previous !== persisted[slot]) {
+  for (const [slot, previous] of photoEntries(previousPhotos)) {
+    const current = photoEntries(persisted).find(([candidate]) => candidate === slot)?.[1];
+    if (previous && previous !== current) {
       await deleteTradePhoto(previous);
     }
   }
