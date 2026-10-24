@@ -24,7 +24,11 @@ export default function billingRegion(request, response) {
   const expiresAt = Math.floor(Date.now() / 1000) + 10 * 60;
   const signedValue = `${country}.${expiresAt}`;
   const signature = createHmac('sha256', tokenSecret).update(signedValue).digest('hex');
-  const usdEnabled = country !== 'IN' && process.env.BILLING_USD_PUBLIC_ENABLED === 'true';
+  const usdLiveEnabled = process.env.VERCEL_ENV !== 'production'
+    || process.env.BILLING_USD_LIVE_ENABLED === 'true';
+  const usdEnabled = country !== 'IN'
+    && process.env.BILLING_USD_PUBLIC_ENABLED === 'true'
+    && usdLiveEnabled;
 
   return response.status(200).json({
     country,
