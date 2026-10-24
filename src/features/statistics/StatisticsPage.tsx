@@ -10,9 +10,10 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { WinRateRing } from '@/components/stats/WinRateRing';
 import { BreakdownCard } from '@/components/stats/BreakdownCard';
 import { InstrumentMark } from '@/components/trade/InstrumentMark';
+import { TradeGradeBadge } from '@/components/trade/TradeGradeBadge';
 
 import { useTradesStore, bootTradesStore } from '@/store/tradesStore';
-import { summary, allBreakdowns } from '@/analytics/core';
+import { summary, allBreakdowns, gradePerformance } from '@/analytics/core';
 import type { CategoryBreakdown } from '@/analytics/core';
 
 import { formatMoney, formatPct, formatR } from '@/lib/format';
@@ -204,6 +205,8 @@ export function StatisticsPage() {
     [trades],
   );
 
+  const grades = useMemo(() => gradePerformance(trades), [trades]);
+
   /*
    * Instrument analysis:
    * Existing R analysis is preserved.
@@ -269,6 +272,10 @@ export function StatisticsPage() {
       key: 'instrument',
       label: 'Instruments',
     },
+    {
+      key: 'grade',
+      label: 'Grades',
+    },
 
     ...templates.map((b) => ({
       key: b.fieldKey,
@@ -283,8 +290,9 @@ export function StatisticsPage() {
     (b) => b.fieldKey === tab,
   );
 
+  const showGrades = tab === 'grade';
   const showInstruments =
-    tab === 'instrument' || !active;
+    tab === 'instrument' || (!active && !showGrades);
 
   function onTabKey(
     e: KeyboardEvent<HTMLDivElement>,
@@ -562,7 +570,42 @@ export function StatisticsPage() {
               id="stats-panel"
               role="tabpanel"
             >
-              {showInstruments ? (
+              {showGrades ? (
+                <Card className="overflow-hidden">
+                  <div className="border-b border-line bg-bg-1 px-5 py-4">
+                    <h2 className="text-base font-semibold text-fg">Trade grade analysis</h2>
+                    <p className="mt-0.5 text-xs text-fg-muted">Compare execution quality by win rate and realized R.</p>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[560px] text-sm">
+                      <thead className="bg-bg-3/50 text-left text-xs text-fg-dim">
+                        <tr>
+                          <th className="px-5 py-3 font-medium">Grade</th>
+                          <th className="px-5 py-3 text-right font-medium">Trades</th>
+                          <th className="px-5 py-3 text-right font-medium">Win rate</th>
+                          <th className="px-5 py-3 text-right font-medium">Avg R</th>
+                          <th className="px-5 py-3 text-right font-medium">Total R</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {grades.map((row) => (
+                          <tr key={row.grade} className="border-t border-line">
+                            <td className="px-5 py-3"><TradeGradeBadge grade={row.grade} /></td>
+                            <td className="px-5 py-3 text-right tabular-nums">{row.count}</td>
+                            <td className="px-5 py-3 text-right tabular-nums">{row.winRate == null ? '—' : formatPct(row.winRate)}</td>
+                            <td className={cn('px-5 py-3 text-right font-mono tabular-nums', toneOf(row.averageR) === 'win' ? 'text-win' : toneOf(row.averageR) === 'loss' ? 'text-loss' : 'text-fg-muted')}>
+                              {row.count ? formatR(row.averageR) : '—'}
+                            </td>
+                            <td className={cn('px-5 py-3 text-right font-mono tabular-nums', toneOf(row.totalR) === 'win' ? 'text-win' : toneOf(row.totalR) === 'loss' ? 'text-loss' : 'text-fg-muted')}>
+                              {row.count ? formatR(row.totalR) : '—'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </Card>
+              ) : showInstruments ? (
                 <Card className="overflow-hidden">
                   <div className="flex items-center justify-between border-b border-line bg-bg-1 px-5 py-4">
                     <div>

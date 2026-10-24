@@ -19,6 +19,7 @@ import { useTradesStore, bootTradesStore } from '@/store/tradesStore';
 import { getTemplate } from '@/domain/templates/registry';
 import type {
   Trade,
+  TradeGrade,
   TemplateField,
   TradeDirection,
   TradeResult,
@@ -39,6 +40,7 @@ interface FormState {
   instrument: string;
   direction: TradeDirection | '';
   result: TradeResult | '';
+  grade: TradeGrade | '';
   entry: string;
   exit: string;
   pnl: string;
@@ -75,6 +77,7 @@ const DEFAULTS: FormState = {
   instrument: '',
   direction: '',
   result: '',
+  grade: '',
   entry: '',
   exit: '',
   pnl: '',
@@ -129,6 +132,7 @@ function tradeToForm(t: Trade): FormState {
     instrument: t.instrument,
     direction: t.direction,
     result: t.result,
+    grade: t.grade ?? '',
     entry: t.entry != null ? String(t.entry) : '',
     exit: t.exit != null ? String(t.exit) : '',
     pnl: t.pnl != null ? String(t.pnl) : '',
@@ -534,6 +538,8 @@ export function TradeFormPage() {
 
         result,
 
+        grade: form.grade || undefined,
+
         entry:
           form.entry === ''
             ? undefined
@@ -907,6 +913,23 @@ export function TradeFormPage() {
                   RESULT
               ========================== */}
               <FormSection title="Result">
+                <FormField
+                  label="Trade grade"
+                  hint="Optional. Rate execution quality, regardless of whether the trade won or lost."
+                >
+                  <Segmented<TradeGrade | ''>
+                    value={form.grade}
+                    onChange={(grade) => patch('grade', grade)}
+                    options={[
+                      { value: 'A+', label: 'A+' },
+                      { value: 'A', label: 'A' },
+                      { value: 'B', label: 'B' },
+                      { value: 'C', label: 'C' },
+                    ]}
+                    fullWidth
+                  />
+                </FormField>
+
                 <FormField
                   label="Outcome"
                   required

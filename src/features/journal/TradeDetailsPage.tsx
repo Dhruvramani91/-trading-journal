@@ -4,6 +4,7 @@ import { Pencil, ArrowLeft, Trash2 } from 'lucide-react';
 
 import { PageHeader } from '@/components/ui/PageHeader';
 import { InstrumentMark } from '@/components/trade/InstrumentMark';
+import { TradeGradeBadge } from '@/components/trade/TradeGradeBadge';
 import { Card, CardHeader, CardTitle, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { ResultPill } from '@/components/ui/ResultPill';
@@ -215,7 +216,7 @@ export function TradeDetailsPage() {
       {/* =========================================================
           TRADE PERFORMANCE
       ========================================================= */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
         <Card>
           <CardBody>
             <Stat
@@ -291,6 +292,12 @@ export function TradeDetailsPage() {
                 />
               }
             />
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardBody>
+            <Stat label="Grade" value={<TradeGradeBadge grade={trade.grade} />} />
           </CardBody>
         </Card>
 

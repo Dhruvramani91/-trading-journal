@@ -15,6 +15,8 @@ export type TradeDirection = 'long' | 'short';
 
 export type TradeResult = 'win' | 'loss' | 'be';
 
+export type TradeGrade = 'A+' | 'A' | 'B' | 'C';
+
 export type TemplateFieldType =
   | 'enum'
   | 'text'
@@ -81,6 +83,9 @@ export interface Trade {
   direction: TradeDirection;
 
   result: TradeResult;
+
+  /** Optional execution-quality grade assigned by the trader. */
+  grade?: TradeGrade;
 
   /**
    * Actual entry price entered manually by the user.
@@ -160,6 +165,7 @@ export type TradeCoreKey =
   | 'instrument'
   | 'direction'
   | 'result'
+  | 'grade'
   | 'entry'
   | 'exit'
   | 'pnl'

@@ -1,4 +1,4 @@
-import type { Trade } from '@/domain/models/trade';
+import type { Trade, TradeGrade } from '@/domain/models/trade';
 import type { TradeRepository } from './repository';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
@@ -12,6 +12,7 @@ type SupabaseTradeRow = {
   instrument: string;
   direction: string;
   result: string;
+  grade?: TradeGrade | null;
 
   entry: number | null;
   exit: number | null;
@@ -82,6 +83,8 @@ function toTrade(row: SupabaseTradeRow): Trade {
 
     result: row.result as Trade['result'],
 
+    grade: row.grade ?? undefined,
+
     entry: row.entry == null ? undefined : Number(row.entry),
 
     exit: row.exit == null ? undefined : Number(row.exit),
@@ -125,6 +128,8 @@ function toRow(
 
     result: input.result,
 
+    grade: input.grade ?? null,
+
     entry: input.entry ?? null,
 
     exit: input.exit ?? null,
@@ -155,6 +160,7 @@ function toPatchRow(patch: Partial<Trade>): Record<string, unknown> {
   if ('instrument' in patch) row.instrument = patch.instrument;
   if ('direction' in patch) row.direction = patch.direction;
   if ('result' in patch) row.result = patch.result;
+  if ('grade' in patch) row.grade = patch.grade ?? null;
   if ('entry' in patch) row.entry = patch.entry ?? null;
   if ('exit' in patch) row.exit = patch.exit ?? null;
   if ('pnl' in patch) row.pnl = patch.pnl ?? null;

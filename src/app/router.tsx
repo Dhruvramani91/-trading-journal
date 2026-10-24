@@ -8,6 +8,7 @@ import PasswordResetPage from '@/features/auth/PasswordResetPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { JournalPage } from '@/features/journal/JournalPage';
 import { TradeFormPage } from '@/features/journal/TradeFormPage';
+import { AMTemplatePreviewPage } from '@/features/journal/AMTemplatePreviewPage';
 import { TradeDetailsPage } from '@/features/journal/TradeDetailsPage';
 import { StatisticsPage } from '@/features/statistics/StatisticsPage';
 import { CalendarPage } from '@/features/calendar/CalendarPage';
@@ -40,6 +41,7 @@ export const router = createBrowserRouter([
             children: [
               { path: 'dashboard', element: <DashboardPage /> },
               { path: 'journal', element: <JournalPage /> },
+              { path: 'journal/template-preview/am', element: <AMTemplatePreviewPage /> },
               { path: 'journal/new', element: <TradeFormPage /> },
               { path: 'journal/:id', element: <TradeDetailsPage /> },
               { path: 'journal/:id/edit', element: <TradeFormPage /> },

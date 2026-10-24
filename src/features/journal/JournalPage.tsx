@@ -35,6 +35,7 @@ import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/Table';
 
 import { ResultPill } from '@/components/ui/ResultPill';
 import { InstrumentMark } from '@/components/trade/InstrumentMark';
+import { TradeGradeBadge } from '@/components/trade/TradeGradeBadge';
 
 import { DirectionPill } from '@/components/ui/DirectionPill';
 
@@ -52,7 +53,7 @@ import type { Trade, TemplateField } from '@/domain/models/trade';
 
 
 
-type SortKey = 'number' | 'openedAt' | 'r' | 'pnl' | 'durationMin' | 'result' | 'instrument';
+type SortKey = 'number' | 'openedAt' | 'r' | 'pnl' | 'durationMin' | 'result' | 'instrument' | 'grade';
 
 
 
@@ -304,6 +305,11 @@ export function JournalPage() {
 
           return a.instrument.localeCompare(b.instrument) * dir;
 
+        case 'grade': {
+          const order: Record<NonNullable<Trade['grade']>, number> = { 'A+': 0, A: 1, B: 2, C: 3 };
+          return ((a.grade ? order[a.grade] : 4) - (b.grade ? order[b.grade] : 4)) * dir;
+        }
+
         default:
 
           return 0;
@@ -441,6 +447,10 @@ export function JournalPage() {
             </Button>
 
 
+
+            <Button asChild variant="secondary" leftIcon={<Eye className="h-4 w-4" />}>
+              <Link to="/journal/template-preview/am">Preview AM template</Link>
+            </Button>
 
             <Button asChild variant="primary" leftIcon={<Plus className="h-4 w-4" />}>
 
@@ -604,6 +614,14 @@ export function JournalPage() {
                       onClick={() => toggleSort('result')}
                     />
                   </TH>
+                  <TH className="text-center">
+                    <SortHeader
+                      label="Grade"
+                      active={sortKey === 'grade'}
+                      dir={sortDir}
+                      onClick={() => toggleSort('grade')}
+                    />
+                  </TH>
                   <TH align="center">Entry</TH>
                   <TH align="center">Exit</TH>
                   <TH align="center">
@@ -661,6 +679,7 @@ export function JournalPage() {
                     </TD>
                     <TD align="center"><DirectionPill direction={t.direction} /></TD>
                     <TD align="center"><ResultPill result={t.result} /></TD>
+                    <TD align="center"><TradeGradeBadge grade={t.grade} /></TD>
                     <TD align="center" className="whitespace-nowrap font-mono num text-xs text-fg-muted">
                       {t.entry ?? '—'}
                     </TD>

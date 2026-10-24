@@ -3,6 +3,7 @@ export { summary } from './summary';
 export { equityCurve } from './equity';
 export { byCategory, allBreakdowns } from './breakdowns';
 export { byDay } from './calendar';
+export { gradePerformance } from './grades';
 export { dayKey, byChronologicalOrder } from './date';
 export {
   metricValue,
@@ -13,6 +14,7 @@ export {
   extremeSetup,
 } from './metrics';
 export type { TradeSummary, CategoryBreakdown, CategoryBucket, EquityPoint, DayPerformance } from './types';
+export type { GradePerformance } from './grades';
 export type {
   DashboardMetric,
   ExtremeKind,

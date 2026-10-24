@@ -42,6 +42,7 @@ create table public.trades (
   instrument text not null,
   direction text not null check (direction in ('long', 'short')),
   result text not null check (result in ('win', 'loss', 'be')),
+  grade text check (grade in ('A+', 'A', 'B', 'C')),
   opened_at timestamptz not null,
   closed_at timestamptz,
   duration_min integer not null default 0,
