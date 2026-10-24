@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Check, CreditCard, LoaderCircle, ShieldCheck } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Check, CreditCard, LoaderCircle, LogOut, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { BrandLogo } from '@/components/layout/Brand';
 import { supabase } from '@/lib/supabase';
@@ -76,7 +76,8 @@ function loadRazorpayCheckout() {
 
 export function CheckoutPage() {
   const [searchParams] = useSearchParams();
-  const { user } = useAuthStore();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuthStore();
   const billingRegion = useBillingRegion();
   const requestedPlan = searchParams.get('plan');
   const plan: BillingPlan = isBillingPlan(requestedPlan) ? requestedPlan : 'monthly';
@@ -85,6 +86,7 @@ export function CheckoutPage() {
   const manualInternationalUnavailable = !billingRegion.regionToken && manualRegion === 'INTERNATIONAL';
   const billingAvailable = billingRegion.ready && !manualInternationalUnavailable && (billingRegion.currency === 'INR' || billingRegion.usdEnabled);
   const [loading, setLoading] = useState(false);
+  const [switchingAccount, setSwitchingAccount] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [actualTrialDays, setActualTrialDays] = useState<number | null>(null);
@@ -94,6 +96,18 @@ export function CheckoutPage() {
   useEffect(() => {
     consumeBillingPlanIntent();
   }, [plan]);
+
+  async function changeAccount() {
+    setSwitchingAccount(true);
+    setError('');
+    try {
+      await signOut();
+      navigate('/login', { replace: true });
+    } catch (signOutError) {
+      setError((signOutError as Error).message || 'Could not switch accounts. Please try again.');
+      setSwitchingAccount(false);
+    }
+  }
 
   async function startCheckout() {
     const client = supabase;
@@ -186,14 +200,14 @@ export function CheckoutPage() {
   }
 
   return (
-    <main className="min-h-screen bg-bg-0 px-4 py-10 text-fg sm:px-6">
-      <div className="mx-auto w-full max-w-5xl">
+    <main className="min-h-screen w-full overflow-x-hidden bg-bg-0 px-4 py-10 text-fg sm:px-6">
+      <div className="mx-auto w-full min-w-0 max-w-5xl">
         <Link to="/" className="mb-10 inline-flex items-center gap-2 text-sm text-fg-muted transition hover:text-fg">
           <ArrowLeft className="h-4 w-4" /> Back to ThePrecisionLab
         </Link>
 
-        <div className="grid items-start gap-6 md:grid-cols-[1.1fr_0.9fr]">
-          <section className="rounded-3xl border border-line bg-bg-2 p-6 shadow-pop sm:p-8">
+        <div className="grid min-w-0 items-start gap-6 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+          <section className="min-w-0 rounded-3xl border border-line bg-bg-2 p-6 shadow-pop sm:p-8">
             <BrandLogo size="md" />
             <p className="mt-8 text-xs font-semibold uppercase tracking-[0.18em] text-fg-dim">Secure checkout</p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight">Choose your plan</h1>
@@ -236,7 +250,7 @@ export function CheckoutPage() {
             </ul>
           </section>
 
-          <aside className="rounded-3xl border border-line bg-bg-2 p-6 shadow-pop sm:p-8">
+          <aside className="min-w-0 rounded-3xl border border-line bg-bg-2 p-6 shadow-pop sm:p-8">
             <h2 className="text-lg font-semibold">Order summary</h2>
             <div className="mt-6 flex items-start justify-between gap-4 border-b border-line pb-5">
               <div><p className="font-medium">ThePrecisionLab {details.name}</p><p className="mt-1 text-sm text-fg-muted">{!billingAvailable ? 'Billing unavailable for this region' : plan === 'monthly' ? (actualTrialDays === 0 ? 'Monthly recurring billing · trial already used' : '7-day free trial if eligible, then monthly billing') : 'Quarterly recurring billing'}</p></div>
@@ -267,7 +281,18 @@ export function CheckoutPage() {
               </Button>
             )}
             <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-fg-dim"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />Payments are securely processed by {billingRegion.currency === 'USD' ? 'Dodo Payments' : 'Razorpay'}. Your card details are not stored by ThePrecisionLab.</p>
-            <p className="mt-5 text-center text-xs text-fg-dim">Signed in as {user?.email || 'your account'}</p>
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-x-2 gap-y-2 text-center text-xs text-fg-dim">
+              <span className="break-all">Signed in as {user?.email || 'your account'}</span>
+              <button
+                type="button"
+                onClick={() => void changeAccount()}
+                disabled={switchingAccount || loading}
+                className="inline-flex items-center gap-1 rounded-md px-2 py-1 font-medium text-accent underline-offset-4 transition hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {switchingAccount ? <LoaderCircle className="h-3 w-3 animate-spin" /> : <LogOut className="h-3 w-3" />}
+                {switchingAccount ? 'Signing out…' : 'Change account'}
+              </button>
+            </div>
           </aside>
         </div>
       </div>
