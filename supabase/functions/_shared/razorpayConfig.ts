@@ -27,11 +27,3 @@ export function razorpayEnvironmentName() {
 export function readRazorpayWebhookSecret(readEnv: EnvReader) {
   return readEnv('RAZORPAY_WEBHOOK_SECRET')?.trim() || null;
 }
-
-export function testBillingUserAllowed(email: string | undefined, readEnv: EnvReader) {
-  if (readEnv('RAZORPAY_ENVIRONMENT')?.trim() !== 'test_mode'
-    && readEnv('DODO_PAYMENTS_ENVIRONMENT')?.trim() !== 'test_mode') return true;
-  const allowed = (readEnv('BILLING_TEST_ALLOWED_EMAILS') || '')
-    .split(',').map((value) => value.trim().toLowerCase()).filter(Boolean);
-  return typeof email === 'string' && allowed.includes(email.trim().toLowerCase());
-}

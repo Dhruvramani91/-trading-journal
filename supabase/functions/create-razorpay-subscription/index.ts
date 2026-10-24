@@ -1,7 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders, jsonResponse, verifiedBillingCountry } from '../_shared/http.ts';
 import { getConfiguredBillingPlan, razorpayPlanMatches, storedSubscriptionUsesConfiguredPlan, subscriptionStartAt, type BillingPlanKey } from '../_shared/billingPlans.ts';
-import { readRazorpayCredentials, testBillingUserAllowed } from '../_shared/razorpayConfig.ts';
+import { readRazorpayCredentials } from '../_shared/razorpayConfig.ts';
 
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -25,9 +25,6 @@ Deno.serve(async (request) => {
     });
     const { data: userData, error: userError } = await userClient.auth.getUser();
     if (userError || !userData.user) return jsonResponse({ error: 'Your session has expired. Sign in again.' }, 401);
-    if (!testBillingUserAllowed(userData.user.email, (name) => Deno.env.get(name))) {
-      return jsonResponse({ error: 'Test checkout is currently limited to approved test accounts.' }, 403);
-    }
 
     const body = await request.json().catch(() => null);
     const plan = body?.plan as BillingPlanKey;
