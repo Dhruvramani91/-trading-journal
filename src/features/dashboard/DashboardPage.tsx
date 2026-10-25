@@ -34,7 +34,6 @@ import {
   formatPct,
   formatDuration,
   formatDate,
-  formatDateLong,
   formatSignedMoney,
   formatMoneyCompact,
 } from '@/lib/format';
@@ -42,7 +41,6 @@ import type { DashboardMetric, MetricPoint } from '@/analytics/core';
 import { cn } from '@/lib/cn';
 import { FilterBar } from '@/components/filters/FilterBar';
 import { useChartTheme } from '@/lib/chartTheme';
-import { useAuthStore } from '@/store/authStore';
 
 interface WeekdayRow {
   label: string;
@@ -56,7 +54,6 @@ interface WeekdayRow {
 export function DashboardPage() {
   const { loaded, load } = useTradesStore();
   const { filtered } = useFilteredTrades();
-  const { user } = useAuthStore();
   const tradesToUseRaw = loaded ? (filtered as Trade[]) : [];
   const navigate = useNavigate();
   const [metric, setMetric] = useState<DashboardMetric>('r');
@@ -140,24 +137,16 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] space-y-6 lg:space-y-7">
-      <header className="relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-line bg-bg-1 px-6 py-6 shadow-card sm:flex-row sm:items-end sm:justify-between sm:px-8 sm:py-7">
+    <div className="mx-auto w-full max-w-[1440px] space-y-5 lg:space-y-6">
+      <header className="flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-accent">The Precision Lab · Performance</p>
-          <h1 className="font-display text-4xl leading-none tracking-tight text-fg sm:text-5xl">Your trading, in focus.</h1>
-          <p className="mt-3 text-sm text-fg-muted">A clear read on your performance{user?.name ? `, ${user.name.split(/\s+/)[0]}` : ''}.</p>
-          <p className="mt-2 text-xs text-fg-dim">
-            {tradesToUse.length === 0
-              ? 'Add your first trade to see your stats.'
-              : `${tradesToUse.length} trade${tradesToUse.length === 1 ? '' : 's'} · ${formatDateLong(tradesToUse[0]?.openedAt ?? '')}`}
-          </p>
+          <h1 className="text-2xl font-semibold leading-tight tracking-[-0.025em] text-fg">Dashboard</h1>
+          <p className="mt-1 text-sm text-fg-muted">Performance overview from your journaled trades.</p>
+          <p className="mt-1.5 text-xs text-fg-dim">{tradesToUse.length} journaled trade{tradesToUse.length === 1 ? '' : 's'}</p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <Button asChild variant="primary" className="h-11 rounded-xl px-5 text-sm" leftIcon={<TrendingUp className="h-4 w-4" />}>
-            <Link to="/journal/new">New trade</Link>
-          </Button>
-        </div>
-        <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-24 h-64 w-64 rounded-full bg-accent/10 blur-3xl" />
+        <Button asChild variant="primary" className="h-10 shrink-0 px-4 text-sm" leftIcon={<TrendingUp className="h-4 w-4" />}>
+          <Link to="/journal/new">New trade</Link>
+        </Button>
       </header>
 
       <FilterBar />
@@ -175,32 +164,13 @@ export function DashboardPage() {
         />
       ) : (
         <>
-          <section aria-label="Realized R statistics" className="space-y-3">
-            <h2 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-muted">
-              <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent" />
-              Performance — R
-            </h2>
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-              <Card className="transition-colors hover:border-line-strong">
-                <CardBody className="p-4 sm:p-5">
-                  <Stat label="Total R" value={formatR(s?.totalR ?? 0)} tone={s && s.totalR > 0 ? 'win' : s && s.totalR < 0 ? 'loss' : 'default'} />
-                </CardBody>
-              </Card>
-              <Card className="transition-colors hover:border-line-strong">
-                <CardBody className="p-4 sm:p-5">
-                  <Stat label="Win Rate" value={s?.winRate == null ? '—' : formatPct(s.winRate)} />
-                </CardBody>
-              </Card>
-              <Card className="transition-colors hover:border-line-strong">
-                <CardBody className="p-4 sm:p-5">
-                  <Stat label="Avg R" value={s ? formatR(s.avgR) : '—'} />
-                </CardBody>
-              </Card>
-              <Card className="transition-colors hover:border-line-strong">
-                <CardBody className="p-4 sm:p-5">
-                  <Stat label="Avg Duration" value={formatDuration(avgDuration)} />
-                </CardBody>
-              </Card>
+          <section aria-label="Realized R statistics" className="space-y-2">
+            <h2 className="text-sm font-semibold text-fg">Performance in R</h2>
+            <div className="grid grid-cols-2 gap-x-5 gap-y-5 border-y border-line py-4 sm:grid-cols-4 sm:gap-x-0 sm:py-5 [&>div]:min-w-0 [&>div]:px-1 sm:[&>div]:px-5 sm:[&>div:not(:first-child)]:border-l sm:[&>div:not(:first-child)]:border-line">
+              <Stat label="Total R" value={formatR(s?.totalR ?? 0)} tone={s && s.totalR > 0 ? 'win' : s && s.totalR < 0 ? 'loss' : 'default'} />
+              <Stat label="Win rate" value={s?.winRate == null ? '—' : formatPct(s.winRate)} />
+              <Stat label="Average R" value={s ? formatR(s.avgR) : '—'} />
+              <Stat label="Average duration" value={formatDuration(avgDuration)} />
             </div>
           </section>
 
@@ -261,16 +231,13 @@ export function DashboardPage() {
             </CardBody>
           </Card>
 
-          <section aria-label="Journal P&L statistics" className="space-y-3">
-            <h2 className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-muted">
-              <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-accent" />
-              Performance — P&amp;L
-            </h2>
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-              <Card><CardBody className="p-4 sm:p-5"><Stat label="Total P&amp;L" value={formatSignedMoney(pnlStats.total)} tone={pnlStats.total > 0 ? 'win' : pnlStats.total < 0 ? 'loss' : 'default'} /></CardBody></Card>
-              <Card><CardBody className="p-4 sm:p-5"><Stat label="P&amp;L Win Rate" value={s?.winRate == null ? '—' : formatPct(s.winRate)} /></CardBody></Card>
-              <Card><CardBody className="p-4 sm:p-5"><Stat label="Avg P&amp;L" value={formatSignedMoney(pnlStats.average)} tone={pnlStats.average > 0 ? 'win' : pnlStats.average < 0 ? 'loss' : 'default'} /></CardBody></Card>
-              <Card><CardBody className="p-4 sm:p-5"><Stat label="Avg Duration" value={formatDuration(avgDuration)} /></CardBody></Card>
+          <section aria-label="Journal P&L statistics" className="space-y-2">
+            <h2 className="text-sm font-semibold text-fg">Performance in P&amp;L</h2>
+            <div className="grid grid-cols-2 gap-x-5 gap-y-5 border-y border-line py-4 sm:grid-cols-4 sm:gap-x-0 sm:py-5 [&>div]:min-w-0 [&>div]:px-1 sm:[&>div]:px-5 sm:[&>div:not(:first-child)]:border-l sm:[&>div:not(:first-child)]:border-line">
+              <Stat label="Total P&amp;L" value={formatSignedMoney(pnlStats.total)} tone={pnlStats.total > 0 ? 'win' : pnlStats.total < 0 ? 'loss' : 'default'} />
+              <Stat label="Win rate" value={s?.winRate == null ? '—' : formatPct(s.winRate)} />
+              <Stat label="Average P&amp;L" value={formatSignedMoney(pnlStats.average)} tone={pnlStats.average > 0 ? 'win' : pnlStats.average < 0 ? 'loss' : 'default'} />
+              <Stat label="Average duration" value={formatDuration(avgDuration)} />
             </div>
           </section>
 

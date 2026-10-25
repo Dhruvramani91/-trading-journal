@@ -69,12 +69,7 @@ export function Sidebar() {
     <aside
       aria-label="Main sidebar"
       style={{ width }}
-      className={cn(
-        'relative z-20 hidden shrink-0 flex-col bg-bg-1/95 backdrop-blur-xl md:flex',
-        collapsed
-          ? 'my-3 ml-3 mr-2 h-[calc(100%-24px)] rounded-2xl border border-line shadow-pop'
-          : 'my-3 ml-3 mr-2 h-[calc(100%-24px)] rounded-2xl border border-line shadow-card',
-      )}
+      className="relative z-20 my-3 ml-3 mr-2 hidden h-[calc(100%-24px)] shrink-0 flex-col rounded-2xl border border-line bg-bg-1 md:flex"
     >
       <div className={cn('flex h-[76px] shrink-0 items-center', collapsed ? 'justify-center px-2' : 'justify-start px-4')}>
         <button

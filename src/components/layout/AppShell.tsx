@@ -8,8 +8,8 @@ export function AppShell() {
       <Sidebar />
       <div className="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-bg-0">
         <MobileNav />
-        <main className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-7 sm:py-9 lg:px-10">
-          <div className="mx-auto w-full max-w-[1600px] animate-fade-in">
+        <main className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
+          <div className="mx-auto w-full max-w-[1600px]">
             <Outlet />
           </div>
         </main>
