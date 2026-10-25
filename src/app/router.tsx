@@ -22,6 +22,7 @@ import { UIComponentsDemoPage } from '@/features/uiComponentsDemo/UIComponentsDe
 import { RequireAuth, RequireSubscription } from './RequireAuth';
 import { CheckoutPage } from '@/features/billing/CheckoutPage';
 import { BacktestStoragePage } from '@/features/backtests/BacktestStoragePage';
+import { FigmaTemplatesPage } from '@/features/journal/FigmaTemplatesPage';
 
 export const router = createBrowserRouter([
   // Public Routes
@@ -47,6 +48,7 @@ export const router = createBrowserRouter([
               { path: 'journal/template-preview/am', element: <AMTemplatePreviewPage /> },
               { path: 'settings', element: <SettingsPage /> },
               { path: 'settings/templates', element: <JournalTemplatesPage /> },
+              { path: 'figma-templates', element: <FigmaTemplatesPage /> },
               { path: 'journal/new', element: <TradeFormPage /> },
               { path: 'journal/:id', element: <TradeDetailsPage /> },
               { path: 'journal/:id/edit', element: <TradeFormPage /> },

@@ -10,6 +10,7 @@ const TITLES: Record<string, { title: string; subtitle?: string }> = {
   '/profile': { title: 'Profile', subtitle: 'Your account and trading profile.' },
   '/accounts': { title: 'Accounts', subtitle: 'Track account performance and rules.' },
   '/backtests': { title: 'Backtest storage', subtitle: 'Keep historical practice separate from your live journal.' },
+  '/figma-templates': { title: 'Figma templates', subtitle: 'Browse trade image templates from Figma Community.' },
 };
 
 export function Topbar() {
