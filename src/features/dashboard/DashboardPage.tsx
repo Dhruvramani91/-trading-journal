@@ -1,16 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowUp, TrendingUp, TrendingDown } from 'lucide-react';
-import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip as ReTooltip,
-  CartesianGrid,
-  type TooltipPayloadEntry,
-} from 'recharts';
 import { Button } from '@/components/ui/Button';
 import { Loader } from '@/components/ui/Loader';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -35,12 +25,13 @@ import {
   formatDuration,
   formatDate,
   formatSignedMoney,
-  formatMoneyCompact,
 } from '@/lib/format';
 import type { DashboardMetric, MetricPoint } from '@/analytics/core';
 import { cn } from '@/lib/cn';
 import { FilterBar } from '@/components/filters/FilterBar';
 import { useChartTheme } from '@/lib/chartTheme';
+
+const DashboardEquityChart = lazy(() => import('./DashboardEquityChart'));
 
 interface WeekdayRow {
   label: string;
@@ -130,7 +121,9 @@ export function DashboardPage() {
     [curvePoints],
   );
 
-  const avgDuration = tradesToUse.length ? tradesToUse.reduce((a, t) => a + t.durationMin, 0) / tradesToUse.length : 0;
+  const avgDuration = tradesToUse.length
+    ? tradesToUse.reduce((a, t) => a + t.durationMin, 0) / tradesToUse.length
+    : 0;
 
   if (!loaded) {
     return <Loader title="Loading trading data…" className="min-h-64" />;
@@ -199,24 +192,9 @@ export function DashboardPage() {
                   {metric === 'r' ? 'No trades to chart yet.' : 'No P&L recorded on your trades yet.'}
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData} margin={{ top: 8, right: 16, left: metric === 'r' ? -20 : 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="2 5" stroke={chart.grid} vertical={false} />
-                    <XAxis dataKey="dateLabel" tick={{ fontSize: 11, fill: chart.axisText }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11, fill: chart.axisText }} axisLine={false} tickLine={false} tickFormatter={(v: number) => (metric === 'r' ? `${v}R` : formatMoneyCompact(v))} width={metric === 'r' ? 45 : 64} />
-                    <ReTooltip
-                      contentStyle={{ background: chart.tooltipBg, border: `1px solid ${chart.tooltipBorder}`, borderRadius: '0.75rem', boxShadow: chart.tooltipShadow, color: chart.tooltipText, fontSize: '0.75rem' }}
-                      formatter={(value: unknown, _name: unknown, item: TooltipPayloadEntry) => {
-                        const p = item.payload as { dateLabel: string } | undefined;
-                        const v = typeof value === 'number' ? value : 0;
-                        const name = metric === 'r' ? 'Cumulative' : 'Cumulative P&L';
-                        const formatted = metric === 'r' ? formatR(v) : formatSignedMoney(v);
-                        return [p ? `${formatted} (${p.dateLabel})` : formatted, name];
-                      }}
-                    />
-                    <Area type="monotone" dataKey="cumulative" stroke={chart.accent} strokeWidth={2} fill={chart.accent} fillOpacity={0.07} dot={false} activeDot={{ r: 4, fill: chart.accent, stroke: chart.tooltipBg, strokeWidth: 2 }} isAnimationActive={false} />
-                  </AreaChart>
-                </ResponsiveContainer>
+                <Suspense fallback={<div className="flex h-full items-center justify-center text-sm text-fg-muted" role="status">Loading chart…</div>}>
+                  <DashboardEquityChart data={chartData} metric={metric} chart={chart} />
+                </Suspense>
               )}
             </CardBody>
           </Card>
@@ -341,7 +319,7 @@ export function DashboardPage() {
                         <TD align="right" className={cn('num font-semibold', typeof t.pnl === 'number' && t.pnl > 0 ? 'text-win' : typeof t.pnl === 'number' && t.pnl < 0 ? 'text-loss' : 'text-be')}>
                           {typeof t.pnl === 'number' && Number.isFinite(t.pnl) ? formatSignedMoney(t.pnl) : '—'}
                         </TD>
-                        <TD align="right" className="text-xs text-fg-muted num">{formatDuration(t.durationMin)}</TD>
+                        <TD align="right" className="text-xs text-fg-muted num">{t.durationMin > 0 ? formatDuration(t.durationMin) : '—'}</TD>
                       </TR>
                     ))}
                   </TBody>

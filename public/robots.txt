@@ -1,0 +1,16 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /journal
+Disallow: /statistics
+Disallow: /calendar
+Disallow: /mistakes
+Disallow: /accounts
+Disallow: /backtests
+Disallow: /figma-templates
+Disallow: /settings
+Disallow: /profile
+Disallow: /manage-subscription
+Disallow: /checkout
+Disallow: /tutorials
+Disallow: /auth/

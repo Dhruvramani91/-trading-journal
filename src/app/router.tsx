@@ -1,30 +1,32 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
-import { LandingPage } from '@/features/auth/LandingPage';
-import { LoginPage } from '@/features/auth/LoginPage';
-import { AuthCallbackPage } from '@/features/auth/AuthCallbackPage';
-import { EmailConfirmedPage } from '@/features/auth/EmailConfirmedPage';
-import PasswordResetPage from '@/features/auth/PasswordResetPage';
-import { DashboardPage } from '@/features/dashboard/DashboardPage';
-import { JournalPage } from '@/features/journal/JournalPage';
-import { TradeFormPage } from '@/features/journal/TradeFormPage';
-import { AMTemplatePreviewPage } from '@/features/journal/AMTemplatePreviewPage';
-import { JournalTemplatesEditorPage } from '@/features/journal/JournalTemplatesEditorPage';
-import { SettingsPage } from '@/features/settings/SettingsPage';
-import { TutorialsPage } from '@/features/settings/TutorialsPage';
-import { TradeDetailsPage } from '@/features/journal/TradeDetailsPage';
-import { StatisticsPage } from '@/features/statistics/StatisticsPage';
-import { CalendarPage } from '@/features/calendar/CalendarPage';
-import { MistakesPage } from '@/features/mistakes/MistakesPage';
-import { ProfilePage } from '@/features/profile/ProfilePage';
-import { AccountSummaryPage } from '@/features/accounts/AccountSummaryPage';
-import { AccountsPage } from '@/features/accounts/AccountsPage';
-import { UIComponentsDemoPage } from '@/features/uiComponentsDemo/UIComponentsDemoPage';
+import {
+  LandingPage,
+  LoginPage,
+  AuthCallbackPage,
+  EmailConfirmedPage,
+  PasswordResetPage,
+  DashboardPage,
+  JournalPage,
+  TradeFormPage,
+  AMTemplatePreviewPage,
+  JournalTemplatesEditorPage,
+  SettingsPage,
+  TutorialsPage,
+  TradeDetailsPage,
+  StatisticsPage,
+  CalendarPage,
+  MistakesPage,
+  ProfilePage,
+  AccountSummaryPage,
+  AccountsPage,
+  UIComponentsDemoPage,
+  CheckoutPage,
+  ManageSubscriptionPage,
+  BacktestStoragePage,
+  FigmaTemplatesPage,
+} from './routeComponents';
 import { RequireAuth, RequireSubscription } from './RequireAuth';
-import { CheckoutPage } from '@/features/billing/CheckoutPage';
-import { ManageSubscriptionPage } from '@/features/billing/ManageSubscriptionPage';
-import { BacktestStoragePage } from '@/features/backtests/BacktestStoragePage';
-import { FigmaTemplatesPage } from '@/features/journal/FigmaTemplatesPage';
 
 export const router = createBrowserRouter([
   // Public Routes
