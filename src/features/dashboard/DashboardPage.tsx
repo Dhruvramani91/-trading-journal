@@ -241,6 +241,7 @@ export function DashboardPage() {
               <CardBody className="text-sm">
                 {bestSetup ? (
                   <>
+                    <div className="mb-2 text-xs text-fg-muted">{bestSetup.section} · {bestSetup.fieldLabel}</div>
                     <div className="flex items-center justify-between">
                       <Badge tone="accent">{bestSetup.label}</Badge>
                       <span className="font-bold text-win">
@@ -266,6 +267,7 @@ export function DashboardPage() {
               <CardBody className="text-sm">
                 {worstSetup ? (
                   <>
+                    <div className="mb-2 text-xs text-fg-muted">{worstSetup.section} · {worstSetup.fieldLabel}</div>
                     <div className="flex items-center justify-between">
                       <Badge tone="accent">{worstSetup.label}</Badge>
                       <span className="font-bold text-loss">

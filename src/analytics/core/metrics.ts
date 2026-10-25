@@ -1,7 +1,7 @@
 import type { Trade } from '@/domain/models/trade';
 import { byCategory } from './breakdowns';
 import { byChronologicalOrder } from './date';
-import { ACTIVE_TEMPLATE_ID } from '@/domain/templates/registry';
+import { ACTIVE_TEMPLATE_ID, getTemplate, TEMPLATES } from '@/domain/templates/registry';
 
 /**
  * The dashboard's two performance metrics.
@@ -162,6 +162,9 @@ export function pickExtremeTrade(
 
 /** Metric-aware Best/Worst setup highlight, ready for the dashboard cards. */
 export interface SetupHighlight {
+  /** Section and field that define the highlighted setup value. */
+  section: string;
+  fieldLabel: string;
   /** Setup bucket label of the highlighted trade's own bucket. */
   label: string;
   /** Trades in the highlighted bucket (a single-trade highlight -> 1). */
@@ -195,12 +198,16 @@ export function extremeSetup(
   const value = metricValue(trade, metric);
   if (value == null) return null;
 
-  // Reuse the existing setup grouping to obtain the highlighted trade's label
-  // and stats in the same bucket shape the dashboard cards already render.
-  const breakdown = byCategory([trade], fieldKey, ACTIVE_TEMPLATE_ID, metric);
+  // Use the trade's immutable template snapshot where available so the label
+  // and section match the form the trader used when recording it.
+  const template = trade.templateSnapshot ?? TEMPLATES[trade.templateId] ?? getTemplate(ACTIVE_TEMPLATE_ID);
+  const setupField = template.fields.find((field) => field.key === fieldKey);
+  const breakdown = byCategory([trade], fieldKey, template, metric);
   const bucket = breakdown.buckets.find((b) => b.count > 0) ?? null;
 
   return {
+    section: setupField?.group ?? 'Strategy',
+    fieldLabel: setupField?.label ?? breakdown.fieldLabel,
     label: bucket?.label ?? '—',
     count: bucket?.count ?? 1,
     average: value,

@@ -29,6 +29,35 @@ describe('TemplateFieldEditorList', () => {
     expect(screen.queryByText('Quick add')).not.toBeInTheDocument();
   });
 
+  it('renames a section and keeps its fields in that section', () => {
+    render(<Harness />);
+    fireEvent.click(screen.getByRole('button', { name: 'Rename Context section' }));
+    const name = screen.getByRole('textbox', { name: 'Section name for Context' });
+    fireEvent.change(name, { target: { value: 'Entry' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save Context section name' }));
+    expect(screen.getByRole('region', { name: 'Entry fields' })).toBeInTheDocument();
+    expect(screen.queryByRole('region', { name: 'Context fields' })).not.toBeInTheDocument();
+  });
+
+  it('creates a named section with an editable starter field', () => {
+    render(<Harness />);
+    fireEvent.click(screen.getByRole('button', { name: 'Add section' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'New section name' }), { target: { value: 'Entry' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Create section' }));
+    expect(screen.getByRole('region', { name: 'Entry fields' })).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Label for New field' })).toBeInTheDocument();
+  });
+
+  it('confirms before deleting a section and its fields', () => {
+    render(<Harness />);
+    fireEvent.click(screen.getByRole('button', { name: 'Delete Context section' }));
+    expect(screen.getByRole('dialog')).toHaveTextContent('Existing trades and their saved answers will remain unchanged.');
+    fireEvent.click(screen.getByRole('button', { name: 'Delete section' }));
+    expect(screen.queryByRole('region', { name: 'Context fields' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Session' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Bias' })).not.toBeInTheDocument();
+  });
+
   it('reorders a focused row with Alt+ArrowDown', () => {
     render(<Harness />);
     const firstRow = screen.getAllByRole('article')[0]!;

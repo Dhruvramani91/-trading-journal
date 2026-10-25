@@ -12,12 +12,13 @@ type PreviewValue = string | boolean;
 const MISTAKES = ['No mistake', 'Early entry', 'Late entry', 'Counter-trend', 'No plan', 'Revenge trade', 'Oversize', 'Moved stop', 'Exited early', 'Held loser', 'FOMO', 'Other'];
 
 export function TemplateLivePreview({
-  template, values, onChange, onFocusField,
+  template, values, onChange, onFocusField, showTemplateTitle = true,
 }: {
   template: TemplateDefinition;
   values: Record<string, PreviewValue>;
   onChange: (key: string, value: PreviewValue) => void;
   onFocusField: (fieldKey: string) => void;
+  showTemplateTitle?: boolean;
 }) {
   const groups = groupTemplateFields(template.fields);
   const clickableLabel = (field: TemplateField) => <button type="button" className="text-left text-xs font-medium text-fg hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/60" onClick={() => onFocusField(field.key)}>{field.label} <span className="text-fg-dim">· edit</span></button>;
@@ -46,7 +47,7 @@ export function TemplateLivePreview({
     </div>
 
     <div className="rounded-xl border border-line bg-bg-2 p-4">
-      <div className="mb-4"><h3 className="text-sm font-semibold text-fg">{template.name}</h3><p className="mt-1 text-xs text-fg-muted">Strategy fields appear in this same order in the trade form.</p></div>
+      {showTemplateTitle && <div className="mb-4"><h3 className="text-sm font-semibold text-fg">{template.name}</h3><p className="mt-1 text-xs text-fg-muted">Strategy fields appear in this same order in the trade form.</p></div>}
       {groups.length ? <div className="space-y-5">{groups.map(([group, fields]) => <FormSection key={`${group}-${fields[0]?.key}`} title={group}>{fields.map((field) => <FormField key={field.key} label={clickableLabel(field)}>
         <TemplateFieldInput field={field} value={values[`strategy:${field.key}`]} onChange={(value) => onChange(`strategy:${field.key}`, value)} portalZIndex={80} />
       </FormField>)}</FormSection>)}</div> : <p className="rounded-lg border border-dashed border-line px-3 py-5 text-sm text-fg-muted">Add strategy fields to see them here.</p>}

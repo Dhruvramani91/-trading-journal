@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { ArrowDown, ArrowUp, Copy, GripVertical, Plus, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Check, Copy, GripVertical, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -7,6 +7,7 @@ import { Select } from '@/components/ui/Select';
 import type { TemplateField, TemplateFieldType } from '@/domain/models/trade';
 import { createTemplateField, duplicateTemplateField, moveField, optionListFromPaste, renameTemplateField, type TemplateIssue } from '@/domain/templates/templateEditor';
 import { groupTemplateFields } from '@/domain/templates/fieldOrder';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 const FIELD_TYPES: Array<{ value: TemplateFieldType; label: string }> = [
   { value: 'enum', label: 'Dropdown' }, { value: 'text', label: 'Text' }, { value: 'number', label: 'Number' },
@@ -28,6 +29,12 @@ export function TemplateFieldEditorList({
 }) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [optionDraft, setOptionDraft] = useState('');
+  const [editingSectionKey, setEditingSectionKey] = useState<string | null>(null);
+  const [sectionNameDraft, setSectionNameDraft] = useState('');
+  const [showAddSection, setShowAddSection] = useState(false);
+  const [newSectionName, setNewSectionName] = useState('');
+  const [sectionError, setSectionError] = useState('');
+  const [sectionToDelete, setSectionToDelete] = useState<{ name: string; fieldKeys: string[] } | null>(null);
   const labelRefs = useRef(new Map<string, HTMLInputElement>());
 
   useEffect(() => {
@@ -53,17 +60,73 @@ export function TemplateFieldEditorList({
 
   const reorder = (from: number, to: number) => onChange(moveField(fields, from, to));
 
+  const renameSection = (sectionFields: readonly TemplateField[]) => {
+    const nextName = sectionNameDraft.trim();
+    if (!nextName) { setSectionError('Section name is required.'); return; }
+    const sectionKeys = new Set(sectionFields.map((field) => field.key));
+    const duplicate = groupTemplateFields(fields, true).some(([name, grouped]) => name.toLocaleLowerCase() === nextName.toLocaleLowerCase() && !grouped.some((field) => sectionKeys.has(field.key)));
+    if (duplicate) { setSectionError('A section with this name already exists.'); return; }
+    onChange(fields.map((field) => sectionKeys.has(field.key) ? { ...field, group: nextName } : field));
+    setEditingSectionKey(null);
+    setSectionError('');
+  };
+
+  const addSection = () => {
+    const name = newSectionName.trim();
+    if (!name) { setSectionError('Section name is required.'); return; }
+    if (groupTemplateFields(fields, true).some(([group]) => group.toLocaleLowerCase() === name.toLocaleLowerCase())) {
+      setSectionError('A section with this name already exists.');
+      return;
+    }
+    const field = createTemplateField('text', fields, 'New field');
+    field.group = name;
+    onChange([...fields, field]);
+    onExpandedChange(field.key);
+    setNewSectionName('');
+    setShowAddSection(false);
+    setSectionError('');
+  };
+
   return <div className="space-y-5">
     <div className="flex flex-wrap items-center justify-between gap-2">
       <div><h2 className="text-base font-semibold text-fg">Strategy fields</h2><p className="mt-1 text-sm text-fg-muted">Arrange these in the order traders should answer them.</p></div>
       <Badge tone="neutral">{fields.length} {fields.length === 1 ? 'field' : 'fields'}</Badge>
     </div>
 
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-line bg-bg-2 px-3 py-2.5">
+      <p className="text-sm text-fg-muted">Organize questions into form sections.</p>
+      <Button type="button" variant="secondary" size="sm" className="min-h-10" leftIcon={<Plus className="h-4 w-4" />} onClick={() => { setShowAddSection((open) => !open); setSectionError(''); }}>Add section</Button>
+    </div>
+
+    {showAddSection && <form className="flex flex-wrap items-end gap-2 rounded-lg border border-line p-3" onSubmit={(event) => { event.preventDefault(); addSection(); }}>
+      <label className="min-w-52 flex-1 space-y-1.5 text-xs font-medium text-fg">Section name
+        <Input autoFocus value={newSectionName} maxLength={60} aria-label="New section name" onChange={(event) => { setNewSectionName(event.target.value); setSectionError(''); }} placeholder="e.g. Entry" />
+      </label>
+      <Button type="submit" className="min-h-10" disabled={!newSectionName.trim()} leftIcon={<Plus className="h-4 w-4" />}>Create section</Button>
+      <Button type="button" variant="ghost" className="min-h-10" onClick={() => { setShowAddSection(false); setSectionError(''); }} leftIcon={<X className="h-4 w-4" />}>Cancel</Button>
+      {sectionError && <p className="w-full text-sm text-loss" role="alert">{sectionError}</p>}
+      <p className="w-full text-xs text-fg-muted">A new text field will be added so the section is ready to edit.</p>
+    </form>}
+
     {fields.length === 0 ? <div className="rounded-xl border border-dashed border-line-strong px-4 py-8 text-center">
       <p className="text-sm font-medium text-fg">No strategy fields yet</p><p className="mt-1 text-sm text-fg-muted">Add a field to start building this section.</p>
     </div> : <div aria-label="Ordered strategy fields" className="space-y-5">
-      {groupTemplateFields(fields, true).map(([group, groupFields]) => <section key={group} className="space-y-2" aria-label={`${group} fields`}>
-        <h3 className="border-b border-line pb-2 text-sm font-semibold text-fg">{group}</h3>
+      {groupTemplateFields(fields, true).map(([group, groupFields]) => {
+        const sectionKey = groupFields[0]?.key ?? group;
+        const editing = editingSectionKey === sectionKey;
+        return <section key={sectionKey} className="space-y-2" aria-label={`${group} fields`}>
+        <div className="flex min-h-10 items-center gap-2 border-b border-line pb-2">
+          {editing ? <>
+            <Input autoFocus value={sectionNameDraft} maxLength={60} aria-label={`Section name for ${group}`} onChange={(event) => { setSectionNameDraft(event.target.value); setSectionError(''); }} onKeyDown={(event) => { if (event.key === 'Enter') { event.preventDefault(); renameSection(groupFields); } if (event.key === 'Escape') { setEditingSectionKey(null); setSectionError(''); } }} />
+            <Button type="button" variant="secondary" size="icon" aria-label={`Save ${group} section name`} title="Save section name" onClick={() => renameSection(groupFields)}><Check className="h-4 w-4" /></Button>
+            <Button type="button" variant="ghost" size="icon" aria-label="Cancel section rename" title="Cancel" onClick={() => { setEditingSectionKey(null); setSectionError(''); }}><X className="h-4 w-4" /></Button>
+          </> : <>
+            <h3 className="min-w-0 flex-1 truncate text-sm font-semibold text-fg">{group}</h3>
+            <Button type="button" variant="ghost" size="icon-sm" aria-label={`Rename ${group} section`} title="Rename section" onClick={() => { setEditingSectionKey(sectionKey); setSectionNameDraft(group); setSectionError(''); }}><Pencil className="h-3.5 w-3.5" /></Button>
+            <Button type="button" variant="ghost" size="icon-sm" aria-label={`Delete ${group} section`} title="Delete section" onClick={() => setSectionToDelete({ name: group, fieldKeys: groupFields.map((field) => field.key) })}><Trash2 className="h-3.5 w-3.5" /></Button>
+          </>}
+        </div>
+        {editing && sectionError && <p className="text-sm text-loss" role="alert">{sectionError}</p>}
         <ol className="space-y-2">
       {groupFields.map((field) => {
         const index = fields.indexOf(field);
@@ -126,7 +189,8 @@ export function TemplateFieldEditorList({
         </li>;
       })}
         </ol>
-      </section>)}
+      </section>;
+      })}
     </div>}
 
     <section className="space-y-3 border-t border-line pt-4">
@@ -134,5 +198,12 @@ export function TemplateFieldEditorList({
       <div className="flex flex-wrap gap-2">{FIELD_TYPES.map((type) => <Button key={type.value} type="button" variant="secondary" size="sm" className="min-h-10" leftIcon={<Plus className="h-3.5 w-3.5" />} onClick={() => addField(type.value, type.value === 'enum' ? undefined : `${type.label} field`)}>{type.label}</Button>)}</div>
     </section>
     {footer}
+    <ConfirmDialog open={Boolean(sectionToDelete)} onOpenChange={(open) => { if (!open) setSectionToDelete(null); }} title={`Delete ${sectionToDelete?.name ?? ''} section?`} description="This removes its fields from this template. Existing trades and their saved answers will remain unchanged." confirmLabel="Delete section" cancelLabel="Keep section" onConfirm={() => {
+      if (!sectionToDelete) return;
+      const keys = new Set(sectionToDelete.fieldKeys);
+      onChange(fields.filter((field) => !keys.has(field.key)));
+      if (expandedFieldKey && keys.has(expandedFieldKey)) onExpandedChange(null);
+      setSectionToDelete(null);
+    }} />
   </div>;
 }

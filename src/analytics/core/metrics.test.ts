@@ -127,6 +127,8 @@ describe('extremeSetup (Best / Worst) is metric-aware', () => {
   it('picks Best setup by R', () => {
     const best = extremeSetup(trades, 'r', 'best');
     expect(best?.label).toBe('Continuation [C3]');
+    expect(best?.section).toBe('Context');
+    expect(best?.fieldLabel).toBe('Daily Candle');
     expect(best?.average).toBe(3);
     expect(best?.total).toBe(3);
   });

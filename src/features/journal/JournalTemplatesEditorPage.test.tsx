@@ -3,11 +3,12 @@ import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { JournalTemplatesEditorPage } from './JournalTemplatesEditorPage';
 import type { TemplateDefinition } from '@/domain/models/trade';
-import { getDefaultTemplateId, listJournalTemplates, saveCustomTemplate, saveDefaultTemplateId } from '@/data/journalTemplateRepository';
+import { archiveCustomTemplate, getDefaultTemplateId, listJournalTemplates, saveCustomTemplate, saveDefaultTemplateId } from '@/data/journalTemplateRepository';
 
 vi.mock('@/data/journalTemplateRepository', () => ({
   getDefaultTemplateId: vi.fn(),
   listJournalTemplates: vi.fn(),
+  archiveCustomTemplate: vi.fn(),
   saveCustomTemplate: vi.fn(),
   saveDefaultTemplateId: vi.fn(),
 }));
@@ -29,6 +30,7 @@ describe('JournalTemplatesEditorPage', () => {
     vi.mocked(getDefaultTemplateId).mockResolvedValue(builtin.id);
     vi.mocked(saveDefaultTemplateId).mockResolvedValue(undefined);
     vi.mocked(saveCustomTemplate).mockImplementation(async (template) => ({ ...template, id: template.id || saved.id }));
+    vi.mocked(archiveCustomTemplate).mockResolvedValue(undefined);
   });
 
   it('Save persists the template without changing the default selection', async () => {
@@ -78,5 +80,22 @@ describe('JournalTemplatesEditorPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Network unavailable.');
     expect(screen.getByDisplayValue('My custom strategy')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Save$/ })).toBeEnabled();
+  });
+
+  it('shows the template name at the top of the live preview', async () => {
+    renderPage();
+    await startScratch();
+    expect(screen.getAllByRole('heading', { name: 'My custom strategy' })).toHaveLength(2);
+    expect(screen.getByText('Live preview · Strategy fields follow this order in the trade form.')).toBeInTheDocument();
+  });
+
+  it('asks for confirmation before deleting a saved template', async () => {
+    vi.mocked(listJournalTemplates).mockResolvedValue([builtin, saved]);
+    renderPage();
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete My custom strategy' }));
+    expect(await screen.findByRole('heading', { name: 'Delete My custom strategy?' })).toBeInTheDocument();
+    expect(screen.getByText(/Existing trades keep their saved template and answers/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Delete template' }));
+    await waitFor(() => expect(archiveCustomTemplate).toHaveBeenCalledWith(saved.id));
   });
 });

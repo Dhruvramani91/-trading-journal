@@ -35,6 +35,8 @@ vi.mock('@/lib/chartTheme', () => ({
 // Charts are irrelevant here; stub recharts so jsdom needs no ResizeObserver.
 vi.mock('recharts', () => ({
   ResponsiveContainer: () => null,
+  AreaChart: () => null,
+  Area: () => null,
   LineChart: () => null,
   Line: () => null,
   XAxis: () => null,
@@ -107,9 +109,9 @@ describe('DashboardPage — P&L support', () => {
 
   it('keeps the R section and adds a P&L section', async () => {
     renderDashboard();
-    await screen.findByText('Performance — R');
+    await screen.findByText('Performance in R');
 
-    expect(screen.getByText('Performance — P&L')).toBeInTheDocument();
+    expect(screen.getByText('Performance in P&L')).toBeInTheDocument();
     expect(screen.getByText('Total R')).toBeInTheDocument();
     expect(screen.getByText('Total P&L')).toBeInTheDocument();
     expect(screen.getByText('+4.00R')).toBeInTheDocument(); // R total unchanged
@@ -130,18 +132,18 @@ describe('DashboardPage — P&L support', () => {
     }));
 
     renderDashboard();
-    await screen.findByText('Performance — R');
+    await screen.findByText('Performance in R');
 
     expect(screen.getByText('Total R')).toBeInTheDocument();
     expect(screen.getByText('+8.00R')).toBeInTheDocument();
-    expect(screen.getByText('Avg R')).toBeInTheDocument();
+    expect(screen.getByText('Average R')).toBeInTheDocument();
     expect(screen.getByText('+1.60R')).toBeInTheDocument();
-    expect(screen.queryByText('Avg R:R')).not.toBeInTheDocument();
+    expect(screen.queryByText('Average R:R')).not.toBeInTheDocument();
   });
 
   it('totals and averages Journal Trade P&L (not account values)', async () => {
     renderDashboard();
-    await screen.findByText('Performance — P&L');
+    await screen.findByText('Performance in P&L');
 
     // 100 + 900 - 300 = 700 (t4 has no P&L and must not count as 0)
     expect(screen.getByText('+$700.00')).toBeInTheDocument();
@@ -178,10 +180,11 @@ describe('DashboardPage — P&L support', () => {
 
   it('switches Best/Worst setup when the metric toggle changes', async () => {
     renderDashboard();
-    await screen.findByText('Performance — R');
+    await screen.findByText('Performance in R');
 
     expect(screen.getByText('+5.00R avg R')).toBeInTheDocument();
     expect(screen.getByText('-2.00R avg R')).toBeInTheDocument();
+    expect(screen.getAllByText('Context · Daily Candle')).toHaveLength(2);
 
     fireEvent.click(screen.getByRole('button', { name: 'Cumulative P&L' }));
 

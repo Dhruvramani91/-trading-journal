@@ -33,6 +33,7 @@ export function JournalTemplatesEditorPage() {
   const [message, setMessage] = useState('');
   const [messageTone, setMessageTone] = useState<'status' | 'error'>('status');
   const [discardOpen, setDiscardOpen] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState<TemplateDefinition | null>(null);
   const [expandedFieldKey, setExpandedFieldKey] = useState<string | null>(null);
   const [focusFieldKey, setFocusFieldKey] = useState<string>();
   const [focusRequestId, setFocusRequestId] = useState(0);
@@ -137,6 +138,23 @@ export function JournalTemplatesEditorPage() {
     finally { setBusy(false); }
   }
 
+  async function deleteSavedTemplate() {
+    if (!templateToDelete) return;
+    setBusy(true); showMessage('');
+    try {
+      if (defaultId === templateToDelete.id) {
+        await saveDefaultTemplateId(DEFAULT_TEMPLATE_ID);
+        setDefaultId(DEFAULT_TEMPLATE_ID);
+      }
+      await archiveCustomTemplate(templateToDelete.id);
+      await reload();
+      setTemplateToDelete(null);
+      showMessage('Template deleted. Existing trades keep their saved template and answers.');
+    } catch (error) {
+      showMessage(error instanceof Error ? error.message : 'Could not delete template.', 'error');
+    } finally { setBusy(false); }
+  }
+
   function removeField(field: TemplateField, index: number) {
     if (!draft) return;
     setDraft({ ...draft, fields: draft.fields.filter((_, fieldIndex) => fieldIndex !== index) });
@@ -179,7 +197,7 @@ export function JournalTemplatesEditorPage() {
         {showBuilder && <div className="divide-y divide-line rounded-xl border border-line">{templates.filter((item) => !item.id.startsWith('custom:')).map((template) => <div key={template.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h3 className="font-medium text-fg">{template.name}</h3>{template.id === defaultId && <Badge tone="neutral">Current default</Badge>}</div><p className="mt-1 text-xs text-fg-muted">{template.fields.length} fields · {template.fields.filter((field) => field.inStats).length} statistics breakdowns</p></div><div className="flex shrink-0 gap-2"><Button size="sm" variant="secondary" onClick={() => setPreview(template)} leftIcon={<Eye className="h-4 w-4" />}>Preview</Button><Button size="sm" onClick={() => startDraft(template)} leftIcon={<Plus className="h-4 w-4" />}>Customize template</Button></div></div>)}</div>}
       </CardBody></Card>
 
-      {templates.some((item) => item.id.startsWith('custom:')) && <Card><CardHeader><CardTitle>Your templates</CardTitle></CardHeader><CardBody className="grid gap-3 md:grid-cols-2">{templates.filter((item) => item.id.startsWith('custom:')).map((template) => <div key={template.id} className="rounded-xl border border-line bg-bg-1 p-4"><div className="flex items-start justify-between gap-3"><div><h3 className="font-semibold text-fg">{template.name}</h3><p className="mt-1 text-sm text-fg-muted">{template.description}</p></div>{template.id === defaultId && <Badge tone="neutral" className="shrink-0">Default</Badge>}</div><div className="mt-3 flex flex-wrap gap-2"><Button variant="secondary" onClick={() => setPreview(template)} leftIcon={<Eye className="h-4 w-4" />}>Preview</Button><Button variant="secondary" onClick={() => startCustomEdit(template)}>Edit template</Button></div></div>)}</CardBody></Card>}
+      {templates.some((item) => item.id.startsWith('custom:')) && <Card><CardHeader><CardTitle>Your templates</CardTitle></CardHeader><CardBody className="grid gap-3 md:grid-cols-2">{templates.filter((item) => item.id.startsWith('custom:')).map((template) => <div key={template.id} className="rounded-xl border border-line bg-bg-1 p-4"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><h3 className="font-semibold text-fg">{template.name}</h3><p className="mt-1 text-sm text-fg-muted">{template.description}</p></div><div className="flex shrink-0 items-center gap-2">{template.id === defaultId && <Badge tone="neutral">Default</Badge>}<Button type="button" variant="ghost" size="icon" aria-label={`Delete ${template.name}`} title={`Delete ${template.name}`} disabled={busy} onClick={() => setTemplateToDelete(template)}><Trash2 className="h-4 w-4 text-loss" /></Button></div></div><div className="mt-3 flex flex-wrap gap-2"><Button variant="secondary" onClick={() => setPreview(template)} leftIcon={<Eye className="h-4 w-4" />}>Preview</Button><Button variant="secondary" onClick={() => startCustomEdit(template)}>Edit template</Button></div></div>)}</CardBody></Card>}
       <Card><CardBody className="flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5"><div><h2 className="font-semibold text-fg">Create your own template</h2><p className="mt-1 text-sm text-fg-muted">Start with an empty set of strategy fields.</p></div><Button variant="secondary" onClick={startFromScratch} leftIcon={<Plus className="h-4 w-4" />}>Create from scratch</Button></CardBody></Card>
     </> : <>
       <div className="flex flex-wrap items-center justify-between gap-3"><div className="flex items-center gap-2"><h2 className="text-lg font-semibold text-fg">Editing: {draft.name || 'Untitled template'}</h2><Badge tone={dirty ? 'outline' : 'neutral'}>{dirty ? 'Unsaved changes' : 'All changes saved'}</Badge></div>{draft.id.startsWith('custom:') && <Button variant="danger" size="sm" leftIcon={<Trash2 className="h-4 w-4" />} disabled={busy} onClick={() => void archiveDraft()}>Archive template</Button>}</div>
@@ -197,7 +215,7 @@ export function JournalTemplatesEditorPage() {
           </section>} /></CardBody></Card>
         </div>
 
-        <Card className="min-w-0 lg:sticky lg:top-4"><CardHeader><div><CardTitle>Live preview</CardTitle><p className="mt-1 text-xs text-fg-muted">This is how your trade form will look. Nothing here is saved.</p></div><Eye className="h-4 w-4 shrink-0 text-fg-muted" aria-hidden="true" /></CardHeader><CardBody className="max-h-[70dvh] overflow-y-auto p-3 sm:p-4 lg:max-h-[calc(100dvh-12rem)]"><TemplateLivePreview template={draft} values={previewValues} onChange={(key, value) => setPreviewValues((current) => ({ ...current, [key]: value }))} onFocusField={focusPreviewField} /></CardBody></Card>
+        <Card className="min-w-0 lg:sticky lg:top-4"><CardHeader><div className="min-w-0"><CardTitle className="truncate">{draft.name || 'Untitled template'}</CardTitle><p className="mt-1 text-xs text-fg-muted">Live preview · Strategy fields follow this order in the trade form.</p></div><Eye className="h-4 w-4 shrink-0 text-fg-muted" aria-hidden="true" /></CardHeader><CardBody className="max-h-[70dvh] overflow-y-auto p-3 sm:p-4 lg:max-h-[calc(100dvh-12rem)]"><TemplateLivePreview template={draft} values={previewValues} onChange={(key, value) => setPreviewValues((current) => ({ ...current, [key]: value }))} onFocusField={focusPreviewField} showTemplateTitle={false} /></CardBody></Card>
       </div>
 
     </>}
@@ -206,6 +224,7 @@ export function JournalTemplatesEditorPage() {
     {toast && <div role="status" aria-live="polite" className="fixed bottom-5 left-1/2 z-[90] flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-3 rounded-xl border border-line bg-bg-2 px-4 py-3 text-sm text-fg shadow-pop"><span>{toast}</span>{removedField && <Button type="button" variant="secondary" size="sm" leftIcon={<Undo2 className="h-4 w-4" />} onClick={undoRemove}>Undo</Button>}<Button type="button" variant="ghost" size="icon-sm" aria-label="Dismiss notification" onClick={() => { setToast(''); setRemovedField(null); window.clearTimeout(toastTimer.current); }}><X className="h-4 w-4" /></Button></div>}
     {preview && <TemplatePreviewDialog template={preview} onClose={() => setPreview(null)} onCustomize={() => { startDraft(preview); setPreview(null); }} />}
     <ConfirmDialog open={discardOpen} onOpenChange={setDiscardOpen} title="Discard unsaved changes?" description="Your edits to this template will be lost. Saved trades and their answers won’t change." confirmLabel="Discard changes" cancelLabel="Keep editing" onConfirm={() => { setDraft(null); setBaseline(''); setFocusFieldKey(undefined); showMessage(''); }} />
+    <ConfirmDialog open={Boolean(templateToDelete)} onOpenChange={(open) => { if (!open) setTemplateToDelete(null); }} title={`Delete ${templateToDelete?.name ?? 'template'}?`} description={`This removes the template from your list. Existing trades keep their saved template and answers.${templateToDelete?.id === defaultId ? ' Your default for new trades will switch to Default ICT Journal.' : ''}`} confirmLabel={busy ? 'Deleting…' : 'Delete template'} cancelLabel="Keep template" onConfirm={deleteSavedTemplate} />
   </div>;
 }
 
