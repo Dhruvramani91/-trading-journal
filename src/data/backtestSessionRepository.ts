@@ -61,6 +61,36 @@ export async function createBacktestSession(input: CreateBacktestSessionInput): 
   return fromRow(data as Record<string, unknown>);
 }
 
+export async function updateBacktestSession(sessionId: string, input: CreateBacktestSessionInput): Promise<BacktestSession> {
+  if (!supabase) {
+    const sessions = localSessions();
+    const existing = sessions.find((session) => session.id === sessionId);
+    if (!existing) throw new Error('Backtest session not found.');
+    const updated: BacktestSession = {
+      ...existing,
+      name: input.name.trim(),
+      instruments: [...input.instruments],
+      startDate: input.startDate,
+      endDate: input.endDate,
+      templateId: input.template.id,
+      templateSnapshot: structuredClone(input.template),
+    };
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(sessions.map((session) => session.id === sessionId ? updated : session)));
+    return updated;
+  }
+
+  const { data, error } = await supabase.from('backtest_sessions').update({
+    name: input.name.trim(),
+    instruments: [...input.instruments],
+    start_date: input.startDate,
+    end_date: input.endDate,
+    template_id: input.template.id,
+    template_snapshot: input.template,
+  }).eq('id', sessionId).select('*').single();
+  if (error) throw new Error(`Could not update backtest session: ${error.message}`);
+  return fromRow(data as Record<string, unknown>);
+}
+
 function localTrades(): BacktestTrade[] {
   try { return JSON.parse(localStorage.getItem(LOCAL_TRADES_KEY) ?? '[]') as BacktestTrade[]; }
   catch { return []; }

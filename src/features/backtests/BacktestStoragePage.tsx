@@ -18,7 +18,7 @@ import { InstrumentMark } from '@/components/trade/InstrumentMark';
 import { TradeGradeBadge } from '@/components/trade/TradeGradeBadge';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Loader } from '@/components/ui/Loader';
-import { createBacktestSession, deleteBacktestSession, deleteBacktestTrade, listBacktestSessions, listBacktestTrades, saveBacktestTrade } from '@/data/backtestSessionRepository';
+import { createBacktestSession, deleteBacktestSession, deleteBacktestTrade, listBacktestSessions, listBacktestTrades, saveBacktestTrade, updateBacktestSession } from '@/data/backtestSessionRepository';
 import { getDefaultTemplateId, listJournalTemplates } from '@/data/journalTemplateRepository';
 import type { BacktestSection, BacktestSession, BacktestTrade, BacktestTradeInput } from '@/domain/models/backtestSession';
 import type { TemplateDefinition, Trade } from '@/domain/models/trade';
@@ -64,6 +64,7 @@ export function BacktestStoragePage() {
   const [templates, setTemplates] = useState<TemplateDefinition[]>([]);
   const [defaultTemplateId, setDefaultTemplateId] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
+  const [editingSession, setEditingSession] = useState<BacktestSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [deletingSessionId, setDeletingSessionId] = useState('');
@@ -87,11 +88,12 @@ export function BacktestStoragePage() {
   const activeSession = useMemo(() => sessions.find((item) => item.id === sessionId), [sessions, sessionId]);
   const activeSection: BacktestSection = SECTIONS.some((item) => item.id === section) ? section as BacktestSection : 'journal';
 
-  async function saveSession(input: { name: string; instruments: string[]; startDate: string; endDate: string; template: TemplateDefinition }) {
-    const saved = await createBacktestSession(input);
-    setSessions((current) => [saved, ...current]);
+  async function saveSession(input: { name: string; instruments: string[]; startDate: string; endDate: string; template: TemplateDefinition }, sessionId?: string) {
+    const saved = sessionId ? await updateBacktestSession(sessionId, input) : await createBacktestSession(input);
+    setSessions((current) => sessionId ? current.map((session) => session.id === sessionId ? saved : session) : [saved, ...current]);
     setCreateOpen(false);
-    navigate(`/backtests/${saved.id}/journal`);
+    setEditingSession(null);
+    if (!sessionId) navigate(`/backtests/${saved.id}/journal`);
   }
 
   async function removeSession(session: BacktestSession) {
@@ -132,22 +134,33 @@ export function BacktestStoragePage() {
         <p className="mt-1 max-w-md text-sm text-fg-muted">Set the instruments, date range, and strategy template you’re testing. It won’t mix with your regular journal.</p>
         <Button className="mt-5" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setCreateOpen(true)}>Create backtest</Button>
       </CardBody></Card>
-      : <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{sessions.map((session) => <Card key={session.id} className="group relative h-full transition-colors hover:border-accent/40">
-        <button type="button" onClick={() => navigate(`/backtests/${session.id}/journal`)} className="w-full rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50">
-          <CardHeader className="pr-14"><CardTitle className="truncate">{session.name}</CardTitle><span className="text-xs text-fg-dim">{session.templateSnapshot.name}</span></CardHeader><CardBody className="space-y-2 text-sm">
+      : <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{sessions.map((session) => <Card key={session.id} className="group flex h-full flex-col transition-colors hover:border-accent/40">
+        <button type="button" onClick={() => navigate(`/backtests/${session.id}/journal`)} className="w-full flex-1 rounded-t-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50">
+          <CardHeader><CardTitle className="truncate">{session.name}</CardTitle><span className="shrink-0 text-xs text-fg-dim">{session.templateSnapshot.name}</span></CardHeader><CardBody className="space-y-2 text-sm">
           <div className="flex flex-wrap gap-1.5">{session.instruments.map((instrument) => <span key={instrument} className="rounded-md border border-line bg-bg-3 px-2 py-0.5 text-xs text-fg-muted">{instrument}</span>)}</div>
           <p className="text-xs text-fg-muted">{formatDate(session.startDate)} – {formatDate(session.endDate)}</p>
           </CardBody>
         </button>
-        <Button type="button" variant="ghost" size="icon-sm" aria-label={`Delete ${session.name}`} title="Delete backtest" disabled={deletingSessionId === session.id} onClick={() => void removeSession(session)} className="absolute right-3 top-3 text-fg-dim opacity-100 transition-colors hover:bg-bg-4 hover:text-fg sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100"><Trash2 className="h-4 w-4" /></Button>
+        <footer className="flex justify-end gap-1 border-t border-line px-3 py-2">
+          <Button type="button" variant="ghost" size="icon-sm" aria-label={`Edit ${session.name}`} title="Edit backtest" onClick={() => setEditingSession(session)} className="text-fg-dim hover:bg-bg-4 hover:text-fg"><Pencil className="h-4 w-4" /></Button>
+          <Button type="button" variant="ghost" size="icon-sm" aria-label={`Delete ${session.name}`} title="Delete backtest" disabled={deletingSessionId === session.id} onClick={() => void removeSession(session)} className="text-fg-dim hover:bg-bg-4 hover:text-loss"><Trash2 className="h-4 w-4" /></Button>
+        </footer>
       </Card>)}</div>}
-    <CreateSessionDialog open={createOpen} onOpenChange={setCreateOpen} templates={templates} defaultTemplateId={defaultTemplateId} onCreate={saveSession} />
+    <CreateSessionDialog
+      open={createOpen || editingSession !== null}
+      onOpenChange={(open) => { if (!open) { setCreateOpen(false); setEditingSession(null); } }}
+      session={editingSession}
+      templates={templates}
+      defaultTemplateId={defaultTemplateId}
+      onSave={saveSession}
+    />
   </>;
 }
 
-function CreateSessionDialog({ open, onOpenChange, templates, defaultTemplateId, onCreate }: {
+function CreateSessionDialog({ open, onOpenChange, session, templates, defaultTemplateId, onSave }: {
   open: boolean; onOpenChange: (open: boolean) => void; templates: TemplateDefinition[]; defaultTemplateId: string;
-  onCreate: (input: { name: string; instruments: string[]; startDate: string; endDate: string; template: TemplateDefinition }) => Promise<void>;
+  session: BacktestSession | null;
+  onSave: (input: { name: string; instruments: string[]; startDate: string; endDate: string; template: TemplateDefinition }, sessionId?: string) => Promise<void>;
 }) {
   const [name, setName] = useState('');
   const [instruments, setInstruments] = useState<string[]>([]);
@@ -159,9 +172,9 @@ function CreateSessionDialog({ open, onOpenChange, templates, defaultTemplateId,
 
   useEffect(() => {
     if (!open) return;
-    setName(''); setInstruments([]); setStartDate(''); setEndDate(''); setError('');
-    setTemplateId(templates.some((template) => template.id === defaultTemplateId) ? defaultTemplateId : templates[0]?.id ?? '');
-  }, [open, templates, defaultTemplateId]);
+    setName(session?.name ?? ''); setInstruments(session?.instruments ?? []); setStartDate(session?.startDate ?? ''); setEndDate(session?.endDate ?? ''); setError('');
+    setTemplateId(session?.templateId ?? (templates.some((template) => template.id === defaultTemplateId) ? defaultTemplateId : templates[0]?.id ?? ''));
+  }, [open, templates, defaultTemplateId, session]);
 
   const toggleInstrument = (instrument: string) => setInstruments((selected) => selected.includes(instrument) ? selected.filter((item) => item !== instrument) : [...selected, instrument]);
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -171,8 +184,8 @@ function CreateSessionDialog({ open, onOpenChange, templates, defaultTemplateId,
     if (!instruments.length) { setError('Select at least one instrument.'); return; }
     if (startDate > endDate) { setError('End date must be on or after the start date.'); return; }
     setBusy(true); setError('');
-    try { await onCreate({ name, instruments, startDate, endDate, template }); }
-    catch (reason) { setError(reason instanceof Error ? reason.message : 'Could not create this session.'); }
+    try { await onSave({ name, instruments, startDate, endDate, template }, session?.id); }
+    catch (reason) { setError(reason instanceof Error ? reason.message : 'Could not save this session.'); }
     finally { setBusy(false); }
   }
 
@@ -181,7 +194,7 @@ function CreateSessionDialog({ open, onOpenChange, templates, defaultTemplateId,
       <Dialog.Overlay className="fixed inset-0 z-50 bg-bg-0/75 backdrop-blur-sm" />
       <Dialog.Content data-select-portal aria-describedby="backtest-create-description" className="fixed left-1/2 top-1/2 z-[51] max-h-[90dvh] w-[min(620px,calc(100vw-24px))] -translate-x-1/2 -translate-y-1/2 overflow-visible rounded-2xl border border-line bg-bg-1 shadow-pop focus:outline-none">
         <header className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
-          <div><Dialog.Title className="text-lg font-semibold text-fg">Create backtest session</Dialog.Title><Dialog.Description id="backtest-create-description" className="mt-1 text-sm text-fg-muted">Choose the scope and strategy for this independent backtest.</Dialog.Description></div>
+          <div><Dialog.Title className="text-lg font-semibold text-fg">{session ? 'Edit backtest session' : 'Create backtest session'}</Dialog.Title><Dialog.Description id="backtest-create-description" className="mt-1 text-sm text-fg-muted">Choose the scope and strategy for this independent backtest.</Dialog.Description></div>
           <Dialog.Close asChild><Button variant="ghost" size="icon-sm" aria-label="Close"><X className="h-4 w-4" /></Button></Dialog.Close>
         </header>
         <form onSubmit={submit} className="max-h-[calc(90dvh-76px)] min-h-0 space-y-5 overflow-y-auto p-5">
@@ -202,7 +215,7 @@ function CreateSessionDialog({ open, onOpenChange, templates, defaultTemplateId,
           {error && <p role="alert" className="rounded-lg border border-line bg-bg-3 px-3 py-2 text-sm text-fg">{error}</p>}
           <footer className="sticky bottom-0 -mx-5 flex justify-end gap-2 border-t border-line bg-bg-1/95 px-5 pt-4 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm motion-reduce:backdrop-blur-none">
             <Dialog.Close asChild><Button type="button" variant="ghost" disabled={busy}>Cancel</Button></Dialog.Close>
-            <Button type="submit" disabled={busy || !templates.length} leftIcon={<Plus className="h-4 w-4" />}>{busy ? 'Creating…' : 'Create session'}</Button>
+            <Button type="submit" disabled={busy || !templates.length} leftIcon={session ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}>{busy ? 'Saving…' : session ? 'Save changes' : 'Create session'}</Button>
           </footer>
         </form>
       </Dialog.Content>
