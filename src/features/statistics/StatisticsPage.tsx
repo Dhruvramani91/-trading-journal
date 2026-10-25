@@ -196,33 +196,40 @@ export function StatisticsPage() {
    * This is the original R-based analytics engine.
    * Nothing here has been changed.
    */
-  const s = useMemo(
-    () => (loaded ? summary(trades) : null),
-    [loaded, trades],
-  );
-
+  const usedTemplateIds = useMemo(() => Array.from(new Set(trades.map((trade) => trade.templateId))), [trades]);
   const availableTemplates = useMemo(() => {
     const unique = new Map(templateOptions.map((item) => [item.id, item]));
-    for (const trade of trades) if (trade.templateSnapshot) unique.set(trade.templateSnapshot.id, trade.templateSnapshot);
-    return Array.from(unique.values());
-  }, [templateOptions, trades]);
-  const selectedTemplate = availableTemplates.find((item) => item.id === selectedTemplateId)
-    ?? trades.find((trade) => trade.templateSnapshot?.id === selectedTemplateId)?.templateSnapshot
+    for (const trade of trades) if (trade.templateSnapshot) unique.set(trade.templateId, trade.templateSnapshot);
+    return usedTemplateIds.map((id) => unique.get(id) ?? getTemplate(id));
+  }, [templateOptions, trades, usedTemplateIds]);
+  const effectiveTemplateId = usedTemplateIds.length === 1
+    ? usedTemplateIds[0]
+    : usedTemplateIds.includes(selectedTemplateId) ? selectedTemplateId : (usedTemplateIds[0] ?? selectedTemplateId);
+  const selectedTemplate = availableTemplates.find((item) => item.id === effectiveTemplateId)
+    ?? trades.find((trade) => trade.templateId === effectiveTemplateId)?.templateSnapshot
     ?? getTemplate();
+  const analysisTrades = useMemo(
+    () => usedTemplateIds.length > 0 ? trades.filter((trade) => trade.templateId === effectiveTemplateId) : trades,
+    [trades, usedTemplateIds.length, effectiveTemplateId],
+  );
+  const s = useMemo(
+    () => (loaded ? summary(analysisTrades) : null),
+    [loaded, analysisTrades],
+  );
   const templates = useMemo(() => loaded
-    ? allBreakdowns(trades, selectedTemplate)
-    : ([] as CategoryBreakdown[]), [loaded, trades, selectedTemplate]);
+    ? allBreakdowns(analysisTrades, selectedTemplate)
+    : ([] as CategoryBreakdown[]), [loaded, analysisTrades, selectedTemplate]);
 
   /*
    * NEW:
    * P&L analytics are calculated separately from R.
    */
   const pnlStats = useMemo(
-    () => calculatePnlStats(trades),
-    [trades],
+    () => calculatePnlStats(analysisTrades),
+    [analysisTrades],
   );
 
-  const grades = useMemo(() => gradePerformance(trades), [trades]);
+  const grades = useMemo(() => gradePerformance(analysisTrades), [analysisTrades]);
 
   /*
    * Instrument analysis:
@@ -241,7 +248,7 @@ export function StatisticsPage() {
       }
     >();
 
-    for (const t of trades) {
+    for (const t of analysisTrades) {
       let row = m.get(t.instrument);
 
       if (!row) {
@@ -277,7 +284,7 @@ export function StatisticsPage() {
     return Array.from(m.entries()).sort(
       (a, b) => b[1].totalR - a[1].totalR,
     );
-  }, [trades]);
+  }, [analysisTrades]);
 
   const maxAbsR = Math.max(
     1,
@@ -355,7 +362,7 @@ export function StatisticsPage() {
         description="How your trades perform, broken down by category."
       />
 
-      <div className="max-w-sm"><label className="mb-1.5 block text-sm font-medium text-fg-muted" htmlFor="stats-template">Strategy breakdown</label><Select id="stats-template" value={selectedTemplateId} onChange={(event) => setSelectedTemplateId(event.target.value)}>{availableTemplates.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></div>
+      {availableTemplates.length > 1 && <div className="max-w-sm"><label className="mb-1.5 block text-sm font-medium text-fg-muted" htmlFor="stats-template">Strategy breakdown</label><Select id="stats-template" value={effectiveTemplateId} onChange={(event) => setSelectedTemplateId(event.target.value)}>{availableTemplates.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></div>}
 
       {!loaded || !s ? (
         <Loader size="sm" title="Loading statistics…" className="min-h-56" />
