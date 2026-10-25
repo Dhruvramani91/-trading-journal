@@ -604,7 +604,7 @@ export interface SegmentedProps<T extends string> {
   options: ReadonlyArray<{
     value: T;
     label: string;
-    tone?: 'default' | 'win' | 'loss' | 'neutral';
+    tone?: 'default' | 'win' | 'loss' | 'neutral' | 'grade-a-plus' | 'grade-a' | 'grade-b' | 'grade-c';
     disabled?: boolean;
   }>;
   size?: 'sm' | 'md';
@@ -660,11 +660,30 @@ export function Segmented<T extends string>({
     >
       {options.map((opt, index) => {
         const isActive = opt.value === value;
-        const activeTone =
-          opt.tone === 'win'
-            ? 'bg-win-fill/15 text-win font-semibold'
-            : opt.tone === 'loss'
-              ? 'bg-loss-fill/15 text-loss font-semibold'
+        const gradeToneClass = opt.tone === 'grade-a-plus'
+          ? 'bg-[rgb(var(--grade-a-plus)/0.15)] text-[rgb(var(--grade-a-plus))]'
+          : opt.tone === 'grade-a'
+            ? 'bg-[rgb(var(--grade-a)/0.15)] text-[rgb(var(--grade-a))]'
+            : opt.tone === 'grade-b'
+              ? 'bg-[rgb(var(--grade-b)/0.15)] text-[rgb(var(--grade-b))]'
+              : opt.tone === 'grade-c'
+                ? 'bg-[rgb(var(--grade-c)/0.15)] text-[rgb(var(--grade-c))]'
+                : undefined;
+        const inactiveGradeTone = opt.tone === 'grade-a-plus'
+          ? 'text-[rgb(var(--grade-a-plus))]'
+          : opt.tone === 'grade-a'
+            ? 'text-[rgb(var(--grade-a))]'
+            : opt.tone === 'grade-b'
+              ? 'text-[rgb(var(--grade-b))]'
+              : opt.tone === 'grade-c'
+                ? 'text-[rgb(var(--grade-c))]'
+                : undefined;
+        const activeTone = opt.tone === 'win'
+          ? 'bg-win-fill/15 text-win font-semibold'
+          : opt.tone === 'loss'
+            ? 'bg-loss-fill/15 text-loss font-semibold'
+            : gradeToneClass
+              ? `${gradeToneClass} font-semibold`
               : 'bg-bg-2 text-fg shadow-sm font-semibold';
 
         return (
@@ -681,7 +700,7 @@ export function Segmented<T extends string>({
             className={cn(
               'flex-1 inline-flex items-center justify-center gap-1 rounded-md text-xs transition-all',
               size === 'sm' ? 'h-6 px-2' : 'h-8 px-3',
-              isActive ? activeTone : 'text-fg-muted hover:text-fg',
+              isActive ? activeTone : cn('text-fg-muted hover:text-fg', inactiveGradeTone),
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/60',
             )}
           >

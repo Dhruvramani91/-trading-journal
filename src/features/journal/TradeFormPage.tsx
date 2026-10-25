@@ -948,10 +948,10 @@ export function TradeFormPage() {
                     value={form.grade}
                     onChange={(grade) => patch('grade', grade)}
                     options={[
-                      { value: 'A+', label: 'A+' },
-                      { value: 'A', label: 'A' },
-                      { value: 'B', label: 'B' },
-                      { value: 'C', label: 'C' },
+                      { value: 'A+', label: 'A+', tone: 'grade-a-plus' },
+                      { value: 'A', label: 'A', tone: 'grade-a' },
+                      { value: 'B', label: 'B', tone: 'grade-b' },
+                      { value: 'C', label: 'C', tone: 'grade-c' },
                     ]}
                     fullWidth
                   />

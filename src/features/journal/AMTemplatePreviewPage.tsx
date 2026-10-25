@@ -146,7 +146,12 @@ export function AMTemplatePreviewPage() {
           </FormSection>
           <FormSection title="Result">
             <FormField label="Trade grade" hint="Optional execution-quality rating.">
-              <Segmented<TradeGrade | ''> value={values.grade as TradeGrade | ''} onChange={(value) => update('grade', value)} options={(['A+', 'A', 'B', 'C'] as const).map((value) => ({ value, label: value }))} fullWidth />
+              <Segmented<TradeGrade | ''> value={values.grade as TradeGrade | ''} onChange={(value) => update('grade', value)} options={[
+                { value: 'A+', label: 'A+', tone: 'grade-a-plus' },
+                { value: 'A', label: 'A', tone: 'grade-a' },
+                { value: 'B', label: 'B', tone: 'grade-b' },
+                { value: 'C', label: 'C', tone: 'grade-c' },
+              ]} fullWidth />
             </FormField>
             <FormField label="Outcome" required>
               <Segmented<string> value={values.result} onChange={(value) => update('result', value)} options={OPTIONS.result.map((value) => ({ value, label: value === 'Break even' ? 'BE' : value }))} fullWidth />

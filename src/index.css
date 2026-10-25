@@ -28,10 +28,10 @@
     --primary-soft: 0 0 0 / 0.06;
     --focus: 42 42 46;
 
-    --grade-a-plus: 67 67 72;
-    --grade-a: 85 85 90;
-    --grade-b: 107 107 112;
-    --grade-c: 130 130 135;
+    --grade-a-plus: 31 138 91;
+    --grade-a: 46 111 181;
+    --grade-b: 148 93 0;
+    --grade-c: 194 65 63;
 
     --win: 31 138 91;
     --win-text: 24 118 77;
@@ -74,10 +74,10 @@
     --primary-soft: 255 255 255 / 0.07;
     --focus: 212 212 216;
 
-    --grade-a-plus: 232 232 234;
-    --grade-a: 201 201 204;
-    --grade-b: 170 170 174;
-    --grade-c: 142 142 147;
+    --grade-a-plus: 95 191 138;
+    --grade-a: 116 169 229;
+    --grade-b: 223 176 92;
+    --grade-c: 229 120 122;
 
     --win: 95 191 138;
     --win-text: 95 191 138;

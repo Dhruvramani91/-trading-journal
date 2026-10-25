@@ -142,10 +142,13 @@ export function Sidebar() {
 
       <div className={cn('shrink-0 border-t border-line py-2', collapsed ? 'px-2' : 'px-3')}>
         {user && (
-          <div
+          <button
+            type="button"
+            onClick={() => navigate('/profile')}
+            aria-label={`Open profile for ${user.name || user.email}`}
             title={collapsed ? user.name || user.email : undefined}
             className={cn(
-              'flex h-9 w-full items-center rounded-lg text-left',
+              'flex h-10 w-full items-center rounded-lg text-left transition-colors hover:bg-bg-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50',
               collapsed ? 'justify-center' : 'gap-3 px-2',
             )}
           >
@@ -158,7 +161,7 @@ export function Sidebar() {
                 <span className="block truncate text-[10px] text-fg-dim">Signed in</span>
               </span>
             )}
-          </div>
+          </button>
         )}
       </div>
 
