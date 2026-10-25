@@ -17,6 +17,7 @@ import { BreakdownCard } from '@/components/stats/BreakdownCard';
 import { InstrumentMark } from '@/components/trade/InstrumentMark';
 import { TradeGradeBadge } from '@/components/trade/TradeGradeBadge';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { Loader } from '@/components/ui/Loader';
 import { createBacktestSession, deleteBacktestSession, deleteBacktestTrade, listBacktestSessions, listBacktestTrades, saveBacktestTrade } from '@/data/backtestSessionRepository';
 import { getDefaultTemplateId, listJournalTemplates } from '@/data/journalTemplateRepository';
 import type { BacktestSection, BacktestSession, BacktestTrade, BacktestTradeInput } from '@/domain/models/backtestSession';
@@ -108,6 +109,16 @@ export function BacktestStoragePage() {
     return <BacktestWorkspace session={activeSession} section={activeSection} tradeId={tradeId} onBack={() => navigate('/backtests')} onSection={(next) => navigate(`/backtests/${activeSession.id}/${next}`)} onTrade={(id) => navigate(`/backtests/${activeSession.id}/trade/${id}`)} />;
   }
 
+  if (loading) {
+    return (
+      <Loader
+        title="Loading backtest sessions…"
+        subtitle="Preparing your backtest workspace."
+        className="min-h-[calc(100dvh-6rem)] sm:min-h-[calc(100dvh-6.5rem)] md:min-h-[calc(100dvh-3rem)] lg:min-h-[calc(100dvh-3.5rem)]"
+      />
+    );
+  }
+
   return <>
     <PageHeader
       title="Backtest storage"
@@ -115,8 +126,7 @@ export function BacktestStoragePage() {
       actions={<Button leftIcon={<Plus className="h-4 w-4" />} onClick={() => setCreateOpen(true)}>Create backtest</Button>}
     />
     {error && <div role="alert" className="mb-4 rounded-lg border border-line bg-bg-3 px-4 py-3 text-sm text-fg">{error}</div>}
-    {loading ? <Card><CardBody className="py-10 text-center text-sm text-fg-muted">Loading backtest sessions…</CardBody></Card>
-      : sessions.length === 0 ? <Card><CardBody className="flex flex-col items-center py-14 text-center">
+    {sessions.length === 0 ? <Card><CardBody className="flex flex-col items-center py-14 text-center">
         <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl border border-line bg-bg-3 text-accent"><FlaskConical className="h-5 w-5" /></span>
         <h2 className="text-base font-semibold text-fg">Start a backtest workspace</h2>
         <p className="mt-1 max-w-md text-sm text-fg-muted">Set the instruments, date range, and strategy template you’re testing. It won’t mix with your regular journal.</p>
