@@ -702,7 +702,7 @@ export function FormField({
   children,
   className,
 }: {
-  label: string;
+  label: ReactNode;
   hint?: ReactNode;
   required?: boolean;
   invalid?: boolean;

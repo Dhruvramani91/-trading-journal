@@ -4,16 +4,16 @@ export type TemplateFieldGroup = [string, TemplateField[]];
 
 /** Keep field ordering consistent with the strategy sections rendered in the trade form. */
 export function groupTemplateFields(fields: readonly TemplateField[]): TemplateFieldGroup[] {
-  const groups = new Map<string, TemplateField[]>();
+  const groups: TemplateFieldGroup[] = [];
 
   for (const field of fields) {
     if (field.key === 'mistake') continue;
-    const group = groups.get(field.group) ?? [];
-    group.push(field);
-    groups.set(field.group, group);
+    const lastGroup = groups.at(-1);
+    if (lastGroup?.[0] === field.group) lastGroup[1].push(field);
+    else groups.push([field.group, [field]]);
   }
 
-  return Array.from(groups.entries());
+  return groups;
 }
 
 /** Form order is group order first, then each group's fields, with mistakes last. */

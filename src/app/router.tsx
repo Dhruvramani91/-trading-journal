@@ -9,7 +9,7 @@ import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { JournalPage } from '@/features/journal/JournalPage';
 import { TradeFormPage } from '@/features/journal/TradeFormPage';
 import { AMTemplatePreviewPage } from '@/features/journal/AMTemplatePreviewPage';
-import { JournalTemplatesPage } from '@/features/journal/JournalTemplatesPage';
+import { JournalTemplatesEditorPage } from '@/features/journal/JournalTemplatesEditorPage';
 import { SettingsPage } from '@/features/settings/SettingsPage';
 import { TutorialsPage } from '@/features/settings/TutorialsPage';
 import { TradeDetailsPage } from '@/features/journal/TradeDetailsPage';
@@ -50,7 +50,7 @@ export const router = createBrowserRouter([
               { path: 'journal/template-preview/am', element: <AMTemplatePreviewPage /> },
               { path: 'settings', element: <SettingsPage /> },
               { path: 'tutorials', element: <TutorialsPage /> },
-              { path: 'settings/templates', element: <JournalTemplatesPage /> },
+              { path: 'settings/templates', element: <JournalTemplatesEditorPage /> },
               { path: 'figma-templates', element: <FigmaTemplatesPage /> },
               { path: 'journal/new', element: <TradeFormPage /> },
               { path: 'journal/:id', element: <TradeDetailsPage /> },

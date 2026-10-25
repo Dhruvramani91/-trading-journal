@@ -7,7 +7,6 @@ import { Loader } from '@/components/ui/Loader';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { AnimatedCheckBox } from '@/components/ui/animated-check-box';
 import { DateTimePicker } from '@/components/ui/DateTimePicker';
 import {
   FormField,
@@ -20,6 +19,7 @@ import { useFormFieldContext } from '@/components/ui/FormFieldContext';
 import { useTradesStore, bootTradesStore } from '@/store/tradesStore';
 import { getTemplate } from '@/domain/templates/registry';
 import { groupTemplateFields } from '@/domain/templates/fieldOrder';
+import { TemplateFieldInput } from './TemplateFieldInput';
 import type { TemplateDefinition } from '@/domain/models/trade';
 import { getDefaultTemplateId, listJournalTemplates } from '@/data/journalTemplateRepository';
 import type {
@@ -1136,8 +1136,6 @@ export function TradeFormPage() {
               TEMPLATE / SETUP
           ========================== */}
           {groups.map(([group, fields]) => {
-            const booleanFields = fields.filter((field) => field.type === 'boolean');
-            const standardFields = fields.filter((field) => field.type !== 'boolean');
             const renderField = (field: (typeof fields)[number]) => {
               const isSetup = field.key === 'entry';
 
@@ -1149,29 +1147,11 @@ export function TradeFormPage() {
                   fieldKey={isSetup ? 'setup' : undefined}
                   invalid={isSetup && Boolean(fieldErrors.setup)}
                 >
-                  {field.type === 'enum' ? (
-                    <Select
-                      value={String(form.templateData[field.key] ?? '')}
-                      onChange={(event) => patchTemplate(field.key, event.target.value)}
-                    >
-                      <option value="">—</option>
-                      {(field.options ?? []).map((option) => (
-                        <option key={option} value={option}>{option}</option>
-                      ))}
-                    </Select>
-                  ) : field.type === 'number' ? (
-                    <Input
-                      type="number"
-                      step="0.1"
-                      value={String(form.templateData[field.key] ?? '')}
-                      onChange={(event) => patchTemplate(field.key, event.target.value)}
-                    />
-                  ) : (
-                    <Input
-                      value={String(form.templateData[field.key] ?? '')}
-                      onChange={(event) => patchTemplate(field.key, event.target.value)}
-                    />
-                  )}
+                  <TemplateFieldInput
+                    field={field}
+                    value={form.templateData[field.key]}
+                    onChange={(value) => patchTemplate(field.key, value)}
+                  />
 
                   {isSetup && <FieldError message={fieldErrors.setup} />}
                 </FormField>
@@ -1186,21 +1166,8 @@ export function TradeFormPage() {
 
                 <CardBody>
                   <FormSection title={group}>
-                    {standardFields.map(renderField)}
+                    {fields.map(renderField)}
                   </FormSection>
-                  {booleanFields.length > 0 && (
-                    <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-                      {booleanFields.map((field) => (
-                        <FormField key={field.key} label={field.label}>
-                          <AnimatedCheckBox
-                            aria-label={field.label}
-                            checked={form.templateData[field.key] === true || form.templateData[field.key] === 'YES' || form.templateData[field.key] === 'true'}
-                            onChange={(event) => patchTemplate(field.key, event.target.checked)}
-                          />
-                        </FormField>
-                      ))}
-                    </div>
-                  )}
                 </CardBody>
               </Card>
             );
