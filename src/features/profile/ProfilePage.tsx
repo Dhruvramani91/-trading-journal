@@ -7,6 +7,7 @@ import {
   CreditCard,
   BarChart3,
   ArrowUpRight,
+  ArrowLeft,
   Camera,
   X,
   Check,
@@ -332,6 +333,7 @@ export function ProfilePage() {
       <PageHeader
         title="Profile"
         description="Your ThePrecisionLab account and plan details."
+        actions={<Button asChild variant="secondary" leftIcon={<ArrowLeft className="h-4 w-4" />}><Link to="/settings">Back to settings</Link></Button>}
       />
 
       <Card className="overflow-hidden">

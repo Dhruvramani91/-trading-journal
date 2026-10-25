@@ -1,45 +1,39 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import {
   BarChart3,
   FlaskConical,
   CalendarDays,
   LayoutDashboard,
   Layers,
-  LogOut,
   Menu,
   Plus,
   ScrollText,
   Settings,
   TriangleAlert,
-  UserRound,
   Wallet,
   X,
 } from 'lucide-react';
 import { BrandLogo } from '@/components/layout/Brand';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/store/authStore';
 
 const ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/journal', label: 'Journal', icon: ScrollText },
-  { to: '/backtests', label: 'Backtest storage', icon: FlaskConical },
-  { to: '/figma-templates', label: 'Figma templates', icon: Layers },
-  { to: '/accounts', label: 'Accounts', icon: Wallet },
   { to: '/statistics', label: 'Statistics', icon: BarChart3 },
   { to: '/calendar', label: 'Calendar', icon: CalendarDays },
   { to: '/mistakes', label: 'Mistakes', icon: TriangleAlert },
+  { to: '/accounts', label: 'Accounts', icon: Wallet },
+  { to: '/backtests', label: 'Backtest storage', icon: FlaskConical },
+  { to: '/figma-templates', label: 'Figma templates', icon: Layers },
   { to: '/settings', label: 'Settings', icon: Settings },
 ] as const;
 
 export function MobileNav() {
-  const [open, setOpen] = useState(false);
-  const [logoutOpen, setLogoutOpen] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
-  const { user, signOut } = useAuthStore();
+  const [open, setOpen] = useState(false);
+  const { user } = useAuthStore();
 
   useEffect(() => setOpen(false), [location.pathname]);
 
@@ -56,12 +50,6 @@ export function MobileNav() {
       window.removeEventListener('keydown', onKeyDown);
     };
   }, [open]);
-
-  async function confirmSignOut() {
-    setLogoutOpen(false);
-    await signOut();
-    navigate('/');
-  }
 
   return (
     <div className="relative z-40 md:hidden">
@@ -115,36 +103,10 @@ export function MobileNav() {
                 );
               })}
             </div>
-            {user && (
-              <div className="mt-3 border-t border-line pt-3">
-                <Link to="/profile" className="mb-2 flex h-11 items-center gap-3 rounded-lg px-3 text-sm text-fg-muted hover:bg-bg-3 hover:text-fg">
-                  <UserRound className="h-4 w-4" />
-                  <span className="truncate">{user.name || user.email}</span>
-                </Link>
-              </div>
-            )}
-            <div className={cn(user && 'mt-2 border-t border-line pt-2')}>
-              <ThemeToggle showLabel className="h-11 w-full justify-start border-0 bg-transparent px-3 text-sm shadow-none hover:bg-bg-3" />
-              {user && (
-                <button type="button" onClick={() => { setOpen(false); setLogoutOpen(true); }} className="flex h-11 w-full items-center gap-3 rounded-lg px-3 text-sm font-medium text-fg-muted hover:bg-loss/10 hover:text-loss">
-                  <LogOut className="h-4 w-4" />
-                  Sign out
-                </button>
-              )}
-            </div>
+            {user && <div className="mt-2 border-t border-line px-3 pt-3 text-xs text-fg-dim">Signed in as {user.name || user.email}</div>}
           </nav>
         </>
       )}
-
-      <ConfirmDialog
-        open={logoutOpen}
-        onOpenChange={setLogoutOpen}
-        title="Sign out?"
-        description="You’ll be returned to the homepage. Make sure your trades are saved."
-        confirmLabel="Sign Out"
-        cancelLabel="Cancel"
-        onConfirm={confirmSignOut}
-      />
     </div>
   );
 }

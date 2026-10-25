@@ -4,7 +4,6 @@ import {
   CalendarDays,
   LayoutDashboard,
   Layers,
-  LogOut,
   PanelLeftClose,
   PanelLeftOpen,
   ScrollText,
@@ -16,12 +15,10 @@ import {
 import { NavLink, useNavigate } from 'react-router-dom';
 import type { KeyboardEvent, PointerEvent } from 'react';
 import { BrandLogo } from '@/components/layout/Brand';
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/store/authStore';
 import { useSidebarStore } from '@/store/sidebarStore';
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 
 const GROUPS = [
   {
@@ -29,14 +26,6 @@ const GROUPS = [
     links: [
       { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
       { to: '/journal', label: 'Journal', icon: ScrollText },
-      { to: '/backtests', label: 'Backtest storage', icon: FlaskConical },
-      { to: '/figma-templates', label: 'Figma templates', icon: Layers },
-      { to: '/accounts', label: 'Accounts', icon: Wallet },
-    ],
-  },
-  {
-    label: 'Analytics',
-    links: [
       { to: '/statistics', label: 'Statistics', icon: BarChart3 },
       { to: '/calendar', label: 'Calendar', icon: CalendarDays },
       { to: '/mistakes', label: 'Mistakes', icon: TriangleAlert },
@@ -45,7 +34,14 @@ const GROUPS = [
   {
     label: 'Workspace',
     links: [
-      { to: '/settings', label: 'Settings', icon: Settings },
+      { to: '/accounts', label: 'Accounts', icon: Wallet },
+      { to: '/backtests', label: 'Backtest storage', icon: FlaskConical },
+    ],
+  },
+  {
+    label: 'Templates',
+    links: [
+      { to: '/figma-templates', label: 'Figma templates', icon: Layers },
     ],
   },
 ] as const;
@@ -54,15 +50,8 @@ export function Sidebar() {
   const navigate = useNavigate();
   const { width, setWidth, toggleCollapse } = useSidebarStore();
   const collapsed = width < 128;
-  const { user, signOut } = useAuthStore();
-  const [logoutOpen, setLogoutOpen] = useState(false);
+  const { user } = useAuthStore();
   const resizeStart = useRef<{ x: number; width: number } | null>(null);
-
-  async function confirmSignOut() {
-    setLogoutOpen(false);
-    await signOut();
-    navigate('/');
-  }
 
   function resizeFromPointer(event: PointerEvent<HTMLDivElement>) {
     if (!resizeStart.current) return;
@@ -114,11 +103,11 @@ export function Sidebar() {
         {collapsed ? <PanelLeftOpen className="h-3.5 w-3.5" /> : <PanelLeftClose className="h-3.5 w-3.5" />}
       </button>
 
-      <nav className={cn('min-h-0 flex-1 space-y-7 overflow-y-auto py-6', collapsed ? 'px-2' : 'px-3')}>
+      <nav className={cn('min-h-0 flex-1 space-y-4 overflow-hidden py-4 max-[650px]:space-y-2 max-[650px]:py-2', collapsed ? 'px-2' : 'px-3')}>
         {GROUPS.map((group) => (
           <div key={group.label}>
-            {!collapsed && <h2 className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-fg-dim">{group.label}</h2>}
-            <div className="space-y-1">
+            {!collapsed && <h2 className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-fg-dim">{group.label}</h2>}
+            <div className="space-y-0.5">
               {group.links.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -129,7 +118,7 @@ export function Sidebar() {
                     title={collapsed ? item.label : undefined}
                     aria-label={collapsed ? item.label : undefined}
                     className={({ isActive }) => cn(
-                      'group flex h-10 items-center rounded-lg text-[13px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+                      'group flex h-9 items-center rounded-lg text-[13px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 max-[650px]:h-8',
                       collapsed ? 'justify-center px-0' : 'gap-3 px-3',
                       isActive
                         ? 'bg-accent/10 text-accent'
@@ -145,16 +134,23 @@ export function Sidebar() {
             </div>
           </div>
         ))}
+        <div>
+          {!collapsed && <h2 className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-fg-dim">Preferences</h2>}
+          <div>
+            <NavLink to="/settings" end title={collapsed ? 'Settings' : undefined} aria-label={collapsed ? 'Settings' : undefined} className={({ isActive }) => cn('group flex h-9 items-center rounded-lg text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 max-[650px]:h-8', collapsed ? 'justify-center px-0' : 'gap-3 px-3', isActive ? 'bg-accent/10 text-accent' : 'text-fg-muted hover:bg-bg-3 hover:text-fg')}>
+              <Settings className="h-[17px] w-[17px] shrink-0" strokeWidth={1.8} />
+              {!collapsed && <span className="truncate">Settings</span>}
+            </NavLink>
+          </div>
+        </div>
       </nav>
 
-      <div className={cn('shrink-0 border-t border-line py-3', collapsed ? 'px-2' : 'px-3')}>
+      <div className={cn('shrink-0 border-t border-line py-2', collapsed ? 'px-2' : 'px-3')}>
         {user && (
-          <button
-            type="button"
-            onClick={() => navigate('/profile')}
-            title={collapsed ? `${user.name || user.email} · Profile` : undefined}
+          <div
+            title={collapsed ? user.name || user.email : undefined}
             className={cn(
-              'mb-2 flex h-10 w-full items-center rounded-lg text-left transition-colors hover:bg-bg-3',
+              'flex h-9 w-full items-center rounded-lg text-left',
               collapsed ? 'justify-center' : 'gap-3 px-2',
             )}
           >
@@ -164,28 +160,11 @@ export function Sidebar() {
             {!collapsed && (
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-xs font-semibold text-fg">{user.name || user.email}</span>
-                <span className="block truncate text-[10px] text-fg-dim">Profile</span>
+                <span className="block truncate text-[10px] text-fg-dim">Signed in</span>
               </span>
             )}
-          </button>
+          </div>
         )}
-        <ThemeToggle
-          showLabel={!collapsed}
-          className={cn(
-            'mb-1 h-9 border-0 bg-transparent shadow-none hover:bg-bg-3',
-            collapsed ? 'w-full' : 'w-full justify-start gap-2 whitespace-nowrap px-2 text-[11px]',
-          )}
-        />
-        <button
-          type="button"
-          onClick={() => setLogoutOpen(true)}
-          title={collapsed ? 'Sign out' : undefined}
-          aria-label="Sign out"
-          className={cn('flex h-9 w-full items-center rounded-lg text-[13px] font-medium text-fg-muted transition-colors hover:bg-loss/10 hover:text-loss', collapsed ? 'justify-center' : 'gap-3 px-3')}
-        >
-          <LogOut className="h-4 w-4 shrink-0" strokeWidth={1.8} />
-          {!collapsed && <span>Sign out</span>}
-        </button>
       </div>
 
       <div
@@ -211,15 +190,6 @@ export function Sidebar() {
         className="absolute inset-y-0 -right-1.5 z-30 w-3 cursor-col-resize touch-none outline-none after:absolute after:inset-y-0 after:left-1/2 after:w-px after:-translate-x-1/2 after:transition-colors hover:after:bg-accent focus-visible:after:bg-accent"
       />
 
-      <ConfirmDialog
-        open={logoutOpen}
-        onOpenChange={setLogoutOpen}
-        title="Sign out?"
-        description="You’ll be returned to the homepage. Make sure your trades are saved."
-        confirmLabel="Sign Out"
-        cancelLabel="Cancel"
-        onConfirm={confirmSignOut}
-      />
     </aside>
   );
 }
