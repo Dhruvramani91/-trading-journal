@@ -37,12 +37,12 @@ describe('byCategory', () => {
     expect(out.buckets[1]!.key).toBe('Continuation [C3]');
   });
 
-  it('handles boolean fields as YES/NO buckets', () => {
-    // quarterOpen / driver are all false in seed → one bucket "NO" with all 5 trades.
+  it('includes only checked trades in boolean-field breakdowns', () => {
+    // quarterOpen / driver are all false in seed, so none qualify for the breakdown.
     const out = byCategory(SEED_TRADES, 'quarterOpen');
     expect(out.buckets).toHaveLength(1);
-    expect(out.buckets[0]!.key).toBe('NO');
-    expect(out.buckets[0]!.count).toBe(5);
+    expect(out.buckets[0]!.key).toBe('YES');
+    expect(out.buckets[0]!.count).toBe(0);
   });
 
   it('returns empty buckets for empty input', () => {

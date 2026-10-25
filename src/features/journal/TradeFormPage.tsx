@@ -49,7 +49,7 @@ interface FormState {
   pnl: string;
   r: string;
   durationMin: string;
-  templateData: Record<string, string>;
+  templateData: Record<string, string | boolean>;
   notes: string;
   photos: TradePhotos;
 }
@@ -155,7 +155,7 @@ function tradeToForm(t: Trade): FormState {
     templateData: Object.fromEntries(
       Object.entries(t.templateData).map(([key, value]) => [
         key,
-        value == null ? '' : String(value),
+        value == null ? '' : typeof value === 'boolean' ? value : String(value),
       ]),
     ),
 
@@ -325,7 +325,7 @@ export function TradeFormPage() {
 
   function patchTemplate(
     key: string,
-    value: string,
+    value: string | boolean,
   ) {
     setForm((current) => ({
       ...current,
@@ -489,7 +489,7 @@ export function TradeFormPage() {
 
     if (
       template.fields.some((field) => field.key === 'entry') &&
-      (!form.templateData.entry || form.templateData.entry.trim() === '')
+      (typeof form.templateData.entry !== 'string' || form.templateData.entry.trim() === '')
     ) {
       errors.setup =
         'Setup is required.';
@@ -796,7 +796,7 @@ export function TradeFormPage() {
       {loading ? (
         <Loader size="sm" title="Loading trade…" className="min-h-40" />
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-6 pb-6">
           {/* =========================
               WHEN & WHAT
           ========================== */}
@@ -1185,47 +1185,20 @@ export function TradeFormPage() {
                         >
                           {field.type ===
                           'boolean' ? (
-                            <Segmented
-                              value={
-                                form
-                                  .templateData[
-                                  field.key
-                                ] ?? ''
-                              }
-                              onChange={(
-                                value,
-                              ) =>
-                                patchTemplate(
-                                  field.key,
-                                  value,
-                                )
-                              }
-                              options={[
-                                {
-                                  value:
-                                    'YES',
-                                  label:
-                                    'YES',
-                                  tone:
-                                    'win',
-                                },
-                                {
-                                  value:
-                                    'NO',
-                                  label:
-                                    'NO',
-                                },
-                              ]}
-                              fullWidth
-                            />
+                            <label className="flex min-h-10 cursor-pointer items-center gap-3 rounded-lg border border-line bg-bg-1 px-3 text-sm text-fg transition-colors hover:border-line-strong has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent/40">
+                              <input
+                                type="checkbox"
+                                checked={form.templateData[field.key] === true || form.templateData[field.key] === 'YES' || form.templateData[field.key] === 'true'}
+                                onChange={(event) => patchTemplate(field.key, event.target.checked)}
+                                className="h-4 w-4 shrink-0 accent-accent"
+                              />
+                              <span>Applied to this trade</span>
+                            </label>
                           ) : field.type ===
                             'enum' ? (
                             <Select
                               value={
-                                form
-                                  .templateData[
-                                  field.key
-                                ] ?? ''
+                                String(form.templateData[field.key] ?? '')
                               }
                               onChange={(
                                 e,
@@ -1267,10 +1240,7 @@ export function TradeFormPage() {
                               type="number"
                               step="0.1"
                               value={
-                                form
-                                  .templateData[
-                                  field.key
-                                ] ?? ''
+                                String(form.templateData[field.key] ?? '')
                               }
                               onChange={(
                                 e,
@@ -1285,10 +1255,7 @@ export function TradeFormPage() {
                           ) : (
                             <Input
                               value={
-                                form
-                                  .templateData[
-                                  field.key
-                                ] ?? ''
+                                String(form.templateData[field.key] ?? '')
                               }
                               onChange={(
                                 e,
@@ -1321,7 +1288,7 @@ export function TradeFormPage() {
           <Card>
             <CardHeader><CardTitle>Mistakes</CardTitle></CardHeader>
             <CardBody><FormSection title="Mistake / filter"><FormField label="Mistake / filter" hint="Track execution mistakes consistently across every strategy.">
-              <Select value={form.templateData.mistake ?? ''} onChange={(event) => patchTemplate('mistake', event.target.value)}>
+              <Select value={String(form.templateData.mistake ?? '')} onChange={(event) => patchTemplate('mistake', event.target.value)}>
                 <option value="">Select…</option>
                 {COMMON_MISTAKES.map((mistake) => <option key={mistake} value={mistake}>{mistake}</option>)}
               </Select>
@@ -1343,7 +1310,7 @@ export function TradeFormPage() {
           {/* =========================
               BOTTOM ACTIONS
           ========================== */}
-          <div className="sticky bottom-0 z-20 -mx-4 flex justify-end gap-3 border-t border-line bg-bg-0/95 px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 backdrop-blur-sm sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 motion-reduce:backdrop-blur-none">
+          <div className="-mx-4 flex justify-end gap-3 border-t border-line bg-bg-0 px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
             <Button
               asChild
               variant="ghost"

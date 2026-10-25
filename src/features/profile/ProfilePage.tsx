@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import {
   Mail,
   ShieldCheck,
@@ -98,6 +98,7 @@ function getInitials(name: string) {
 }
 
 export function ProfilePage() {
+  const location = useLocation();
   const { user, updateProfile, error, clearError } = useAuthStore();
   const { trades, loaded, load } = useTradesStore();
 
@@ -191,6 +192,14 @@ export function ProfilePage() {
     const interval = window.setInterval(updateBillingClock, 30_000);
     return () => window.clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (location.hash !== '#billing-subscription') return;
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById('billing-subscription')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [location.hash]);
 
   useEffect(() => {
     if (!cancelConfirmOpen) return;
@@ -474,7 +483,7 @@ export function ProfilePage() {
         </Card>
       </div>
 
-      <Card>
+      <Card id="billing-subscription" className="scroll-mt-6">
         <CardBody className="p-5 sm:p-6">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0">

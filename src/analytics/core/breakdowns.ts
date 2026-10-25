@@ -79,6 +79,7 @@ export function byCategory(
   const groups = new Map<string, Trade[]>();
   for (const t of trades) {
     const v = t.templateData[fieldKey];
+    if (field?.type === 'boolean' && v !== true && v !== 'YES' && v !== 'true') continue;
     const k = bucketKey(v);
     let arr = groups.get(k);
     if (!arr) {
@@ -94,6 +95,12 @@ export function byCategory(
     b.key = k;
     b.label = bucketLabel(k);
     buckets.push(b);
+  }
+  if (field?.type === 'boolean' && buckets.length === 0) {
+    const empty = buildBucket([]);
+    empty.key = 'YES';
+    empty.label = 'YES';
+    buckets.push(empty);
   }
   // Metric-aware ordering: R (default) keeps existing behaviour byte-for-byte;
   // P&L ranks by Journal Trade P&L (never account attachment values).

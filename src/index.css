@@ -21,10 +21,15 @@
     --fg-dim: 102 112 133;
     --fg-inverse: 255 255 255;
 
-    --accent: 139 60 246;
-    --accent-hover: 121 43 223;
-    --accent-muted: 139 60 246;
+    --accent: 71 85 105;
+    --accent-hover: 51 65 85;
+    --accent-muted: 100 116 139;
     --accent-fg: 255 255 255;
+
+    --grade-a-plus: 8 122 81;
+    --grade-a: 13 116 110;
+    --grade-b: 161 98 7;
+    --grade-c: 190 24 93;
 
     --win: 18 168 112;
     --win-text: 8 122 81;
@@ -60,10 +65,15 @@
     --fg-dim: 139 149 168;
     --fg-inverse: 13 13 15;
 
-    --accent: 165 102 255;
-    --accent-hover: 181 128 255;
-    --accent-muted: 165 102 255;
-    --accent-fg: 13 13 15;
+    --accent: 203 213 225;
+    --accent-hover: 241 245 249;
+    --accent-muted: 148 163 184;
+    --accent-fg: 15 23 42;
+
+    --grade-a-plus: 52 211 153;
+    --grade-a: 45 212 191;
+    --grade-b: 251 191 36;
+    --grade-c: 251 113 133;
 
     --win: 53 211 155;
     --win-text: 53 211 155;

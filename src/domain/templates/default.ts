@@ -36,6 +36,26 @@ export const DEFAULT_TEMPLATE: TemplateDefinition = {
       icon: 'CandlestickChart',
     },
     {
+      key: 'universalModel',
+      label: 'Universal Model',
+      group: 'Context',
+      type: 'enum',
+      options: ['IRL - ERL', 'ERL - IRL', 'ERL - ERL'],
+      inTable: true,
+      inStats: true,
+      icon: 'ArrowLeftRight',
+    },
+    {
+      key: 'assetType',
+      label: 'Asset Type',
+      group: 'Context',
+      type: 'enum',
+      options: ['Leading', 'Middle', 'Lagging'],
+      inTable: true,
+      inStats: true,
+      icon: 'Layers',
+    },
+    {
       key: 'dailyProfile',
       label: 'Daily Profile',
       group: 'Context',
@@ -147,6 +167,15 @@ export const DEFAULT_TEMPLATE: TemplateDefinition = {
       inTable: true,
       inStats: true,
       icon: 'Zap',
+    },
+    {
+      key: 'strengthSwitch',
+      label: 'Strength Switch',
+      group: 'Context',
+      type: 'boolean',
+      inTable: true,
+      inStats: true,
+      icon: 'ArrowLeftRight',
     },
 
     // ---------- Mistakes / filters ----------

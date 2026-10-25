@@ -665,8 +665,8 @@ function JournalTradeTable({
         <TH align="center"><SortHeader label="Profit / loss (USD)" active={sortKey === 'pnl'} dir={sortDir} onClick={() => toggleSort('pnl')} align="left" /></TH>
         <TH align="center"><SortHeader label="Realized R" active={sortKey === 'r'} dir={sortDir} onClick={() => toggleSort('r')} align="left" /></TH>
         <TH align="center"><SortHeader label="Duration" active={sortKey === 'durationMin'} dir={sortDir} onClick={() => toggleSort('durationMin')} align="left" /></TH>
-        {fields.map((field) => <TH key={field.key} title={field.label} className="text-center">{field.label}</TH>)}
-        <TH aria-label="Open trade" align="center" />
+        {fields.map((field) => <TH key={field.key} title={field.label} className="min-w-[185px] text-center">{field.label}</TH>)}
+        <TH aria-label="Open trade" align="center" className="sticky right-0 z-20 w-[58px] bg-bg-3" />
       </TR></THead>
       <TBody>{trades.map((trade) => (
         <TR key={trade.id} interactive onClick={() => onOpen(trade.id)} className="h-[64px] odd:bg-bg-2 even:bg-bg-3/35">
@@ -681,8 +681,8 @@ function JournalTradeTable({
           <TD align="center" className="whitespace-nowrap">{trade.pnl == null ? <span className="font-mono text-sm text-fg-dim">—</span> : <span className={trade.pnl > 0 ? 'font-mono text-sm font-semibold text-win' : trade.pnl < 0 ? 'font-mono text-sm font-semibold text-loss' : 'font-mono text-sm font-semibold text-be'}>{formatSignedMoney(trade.pnl)}</span>}</TD>
           <TD align="center" className={cn('whitespace-nowrap font-mono text-sm font-semibold', trade.r > 0 ? 'text-win' : trade.r < 0 ? 'text-loss' : 'text-be')}>{formatR(trade.r)}</TD>
           <TD align="center" className="whitespace-nowrap font-mono num text-xs text-fg-muted">{formatDuration(trade.durationMin)}</TD>
-          {fields.map((field) => { const value = readFieldLabel(trade, field.key); return <TD key={field.key} align="center" className="max-w-[185px] truncate text-xs text-fg-muted" title={value}>{value}</TD>; })}
-          <TD align="center"><button type="button" aria-label={`View trade ${trade.number ?? ''} details`} title="View full trade details" onClick={(event) => { event.stopPropagation(); onOpen(trade.id); }} className="rounded-md p-2 text-fg-dim transition-colors hover:bg-accent/10 hover:text-accent"><Eye className="h-4 w-4" /></button></TD>
+          {fields.map((field) => { const value = readFieldLabel(trade, field.key); return <TD key={field.key} align="center" className="w-[185px] min-w-[185px] max-w-[185px] truncate text-xs text-fg-muted" title={value}>{value}</TD>; })}
+          <TD align="center" className="sticky right-0 z-[5] w-[58px] bg-bg-2 group-even:bg-bg-3 group-hover:bg-bg-4"><button type="button" aria-label={`View trade ${trade.number ?? ''} details`} title="View full trade details" onClick={(event) => { event.stopPropagation(); onOpen(trade.id); }} className="rounded-md p-2 text-fg-dim transition-colors hover:bg-accent/10 hover:text-accent"><Eye className="h-4 w-4" /></button></TD>
         </TR>
       ))}</TBody>
     </Table>
@@ -1401,9 +1401,15 @@ function matchesFilters(
 
       if (selected.length > 0) {
 
-        const value = trade.templateData[field.key];
-
-        if (typeof value !== 'boolean' || !selected.includes(value)) return false;
+        const rawValue = trade.templateData[field.key];
+        const value = typeof rawValue === 'boolean'
+          ? rawValue
+          : rawValue === 'YES' || rawValue === 'true'
+            ? true
+            : rawValue === 'NO' || rawValue === 'false'
+              ? false
+              : null;
+        if (value === null || !selected.includes(value)) return false;
 
       }
 

@@ -151,7 +151,8 @@ function TemplateFormPreview({ template, values, onChange, portalZIndex }: { tem
 function PreviewField({ field, value, onChange, portalZIndex }: { field: PreviewControl; value: string; onChange: (value: string) => void; portalZIndex?: number }) {
   return <FormField label={field.label}>
     {field.type === 'datetime' ? <DateTimePicker value={value} onChange={onChange} placeholder="Select date and time" />
-      : field.type === 'segment' || field.type === 'boolean' ? <Segmented<string> value={value} onChange={onChange} options={(field.options ?? (field.type === 'boolean' ? ['YES', 'NO'] : [])).map((option) => ({ value: option, label: option }))} fullWidth />
+      : field.type === 'boolean' ? <label className="flex min-h-10 cursor-pointer items-center gap-3 rounded-lg border border-line bg-bg-1 px-3 text-sm text-fg"><input type="checkbox" checked={value === 'YES' || value === 'true'} onChange={(event) => onChange(event.target.checked ? 'YES' : '')} className="h-4 w-4 shrink-0 accent-accent" /><span>Applied to this trade</span></label>
+      : field.type === 'segment' ? <Segmented<string> value={value} onChange={onChange} options={(field.options ?? []).map((option) => ({ value: option, label: option }))} fullWidth />
       : field.type === 'enum' ? <Select value={value} portalZIndex={portalZIndex} onChange={(event) => onChange(event.target.value)}><option value="">Select…</option>{(field.options ?? []).map((option) => <option key={option} value={option}>{option}</option>)}</Select>
       : <Input type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'} value={value} disabled={field.disabled} onChange={(event) => onChange(event.target.value)} placeholder={field.disabled ? 'Calculated in a saved trade' : 'Enter value'} />}
   </FormField>;
