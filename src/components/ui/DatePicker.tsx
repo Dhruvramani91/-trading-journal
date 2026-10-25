@@ -317,7 +317,7 @@ export function DatePicker({
                 }
                 if (event.key === 'Escape' && open) setOpen(false);
               }}
-              className={cn('h-11 w-full rounded-xl border border-[rgb(var(--input-overlay-border))] bg-[rgb(var(--input-overlay-trigger))] px-3 pr-11 text-sm text-[rgb(var(--input-overlay-text))] shadow-[0_0_0_2px_rgb(var(--input-overlay-border)/0.18)] placeholder:text-[rgb(var(--input-overlay-muted))] transition-colors hover:border-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none', isInvalid && 'border-loss-fill focus-visible:ring-loss-fill/40', className)}
+              className={cn('h-11 w-full rounded-xl border border-[rgb(var(--input-overlay-border))] bg-[rgb(var(--input-overlay-trigger))] px-3 pr-11 text-sm text-[rgb(var(--input-overlay-text))] shadow-[0_0_0_2px_rgb(var(--input-overlay-border)/0.18)] placeholder:text-[rgb(var(--input-overlay-muted))] transition-colors hover:border-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50 disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none', isInvalid && 'border-line-strong focus-visible:ring-focus/40', className)}
             />
             <button
               type="button"
@@ -332,7 +332,7 @@ export function DatePicker({
                 }
                 setOpen((current) => !current);
               }}
-              className="absolute inset-y-0 right-1 inline-flex w-9 items-center justify-center rounded-lg text-[rgb(var(--input-overlay-muted))] transition-colors hover:bg-[rgb(var(--input-overlay-hover))] hover:text-[rgb(var(--input-overlay-text))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 disabled:opacity-50"
+              className="absolute inset-y-0 right-1 inline-flex w-9 items-center justify-center rounded-lg text-[rgb(var(--input-overlay-muted))] transition-colors hover:bg-[rgb(var(--input-overlay-hover))] hover:text-[rgb(var(--input-overlay-text))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50 disabled:opacity-50"
             >
               <CalendarDays className="h-4 w-4" aria-hidden="true" />
             </button>
@@ -356,18 +356,18 @@ export function DatePicker({
           {view === 'calendar' ? (
             <>
               <header className="flex items-center justify-between gap-1">
-                <button type="button" aria-label="Previous month" onClick={() => changeMonth(-1)} className="grid h-8 w-8 place-items-center rounded-lg text-[rgb(var(--input-overlay-muted))] transition-colors hover:bg-[rgb(var(--input-overlay-hover))] hover:text-[rgb(var(--input-overlay-text))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50">
+                <button type="button" aria-label="Previous month" onClick={() => changeMonth(-1)} className="grid h-8 w-8 place-items-center rounded-lg text-[rgb(var(--input-overlay-muted))] transition-colors hover:bg-[rgb(var(--input-overlay-hover))] hover:text-[rgb(var(--input-overlay-text))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50">
                   <ChevronLeft className="h-4 w-4" />
                 </button>
                 <div className="flex items-center gap-1.5">
-                  <button type="button" aria-label="Choose month" aria-expanded={false} onClick={() => setView('month')} className="inline-flex h-8 items-center gap-1 rounded-lg border border-[rgb(var(--input-overlay-border))] px-2 text-[13px] font-medium transition-colors hover:bg-[rgb(var(--input-overlay-hover))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50">
+                  <button type="button" aria-label="Choose month" aria-expanded={false} onClick={() => setView('month')} className="inline-flex h-8 items-center gap-1 rounded-lg border border-[rgb(var(--input-overlay-border))] px-2 text-[13px] font-medium transition-colors hover:bg-[rgb(var(--input-overlay-hover))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50">
                     {monthLabel}<ChevronsUpDown className="h-3.5 w-3.5 text-[rgb(var(--input-overlay-muted))]" />
                   </button>
-                  <button type="button" aria-label="Choose year" aria-expanded={false} onClick={() => setView('year')} className="inline-flex h-8 items-center gap-1 rounded-lg border border-[rgb(var(--input-overlay-border))] px-2 text-[13px] font-medium transition-colors hover:bg-[rgb(var(--input-overlay-hover))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50">
+                  <button type="button" aria-label="Choose year" aria-expanded={false} onClick={() => setView('year')} className="inline-flex h-8 items-center gap-1 rounded-lg border border-[rgb(var(--input-overlay-border))] px-2 text-[13px] font-medium transition-colors hover:bg-[rgb(var(--input-overlay-hover))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50">
                     {year}<ChevronsUpDown className="h-3.5 w-3.5 text-[rgb(var(--input-overlay-muted))]" />
                   </button>
                 </div>
-                <button type="button" aria-label="Next month" onClick={() => changeMonth(1)} className="grid h-8 w-8 place-items-center rounded-lg text-[rgb(var(--input-overlay-muted))] transition-colors hover:bg-[rgb(var(--input-overlay-hover))] hover:text-[rgb(var(--input-overlay-text))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50">
+                <button type="button" aria-label="Next month" onClick={() => changeMonth(1)} className="grid h-8 w-8 place-items-center rounded-lg text-[rgb(var(--input-overlay-muted))] transition-colors hover:bg-[rgb(var(--input-overlay-hover))] hover:text-[rgb(var(--input-overlay-text))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50">
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </header>
@@ -404,7 +404,7 @@ export function DatePicker({
                           selectDate(day);
                         }}
                         onKeyDown={(event) => onDayKeyDown(event, day)}
-                        className={cn('relative grid h-9 w-9 place-items-center rounded-lg text-[13px] font-medium tabular-nums outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-accent/60', outsideMonth && 'text-[rgb(var(--input-overlay-muted))]/55', !outsideMonth && 'text-[rgb(var(--input-overlay-text))]', marked && !selected && 'bg-orange-500/10', !selected && !dayDisabled && 'hover:bg-[rgb(var(--input-overlay-hover))]', selected && 'ui-date-selected bg-accent text-accent-fg', dayDisabled && 'cursor-not-allowed opacity-40')}
+                        className={cn('relative grid h-9 w-9 place-items-center rounded-lg text-[13px] font-medium tabular-nums outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-focus/60', outsideMonth && 'text-[rgb(var(--input-overlay-muted))]/55', !outsideMonth && 'text-[rgb(var(--input-overlay-text))]', marked && !selected && 'bg-primary-soft', !selected && !dayDisabled && 'hover:bg-[rgb(var(--input-overlay-hover))]', selected && 'ui-date-selected bg-accent text-accent-fg', dayDisabled && 'cursor-not-allowed opacity-40')}
                       >
                         <span>{day.getDate()}</span>
                         {isToday && <span aria-hidden="true" className={cn('absolute bottom-1 h-1 w-1 rounded-full', selected ? 'bg-current' : 'bg-accent')} />}
@@ -447,7 +447,7 @@ export function DatePicker({
                         const normalizedHour = Number(normalized) % 12 + (period === 'PM' ? 12 : 0);
                         onTimeChange(`${String(normalizedHour).padStart(2, '0')}:${match?.[2] ?? '00'}`);
                       }}
-                      className="h-9 w-11 rounded-lg border border-[rgb(var(--input-overlay-border))] bg-transparent text-center text-sm font-semibold tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-accent/50 disabled:opacity-40"
+                      className="h-9 w-11 rounded-lg border border-[rgb(var(--input-overlay-border))] bg-transparent text-center text-sm font-semibold tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-focus/50 disabled:opacity-40"
                     />
                     <span className="text-sm text-[rgb(var(--input-overlay-muted))]">:</span>
                     <input
@@ -474,7 +474,7 @@ export function DatePicker({
                         const match = /^([0-2]\d):([0-5]\d)$/.exec(timeValue ?? '00:00');
                         onTimeChange(`${match?.[1] ?? '00'}:${normalized}`);
                       }}
-                      className="h-9 w-11 rounded-lg border border-[rgb(var(--input-overlay-border))] bg-transparent text-center text-sm font-semibold tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-accent/50 disabled:opacity-40"
+                      className="h-9 w-11 rounded-lg border border-[rgb(var(--input-overlay-border))] bg-transparent text-center text-sm font-semibold tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-focus/50 disabled:opacity-40"
                     />
                     <button
                       type="button"
@@ -485,7 +485,7 @@ export function DatePicker({
                         const hour24 = match ? Number(match[1]) : 0;
                         onTimeChange(`${String((hour24 + 12) % 24).padStart(2, '0')}:${match?.[2] ?? '00'}`);
                       }}
-                      className="h-9 min-w-12 rounded-lg border border-[rgb(var(--input-overlay-border))] px-2 text-xs font-semibold transition-colors hover:bg-[rgb(var(--input-overlay-hover))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 disabled:opacity-40"
+                      className="h-9 min-w-12 rounded-lg border border-[rgb(var(--input-overlay-border))] px-2 text-xs font-semibold transition-colors hover:bg-[rgb(var(--input-overlay-hover))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50 disabled:opacity-40"
                     >
                       {(Number(/^([0-2]\d):/.exec(timeValue ?? '00:00')?.[1] ?? '00') >= 12) ? 'PM' : 'AM'}
                     </button>
@@ -495,7 +495,7 @@ export function DatePicker({
               {keepOpenOnSelect ? (
                 <div className="flex items-center justify-between gap-2">
                   {clearable ? (
-                    <button type="button" onClick={clearDate} className="rounded-lg px-2 py-2 text-xs font-medium text-[rgb(var(--input-overlay-muted))] transition-colors hover:bg-[rgb(var(--input-overlay-hover))] hover:text-[rgb(var(--input-overlay-text))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50">
+                    <button type="button" onClick={clearDate} className="rounded-lg px-2 py-2 text-xs font-medium text-[rgb(var(--input-overlay-muted))] transition-colors hover:bg-[rgb(var(--input-overlay-hover))] hover:text-[rgb(var(--input-overlay-text))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50">
                       Clear
                     </button>
                   ) : <span />}
@@ -505,7 +505,7 @@ export function DatePicker({
                       setOpen(false);
                       requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
                     }}
-                    className="rounded-lg bg-fg px-4 py-2 text-xs font-semibold text-fg-inverse transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                    className="rounded-lg bg-fg px-4 py-2 text-xs font-semibold text-fg-inverse transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50"
                   >
                     Done
                   </button>
@@ -550,7 +550,7 @@ export function DatePicker({
                         setView('calendar');
                       }}
                       style={{ animationDelay: `${Math.min(index * 24, 180)}ms` }}
-                      className={cn('ui-dropdown-row-enter min-h-9 rounded-lg px-2 text-xs font-medium text-[rgb(var(--input-overlay-muted))] hover:bg-[rgb(var(--input-overlay-hover))] hover:text-[rgb(var(--input-overlay-text))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50', selected && 'bg-[rgb(var(--input-overlay-hover))] text-[rgb(var(--input-overlay-text))]')}
+                      className={cn('ui-dropdown-row-enter min-h-9 rounded-lg px-2 text-xs font-medium text-[rgb(var(--input-overlay-muted))] hover:bg-[rgb(var(--input-overlay-hover))] hover:text-[rgb(var(--input-overlay-text))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50', selected && 'bg-[rgb(var(--input-overlay-hover))] text-[rgb(var(--input-overlay-text))]')}
                     >
                       {item.label}
                     </button>

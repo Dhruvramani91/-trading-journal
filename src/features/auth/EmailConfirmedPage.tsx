@@ -24,8 +24,8 @@ export function EmailConfirmedPage() {
         <Card className="shadow-pop border-line bg-bg-2">
           <CardBody className="p-6 sm:p-8">
             <div className="text-center space-y-5">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-win-fill/10 border border-win-fill/20">
-                <CheckCircle2 className="h-7 w-7 text-win" />
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-bg-3 border border-line">
+                <CheckCircle2 className="h-7 w-7 text-fg-muted" />
               </div>
 
               <div className="space-y-2">

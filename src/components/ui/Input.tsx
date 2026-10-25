@@ -24,8 +24,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         aria-required={ariaRequired ?? (props.required || field?.required || undefined)}
         className={cn(
           'h-9 w-full rounded-lg border bg-bg-2 px-3 text-sm text-fg placeholder:text-fg-dim shadow-input',
-          'transition-all focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/60 motion-reduce:transition-none',
-          invalid || field?.invalid ? 'border-loss-fill/60 focus:ring-loss-fill/30' : 'border-line hover:border-line-strong',
+          'transition-all focus:outline-none focus:ring-2 focus:ring-focus/40 focus:border-accent/60 motion-reduce:transition-none',
+          invalid || field?.invalid ? 'border-line-strong focus:ring-focus/40' : 'border-line hover:border-line-strong',
           'disabled:cursor-not-allowed disabled:opacity-50',
           className,
         )}

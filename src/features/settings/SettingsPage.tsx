@@ -30,7 +30,7 @@ export function SettingsPage() {
         <ThemeToggle showLabel className="h-9 w-auto shrink-0 px-3 text-sm" />
       </CardBody></Card>
       <Card><CardBody className="flex min-h-[112px] items-center gap-4 p-5">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-loss-fill/10 text-loss"><LogOut className="h-5 w-5" /></span>
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-bg-3 text-fg-muted"><LogOut className="h-5 w-5" /></span>
         <span className="min-w-0 flex-1"><CardTitle>Sign out</CardTitle><span className="mt-1 block text-sm text-fg-muted">Sign out of your account on this device.</span></span>
         <Button variant="danger" className="shrink-0" onClick={() => setLogoutOpen(true)}>Sign out</Button>
       </CardBody></Card>
@@ -40,7 +40,7 @@ export function SettingsPage() {
 }
 
 function SettingsLink({ to, icon, title, description }: { to: string; icon: React.ReactNode; title: string; description: string }) {
-  return <Link to={to} className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50">
+  return <Link to={to} className="block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50">
     <Card className="h-full transition-colors hover:border-line-strong"><CardBody className="flex min-h-[112px] items-center gap-4 p-5">
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">{icon}</span>
       <span className="min-w-0 flex-1"><CardTitle>{title}</CardTitle><span className="mt-1 block text-sm text-fg-muted">{description}</span></span>

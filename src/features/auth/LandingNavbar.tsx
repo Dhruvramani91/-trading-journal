@@ -77,15 +77,8 @@ export function LandingNavbar({ isAuthenticated }: { isAuthenticated: boolean })
     closeMenu();
   }
 
-  const glassBackground = darkMode
-    ? 'rgba(16, 18, 22, 0.92)'
-    : 'rgba(252, 253, 254, 0.92)';
-  const borderColor = darkMode
-    ? 'rgba(255, 255, 255, 0.09)'
-    : 'rgba(0, 0, 0, 0.06)';
-  const shadow = darkMode
-    ? '0 8px 30px rgba(0, 0, 0, 0.28), 0 2px 6px rgba(0, 0, 0, 0.18)'
-    : '0 8px 30px rgba(20, 20, 40, 0.08), 0 2px 6px rgba(20, 20, 40, 0.04)';
+  const glassBackground = 'rgb(var(--bg-1) / 0.96)';
+  const borderColor = 'rgb(var(--line) / 0.85)';
 
   return (
     <>
@@ -104,7 +97,7 @@ export function LandingNavbar({ isAuthenticated }: { isAuthenticated: boolean })
             paddingRight: collapsed && isDesktop ? 8 : viewportWidth <= 380 ? 6 : viewportWidth <= 640 ? 16 : 24,
             backgroundColor: collapsed ? glassBackground : 'rgba(0, 0, 0, 0)',
             borderColor: collapsed ? borderColor : 'rgba(0, 0, 0, 0)',
-            boxShadow: collapsed ? shadow : '0 0 0 rgba(0, 0, 0, 0)',
+            boxShadow: 'none',
             backdropFilter: collapsed ? 'blur(12px)' : 'blur(0px)',
           }}
           transition={transition}

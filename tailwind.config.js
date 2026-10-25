@@ -30,6 +30,8 @@ export default {
           muted: 'rgb(var(--accent-muted) / <alpha-value>)',
           fg: 'rgb(var(--accent-fg) / <alpha-value>)',
         },
+        'primary-soft': 'rgb(var(--primary-soft))',
+        focus: 'rgb(var(--focus) / <alpha-value>)',
         win: {
           DEFAULT: 'rgb(var(--win-text) / <alpha-value>)',
           fill: 'rgb(var(--win) / <alpha-value>)',

@@ -93,7 +93,7 @@ export function Sidebar() {
         onClick={toggleCollapse}
         title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        className="absolute right-[-11px] top-[4.5rem] z-40 flex h-6 w-6 items-center justify-center rounded-full border border-line bg-bg-1 text-fg-dim shadow-sm transition-colors hover:bg-bg-3 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+        className="absolute right-[-11px] top-[4.5rem] z-40 flex h-6 w-6 items-center justify-center rounded-full border border-line bg-bg-1 text-fg-dim shadow-sm transition-colors hover:bg-bg-3 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/40"
       >
         {collapsed ? <PanelLeftOpen className="h-3.5 w-3.5" /> : <PanelLeftClose className="h-3.5 w-3.5" />}
       </button>
@@ -113,10 +113,10 @@ export function Sidebar() {
                     title={collapsed ? item.label : undefined}
                     aria-label={collapsed ? item.label : undefined}
                     className={({ isActive }) => cn(
-                      'group relative flex h-10 items-center rounded-xl text-[13px] font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 max-[650px]:h-8',
+                      'group relative flex h-10 items-center rounded-xl text-[13px] font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/40 max-[650px]:h-8',
                       collapsed ? 'justify-center px-0' : 'gap-3 px-3',
                       isActive
-                        ? 'bg-accent/10 text-accent before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:bg-accent'
+                        ? 'bg-primary-soft text-fg before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:bg-accent'
                         : 'text-fg-muted hover:bg-bg-3 hover:text-fg',
                     )}
                   >
@@ -132,7 +132,7 @@ export function Sidebar() {
         <div>
           {!collapsed && <h2 className="mb-2 px-3 text-[9px] font-bold uppercase tracking-[0.2em] text-fg-dim">Preferences</h2>}
           <div>
-            <NavLink to="/settings" end title={collapsed ? 'Settings' : undefined} aria-label={collapsed ? 'Settings' : undefined} className={({ isActive }) => cn('group flex h-9 items-center rounded-lg text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 max-[650px]:h-8', collapsed ? 'justify-center px-0' : 'gap-3 px-3', isActive ? 'bg-accent/10 text-accent' : 'text-fg-muted hover:bg-bg-3 hover:text-fg')}>
+            <NavLink to="/settings" end title={collapsed ? 'Settings' : undefined} aria-label={collapsed ? 'Settings' : undefined} className={({ isActive }) => cn('group relative flex h-9 items-center rounded-lg text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/40 max-[650px]:h-8', collapsed ? 'justify-center px-0' : 'gap-3 px-3', isActive ? 'bg-primary-soft text-fg before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:bg-accent' : 'text-fg-muted hover:bg-bg-3 hover:text-fg')}>
               <Settings className="h-[17px] w-[17px] shrink-0" strokeWidth={1.8} />
               {!collapsed && <span className="truncate">Settings</span>}
             </NavLink>

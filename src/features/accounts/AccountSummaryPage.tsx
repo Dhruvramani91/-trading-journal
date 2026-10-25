@@ -104,13 +104,7 @@ function RuleProgress({
   const pctClamped = Math.max(0, Math.min(100, pct));
   const filled = reverse ? Math.max(0, 100 - pctClamped) : pctClamped;
 
-  const barTone = reverse
-    ? 'bg-win-fill'
-    : pctClamped < 33
-      ? 'bg-loss-fill'
-      : pctClamped < 66
-        ? 'bg-amber-400'
-        : 'bg-win-fill';
+  const barTone = 'bg-fg-muted';
 
   return (
     <div className="space-y-1.5">
@@ -439,7 +433,7 @@ function AttachTradesModal({
                   onChange={(e) => setSearch(e.target.value)}
                   className={cn(
                     'h-9 w-full rounded-lg border bg-bg-2 pl-10 pr-3 text-sm text-fg',
-                    'focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/60'
+                    'focus:outline-none focus:ring-2 focus:ring-focus/40 focus:border-accent/60'
                   )}
                 />
               </div>
@@ -449,7 +443,7 @@ function AttachTradesModal({
                 onChange={(e) => setDirectionFilter(e.target.value as typeof directionFilter)}
                 className={cn(
                   'h-9 rounded-lg border bg-bg-2 px-3 text-sm text-fg',
-                  'focus:outline-none focus:ring-2 focus:ring-accent/40'
+                  'focus:outline-none focus:ring-2 focus:ring-focus/40'
                 )}
               >
                 <option value="all">All directions</option>
@@ -462,7 +456,7 @@ function AttachTradesModal({
                 onChange={(e) => setResultFilter(e.target.value as typeof resultFilter)}
                 className={cn(
                   'h-9 rounded-lg border bg-bg-2 px-3 text-sm text-fg',
-                  'focus:outline-none focus:ring-2 focus:ring-accent/40'
+                  'focus:outline-none focus:ring-2 focus:ring-focus/40'
                 )}
               >
                 <option value="all">All results</option>
@@ -479,7 +473,7 @@ function AttachTradesModal({
           {saveError ? (
             <div
               role="alert"
-              className="mx-3 my-3 rounded-lg border border-loss-fill/30 bg-loss-fill/10 px-4 py-3 text-sm text-loss"
+              className="mx-3 my-3 rounded-lg border border-line bg-bg-3 px-4 py-3 text-sm text-fg"
             >
               {saveError}
             </div>
@@ -500,7 +494,7 @@ function AttachTradesModal({
                       type="button"
                       onClick={toggleAll}
                       className={cn(
-                        'rounded focus:outline-none focus:ring-2 focus:ring-accent/50',
+                        'rounded focus:outline-none focus:ring-2 focus:ring-focus/50',
                         selectedIds.size === availableTrades.length && availableTrades.length > 0
                           ? 'text-accent'
                           : 'text-fg-dim'
@@ -555,7 +549,7 @@ function AttachTradesModal({
                           type="button"
                           onClick={() => toggleSelection(trade.id)}
                           className={cn(
-                            'rounded focus:outline-none focus:ring-2 focus:ring-accent/50',
+                            'rounded focus:outline-none focus:ring-2 focus:ring-focus/50',
                             isSelected ? 'text-accent' : 'text-fg-dim'
                           )}
                           aria-label={isSelected ? 'Deselect' : 'Select'}
@@ -739,7 +733,7 @@ function AttachHelpTip({ className }: { className?: string }) {
         className={cn(
           'inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full',
           'text-fg-muted transition-colors hover:text-accent',
-          'focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50',
+          'focus:outline-none focus-visible:ring-2 focus-visible:ring-focus/50',
           className
         )}
       >
@@ -771,7 +765,7 @@ interface AttachResultStepProps {
 
 const inputCls = cn(
   'h-9 w-full min-w-0 max-w-full rounded-lg border bg-bg-2 px-3 text-sm text-fg',
-  'focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/60'
+  'focus:outline-none focus:ring-2 focus:ring-focus/40 focus:border-accent/60'
 );
 
 function AttachResultStep({
@@ -802,7 +796,7 @@ function AttachResultStep({
       {(fieldError || saveError) && (
         <div
           role="alert"
-          className="mb-4 rounded-lg border border-loss-fill/30 bg-loss-fill/10 px-4 py-3 text-sm text-loss"
+          className="mb-4 rounded-lg border border-line bg-bg-3 px-4 py-3 text-sm text-fg"
         >
           {fieldError ?? saveError}
         </div>
@@ -1116,7 +1110,7 @@ export function AccountSummaryPage() {
       <div className="space-y-4">
         <h1 className="text-2xl font-bold text-fg">Account</h1>
         <Card>
-          <CardBody className="text-sm text-loss">{error}</CardBody>
+          <CardBody className="text-sm text-fg">{error}</CardBody>
         </Card>
       </div>
     );
@@ -1238,12 +1232,6 @@ export function AccountSummaryPage() {
               <div className="h-full w-full min-w-0">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={equityData} margin={{ top: 8, right: 16, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="accountEquityCurveFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={performance.totalPnl >= 0 ? chart.win : chart.loss} stopOpacity={0.2} />
-                      <stop offset="100%" stopColor={performance.totalPnl >= 0 ? chart.win : chart.loss} stopOpacity={0.015} />
-                    </linearGradient>
-                  </defs>
                   <CartesianGrid strokeDasharray="2 5" stroke={chart.grid} vertical={false} />
                   <XAxis
                     dataKey="dateLabel"
@@ -1277,11 +1265,12 @@ export function AccountSummaryPage() {
                   <Area
                     type="monotone"
                     dataKey="cumulativePnl"
-                    stroke={performance.totalPnl >= 0 ? chart.win : chart.loss}
+                    stroke={chart.accent}
                     strokeWidth={2}
-                    fill="url(#accountEquityCurveFill)"
+                    fill={chart.accent}
+                    fillOpacity={0.07}
                     dot={false}
-                    activeDot={{ r: 4, fill: performance.totalPnl >= 0 ? chart.win : chart.loss, stroke: chart.tooltipBg, strokeWidth: 2 }}
+                    activeDot={{ r: 4, fill: chart.accent, stroke: chart.tooltipBg, strokeWidth: 2 }}
                     isAnimationActive={false}
                   />
                 </AreaChart>

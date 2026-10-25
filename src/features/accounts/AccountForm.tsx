@@ -139,10 +139,10 @@ function sameRules(a: RuleInputs, b: RuleInputs): boolean {
 function inputClass(hasError: boolean, extra = ''): string {
   return cn(
     'h-9 w-full rounded-lg border bg-bg-2 px-3.5 text-sm text-fg',
-    'transition-all focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/60',
+    'transition-all focus:outline-none focus:ring-2 focus:ring-focus/40 focus:border-accent/60',
     'disabled:cursor-not-allowed disabled:opacity-50',
     hasError
-      ? 'border-loss-fill/60 focus:ring-loss-fill/30'
+      ? 'border-line-strong focus:ring-focus/40'
       : 'border-line hover:border-line-strong',
     extra
   );
@@ -169,13 +169,13 @@ function Field({
     <label htmlFor={id} className={cn('flex flex-col gap-1.5', className)}>
       <span className="block text-xs font-semibold text-fg">
         {label}
-        {required ? <span className="text-loss"> *</span> : null}
+        {required ? <span className="text-fg-muted"> *</span> : null}
       </span>
 
       <div className="relative">{children}</div>
 
       {error ? (
-        <p id={`${id}-error`} className="text-xs text-loss">
+        <p id={`${id}-error`} className="text-xs text-fg-muted">
           {error}
         </p>
       ) : hint ? (
@@ -464,7 +464,7 @@ export function AccountForm({
               {submitError ? (
                 <div
                   role="alert"
-                  className="mb-4 rounded-lg border border-loss-fill/30 bg-loss-fill/10 px-4 py-3 text-sm text-loss"
+                  className="mb-4 rounded-lg border border-line bg-bg-3 px-4 py-3 text-sm text-fg-muted"
                 >
                   {submitError}
                 </div>
@@ -488,7 +488,7 @@ export function AccountForm({
                     htmlFor={nameId}
                     className="block text-xs font-semibold text-fg mb-1.5"
                   >
-                    Account name <span className="text-loss">*</span>
+                    Account name <span className="text-fg-muted">*</span>
                   </label>
                   <Input
                     ref={nameRef}
@@ -503,7 +503,7 @@ export function AccountForm({
                     aria-invalid={visibleError('name') ? true : undefined}
                   />
                   {visibleError('name') ? (
-                    <p id={`${nameId}-error`} className="mt-1 text-xs text-loss">
+                    <p id={`${nameId}-error`} className="mt-1 text-xs text-fg-muted">
                       {visibleError('name')}
                     </p>
                   ) : null}
@@ -656,7 +656,7 @@ export function AccountForm({
                     onClick={() => setCustom(defaultRuleInputs(accountType, accountSize, phase))}
                     className={cn(
                       'mt-4 rounded-lg px-1 py-1 text-xs font-semibold text-fg-muted underline underline-offset-2 hover:text-fg',
-                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-1'
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-1'
                     )}
                   >
                     Reset to standard values

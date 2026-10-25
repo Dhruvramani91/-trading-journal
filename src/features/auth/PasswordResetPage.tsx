@@ -76,12 +76,12 @@ export default function PasswordResetPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-[#08090d] text-white flex items-center justify-center px-4">
+      <div className="min-h-screen bg-bg-0 text-fg flex items-center justify-center px-4">
         <div className="w-full max-w-md">
-          <div className="rounded-2xl border border-white/10 bg-[#101116] p-8 shadow-2xl text-center">
-            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/10">
+          <div className="rounded-2xl border border-line bg-bg-2 p-8 text-center">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-bg-3">
               <CheckCircle2
-                className="h-9 w-9 text-emerald-400"
+                className="h-9 w-9 text-fg-muted"
                 strokeWidth={2}
               />
             </div>
@@ -90,7 +90,7 @@ export default function PasswordResetPage() {
               Password changed successfully
             </h1>
 
-            <p className="mt-3 text-sm leading-6 text-white/60">
+            <p className="mt-3 text-sm leading-6 text-fg-muted">
               Your ThePrecisionLab password has been updated.
               You can now log in using your new password.
             </p>
@@ -98,7 +98,7 @@ export default function PasswordResetPage() {
             <button
               type="button"
               onClick={handleGoToLogin}
-              className="mt-7 w-full rounded-xl bg-white px-4 py-3 text-sm font-medium text-black transition hover:bg-white/90"
+              className="mt-7 w-full rounded-xl bg-accent px-4 py-3 text-sm font-medium text-accent-fg transition hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
             >
               Go to Login
             </button>
@@ -111,21 +111,21 @@ export default function PasswordResetPage() {
   const displayedError = localError || error;
 
   return (
-    <div className="min-h-screen bg-[#08090d] text-white flex items-center justify-center px-4">
+    <div className="min-h-screen bg-bg-0 text-fg flex items-center justify-center px-4">
       <div className="w-full max-w-md">
-        <div className="rounded-2xl border border-white/10 bg-[#101116] p-8 shadow-2xl">
+        <div className="rounded-2xl border border-line bg-bg-2 p-8">
           <Link
             to="/login"
-            className="mb-8 inline-flex items-center gap-2 text-sm text-white/50 transition hover:text-white"
+            className="mb-8 inline-flex items-center gap-2 rounded-md text-sm text-fg-muted transition hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Login
           </Link>
 
           <div className="mb-7">
-            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-white/5">
+            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl bg-bg-3">
               <LockKeyhole
-                className="h-6 w-6 text-white/80"
+                className="h-6 w-6 text-fg-muted"
                 strokeWidth={1.8}
               />
             </div>
@@ -134,13 +134,13 @@ export default function PasswordResetPage() {
               Reset your password
             </h1>
 
-            <p className="mt-2 text-sm leading-6 text-white/50">
+            <p className="mt-2 text-sm leading-6 text-fg-muted">
               Enter a new password for your ThePrecisionLab account.
             </p>
           </div>
 
           {displayedError && (
-            <div className="mb-5 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+            <div role="alert" className="mb-5 rounded-xl border border-line bg-bg-3 px-4 py-3 text-sm text-fg">
               {displayedError}
             </div>
           )}
@@ -149,7 +149,7 @@ export default function PasswordResetPage() {
             <div>
               <label
                 htmlFor="new-password"
-                className="mb-2 block text-sm font-medium text-white/80"
+                className="mb-2 block text-sm font-medium text-fg"
               >
                 New Password
               </label>
@@ -162,14 +162,14 @@ export default function PasswordResetPage() {
                 placeholder="Enter your new password"
                 autoComplete="new-password"
                 disabled={loading}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 transition focus:border-white/25 focus:bg-white/[0.07] disabled:opacity-50"
+                className="w-full rounded-xl border border-line bg-bg-1 px-4 py-3 text-sm text-fg outline-none placeholder:text-fg-dim transition focus-visible:ring-2 focus-visible:ring-focus disabled:opacity-50"
               />
             </div>
 
             <div>
               <label
                 htmlFor="confirm-password"
-                className="mb-2 block text-sm font-medium text-white/80"
+                className="mb-2 block text-sm font-medium text-fg"
               >
                 Confirm Password
               </label>
@@ -182,20 +182,20 @@ export default function PasswordResetPage() {
                 placeholder="Confirm your new password"
                 autoComplete="new-password"
                 disabled={loading}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 transition focus:border-white/25 focus:bg-white/[0.07] disabled:opacity-50"
+                className="w-full rounded-xl border border-line bg-bg-1 px-4 py-3 text-sm text-fg outline-none placeholder:text-fg-dim transition focus-visible:ring-2 focus-visible:ring-focus disabled:opacity-50"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-white px-4 py-3 text-sm font-medium text-black transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-xl bg-accent px-4 py-3 text-sm font-medium text-accent-fg transition hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? 'Changing Password...' : 'Reset Password'}
             </button>
           </form>
 
-          <p className="mt-6 text-center text-xs text-white/35">
+          <p className="mt-6 text-center text-xs text-fg-muted">
             Your old password will not be displayed or retrieved.
           </p>
         </div>

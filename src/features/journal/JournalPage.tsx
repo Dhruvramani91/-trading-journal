@@ -626,7 +626,7 @@ function JournalTradeTable({
     <>
     <div className="space-y-2 p-3 lg:hidden" aria-label="Trade list">
       {trades.map((trade) => (
-        <button key={trade.id} type="button" onClick={() => onOpen(trade.id)} aria-label={`Open trade ${trade.number != null ? `number ${trade.number}` : ''} details`} className="w-full rounded-xl border border-line bg-bg-1 p-3.5 text-left transition-colors hover:border-line-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 motion-reduce:transition-none">
+        <button key={trade.id} type="button" onClick={() => onOpen(trade.id)} aria-label={`Open trade ${trade.number != null ? `number ${trade.number}` : ''} details`} className="w-full rounded-xl border border-line bg-bg-1 p-3.5 text-left transition-colors hover:border-line-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50 motion-reduce:transition-none">
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2.5">
               <InstrumentMark instrument={trade.instrument} className="h-9 w-9" />
@@ -1101,7 +1101,7 @@ function JournalFilterPanel({
 
             onClick={onClear}
 
-            className="inline-flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-fg-muted transition-colors hover:bg-bg-3 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
+            className="inline-flex min-h-10 items-center gap-2 rounded-lg px-3 text-sm font-medium text-fg-muted transition-colors hover:bg-bg-3 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/40"
 
           >
 
@@ -1119,7 +1119,7 @@ function JournalFilterPanel({
 
             onClick={onClose}
 
-            className="min-h-10 rounded-lg bg-fg px-5 py-2 text-sm font-semibold text-fg-inverse transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+            className="min-h-10 rounded-lg bg-fg px-5 py-2 text-sm font-semibold text-fg-inverse transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50"
 
           >
 
@@ -1199,7 +1199,7 @@ function CheckOption({
 
       className={
 
-        'flex min-h-10 items-center gap-2.5 rounded-xl border px-3 py-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 ' +
+        'flex min-h-10 items-center gap-2.5 rounded-xl border px-3 py-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/40 ' +
 
         (checked
 
@@ -1269,7 +1269,7 @@ function DateInput({
 
         onChange={(event) => onChange(event.target.value)}
 
-        className="h-10 w-full rounded-xl border border-line bg-bg-1 px-3 text-sm text-fg outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-accent/15"
+        className="h-10 w-full rounded-xl border border-line bg-bg-1 px-3 text-sm text-fg outline-none transition-colors focus:border-accent focus:ring-2 focus:ring-focus/15"
 
       />
 

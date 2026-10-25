@@ -475,10 +475,10 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             'shadow-input',
             'transition-all duration-150 ease-in-out',
             'hover:border-accent/40',
-            'focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/60',
+            'focus:outline-none focus:ring-2 focus:ring-focus/40 focus:border-accent/60',
             'disabled:cursor-not-allowed disabled:opacity-50',
             (invalid || field?.invalid)
-              ? 'border-loss-fill/60 bg-loss-fill/5'
+              ? 'border-line-strong bg-bg-3'
               : 'border-line',
             className,
           )}
@@ -511,7 +511,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
               'bg-bg-2',
               'px-2 pt-2 pb-2',
               'text-fg',
-              'shadow-[0_30px_80px_rgba(8,12,24,.18),0_2px_8px_rgba(8,12,24,.08)]',
+              'shadow-[var(--shadow-pop)]',
               'animate-in fade-in-0 zoom-in-95 motion-reduce:animate-none motion-reduce:transition-none',
               'origin-top',
             )}
@@ -554,7 +554,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
                     'rounded-xl px-3.5 py-2.5',
                     'text-left text-[16.5px]',
                     'transition-colors duration-100',
-                    'outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/60',
+                    'outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus/60',
                     option.disabled
                       ? 'cursor-not-allowed text-fg-dim'
                       : 'cursor-pointer text-fg',
@@ -682,7 +682,7 @@ export function Segmented<T extends string>({
               'flex-1 inline-flex items-center justify-center gap-1 rounded-md text-xs transition-all',
               size === 'sm' ? 'h-6 px-2' : 'h-8 px-3',
               isActive ? activeTone : 'text-fg-muted hover:text-fg',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/60',
             )}
           >
             {opt.label}

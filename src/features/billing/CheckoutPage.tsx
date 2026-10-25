@@ -74,6 +74,18 @@ function loadRazorpayCheckout() {
   });
 }
 
+function getCheckoutAccentHex() {
+  const channels = getComputedStyle(document.documentElement)
+    .getPropertyValue('--accent')
+    .trim()
+    .split(/[\s/]+/)
+    .slice(0, 3)
+    .map((channel) => Number(channel));
+  return channels.length === 3 && channels.every(Number.isFinite)
+    ? `#${channels.map((channel) => Math.round(channel).toString(16).padStart(2, '0')).join('')}`
+    : '#1A1A1C';
+}
+
 export function CheckoutPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -174,7 +186,7 @@ export function CheckoutPage() {
         description: `${details.name} plan — ${details.amount} ${details.cycle}`,
         image: `${window.location.origin}/logo.png`,
         prefill: { name: user?.name || '', email: user?.email || '' },
-        theme: { color: '#6558e8' },
+        theme: { color: getCheckoutAccentHex() },
         modal: { ondismiss: () => setLoading(false) },
         handler: async (response) => {
           const { data: verified, error: verifyError } = await client.functions.invoke<VerifySubscriptionResponse>('verify-razorpay-subscription', {
@@ -222,7 +234,7 @@ export function CheckoutPage() {
               </label>
             )}
             <p className="mt-2 text-xs text-fg-dim">{!billingRegion.ready ? 'Detecting billing region…' : manualInternationalUnavailable ? 'International location could not be verified. Only India billing is available for this session.' : `Billing region: ${billingRegion.country} · ${billingRegion.currency}${billingRegion.currency === 'USD' && !billingRegion.usdEnabled ? ' · International checkout is not available yet' : ''}`}</p>
-            {billingRegion.ready && billingRegion.paymentMode === 'test_mode' && <p role="status" className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300">Test payment mode is active. No real payment will be taken.</p>}
+            {billingRegion.ready && billingRegion.paymentMode === 'test_mode' && <p role="status" className="mt-3 rounded-lg border border-line bg-bg-3 px-3 py-2 text-sm text-fg-muted">Test payment mode is active. No real payment will be taken.</p>}
 
             <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:mt-5">
               {billingAvailable ? (Object.keys(getPlanDetails(billingRegion.currency)) as BillingPlan[]).map((option) => {
@@ -233,7 +245,7 @@ export function CheckoutPage() {
                     key={option}
                     to={`/checkout?plan=${option}`}
                     aria-current={selected ? 'true' : undefined}
-                    className={`rounded-2xl border p-4 transition ${selected ? 'border-accent bg-accent/5 ring-1 ring-accent/40' : 'border-line bg-bg-1 hover:border-line-strong'}`}
+                    className={`rounded-2xl border p-4 transition ${selected ? 'border-accent bg-accent/5 ring-1 ring-focus/40' : 'border-line bg-bg-1 hover:border-line-strong'}`}
                   >
                     <span className="flex items-center justify-between text-sm font-semibold">{optionDetails.name}{selected && <Check className="h-4 w-4 text-accent" />}</span>
                     <span className="mt-3 block text-2xl font-bold">{optionDetails.amount}<span className="ml-1 text-xs font-medium text-fg-muted">{optionDetails.cycle}</span></span>
@@ -245,7 +257,7 @@ export function CheckoutPage() {
 
             <ul className="mt-7 space-y-3 text-sm text-fg-muted lg:mt-5 lg:space-y-2">
               {['Unlimited journal entries', 'Discipline score and performance analytics', 'Weekly review prompts'].map((item) => (
-                <li key={item} className="flex items-center gap-2"><Check className="h-4 w-4 shrink-0 text-win" />{item}</li>
+                <li key={item} className="flex items-center gap-2"><Check className="h-4 w-4 shrink-0 text-fg-muted" />{item}</li>
               ))}
             </ul>
           </section>
@@ -268,9 +280,9 @@ export function CheckoutPage() {
             )}
 
             {notice && <div role="status" className="mb-4 rounded-xl border border-accent/30 bg-accent/5 px-3 py-2.5 text-sm text-fg-muted">{notice}</div>}
-            {error && <div role="alert" className="mb-4 rounded-xl border border-loss-fill/30 bg-loss-fill/10 px-3 py-2.5 text-sm text-loss">{error}</div>}
+            {error && <div role="alert" className="mb-4 rounded-xl border border-line bg-bg-3 px-3 py-2.5 text-sm text-fg">{error}</div>}
             {success ? (
-              <div role="status" className="rounded-xl border border-win-fill/30 bg-win-fill/10 p-4 text-sm text-win">
+              <div role="status" className="rounded-xl border border-line bg-bg-3 p-4 text-sm text-fg">
                 <p className="font-semibold">Authorization received</p>
                 <p className="mt-1 text-xs leading-5">Your Razorpay status is being confirmed. Paid access is available only after subscription activation or during the monthly trial. You can review your status in your profile.</p>
                 <Button asChild variant="primary" className="mt-4 w-full"><Link to="/profile">View subscription status</Link></Button>

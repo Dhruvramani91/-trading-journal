@@ -780,16 +780,16 @@ export function TradeFormPage() {
       />
 
       {error ? (
-        <div role="alert" className="rounded-md border border-loss-fill/30 bg-loss-fill/10 px-3 py-2 text-sm text-loss">
+        <div role="alert" className="rounded-md border border-line bg-bg-3 px-3 py-2 text-sm text-fg">
           {error}
         </div>
       ) : null}
 
       {Object.keys(fieldErrors).length > 0 && !error ? (
-        <div ref={errorSummaryRef} role="alert" aria-live="assertive" aria-labelledby="trade-error-summary-title" tabIndex={-1} className="rounded-xl border border-loss-fill/30 bg-loss-fill/5 px-4 py-3 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-loss-fill/50">
-          <h2 id="trade-error-summary-title" className="font-semibold text-loss">Review {Object.keys(fieldErrors).length} field{Object.keys(fieldErrors).length === 1 ? '' : 's'} before saving</h2>
+        <div ref={errorSummaryRef} role="alert" aria-live="assertive" aria-labelledby="trade-error-summary-title" tabIndex={-1} className="rounded-xl border border-line bg-bg-3 px-4 py-3 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-focus/50">
+          <h2 id="trade-error-summary-title" className="font-semibold text-fg">Review {Object.keys(fieldErrors).length} field{Object.keys(fieldErrors).length === 1 ? '' : 's'} before saving</h2>
           <ul className="mt-2 flex flex-wrap gap-x-5 gap-y-1.5">
-            {Object.entries(fieldErrors).map(([key, message]) => <li key={key}><button type="button" onClick={() => focusField(key)} className="text-left text-fg-muted underline decoration-line-strong underline-offset-2 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50">{message}</button></li>)}
+            {Object.entries(fieldErrors).map(([key, message]) => <li key={key}><button type="button" onClick={() => focusField(key)} className="text-left text-fg-muted underline decoration-line-strong underline-offset-2 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50">{message}</button></li>)}
           </ul>
         </div>
       ) : null}
@@ -1294,7 +1294,7 @@ export function TradeFormPage() {
 
           <Card>
             <CardHeader><CardTitle>Notes</CardTitle></CardHeader>
-            <CardBody><textarea aria-label="Notes" value={form.notes} onChange={(e) => patch('notes', e.target.value)} rows={4} placeholder="What did you see? What worked, what didn’t?" className="w-full rounded-md border border-line bg-bg-1 px-3 py-2 text-sm text-fg placeholder:text-fg-dim focus:border-accent/40 focus:outline-none focus:ring-2 focus:ring-accent/60" /></CardBody>
+            <CardBody><textarea aria-label="Notes" value={form.notes} onChange={(e) => patch('notes', e.target.value)} rows={4} placeholder="What did you see? What worked, what didn’t?" className="w-full rounded-md border border-line bg-bg-1 px-3 py-2 text-sm text-fg placeholder:text-fg-dim focus:border-accent/40 focus:outline-none focus:ring-2 focus:ring-focus/60" /></CardBody>
           </Card>
 
           <Card>
@@ -1356,7 +1356,7 @@ function FieldError({
   if (!message) return null;
 
   return (
-    <p id={field?.errorId} aria-live="polite" className="mt-1.5 text-xs font-medium text-loss">
+    <p id={field?.errorId} aria-live="polite" className="mt-1.5 text-xs font-medium text-fg-muted">
       {message}
     </p>
   );

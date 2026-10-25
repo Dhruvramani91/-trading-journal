@@ -333,7 +333,7 @@ export function CalendarPage() {
                               'cursor-pointer shadow-sm hover:brightness-105',
                             )
                           : 'border-line/60 bg-bg-2/60 text-fg-dim',
-                        isToday && 'ring-2 ring-accent shadow-sm',
+                        isToday && 'ring-2 ring-focus shadow-sm',
                       )}
                     >
                       <div className="flex w-full items-center justify-between gap-1">

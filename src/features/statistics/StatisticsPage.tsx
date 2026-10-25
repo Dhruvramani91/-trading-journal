@@ -579,7 +579,7 @@ export function StatisticsPage() {
                       setTab(t.key)
                     }
                     className={cn(
-                      'shrink-0 rounded-lg border px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40',
+                      'shrink-0 rounded-lg border px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/40',
 
                       selected
                         ? 'border-accent bg-accent/10 text-accent shadow-sm'

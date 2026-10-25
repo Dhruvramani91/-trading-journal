@@ -203,12 +203,6 @@ export function DashboardPage() {
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={chartData} margin={{ top: 8, right: 16, left: metric === 'r' ? -20 : 0, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="dashboardCurveFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor={chart.accent} stopOpacity={0.2} />
-                        <stop offset="100%" stopColor={chart.accent} stopOpacity={0.015} />
-                      </linearGradient>
-                    </defs>
                     <CartesianGrid strokeDasharray="2 5" stroke={chart.grid} vertical={false} />
                     <XAxis dataKey="dateLabel" tick={{ fontSize: 11, fill: chart.axisText }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 11, fill: chart.axisText }} axisLine={false} tickLine={false} tickFormatter={(v: number) => (metric === 'r' ? `${v}R` : formatMoneyCompact(v))} width={metric === 'r' ? 45 : 64} />
@@ -222,7 +216,7 @@ export function DashboardPage() {
                         return [p ? `${formatted} (${p.dateLabel})` : formatted, name];
                       }}
                     />
-                    <Area type="monotone" dataKey="cumulative" stroke={chart.accent} strokeWidth={2} fill="url(#dashboardCurveFill)" dot={false} activeDot={{ r: 4, fill: chart.accent, stroke: chart.tooltipBg, strokeWidth: 2 }} isAnimationActive={false} />
+                    <Area type="monotone" dataKey="cumulative" stroke={chart.accent} strokeWidth={2} fill={chart.accent} fillOpacity={0.07} dot={false} activeDot={{ r: 4, fill: chart.accent, stroke: chart.tooltipBg, strokeWidth: 2 }} isAnimationActive={false} />
                   </AreaChart>
                 </ResponsiveContainer>
               )}

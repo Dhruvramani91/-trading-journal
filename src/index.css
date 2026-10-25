@@ -5,89 +5,93 @@
 @layer base {
   :root {
     color-scheme: light;
-    --bg: 224 224 224;
-    --bg-0: 224 224 224;
-    --bg-1: 242 242 242;
-    --bg-2: 242 242 242;
-    --bg-3: 242 242 242;
-    --bg-4: 242 242 242;
+    --bg: 237 237 238;
+    --bg-0: 237 237 238;
+    --bg-1: 250 250 250;
+    --bg-2: 255 255 255;
+    --bg-3: 242 242 243;
+    --bg-4: 242 242 243;
 
-    --line: 220 226 234;
-    --line-strong: 202 211 222;
-    --line-subtle: 235 239 245;
+    --line: 226 226 228;
+    --line-strong: 205 205 209;
+    --line-subtle: 235 235 236;
 
-    --fg: 13 13 15;
-    --fg-muted: 83 96 115;
-    --fg-dim: 106 119 137;
+    --fg: 17 17 18;
+    --fg-muted: 107 107 112;
+    --fg-dim: 107 107 112;
     --fg-inverse: 255 255 255;
 
-    --accent: 77 91 110;
-    --accent-hover: 57 70 88;
-    --accent-muted: 109 123 141;
+    --accent: 26 26 28;
+    --accent-hover: 42 42 46;
+    --accent-muted: 107 107 112;
     --accent-fg: 255 255 255;
+    --primary-soft: 0 0 0 / 0.06;
+    --focus: 42 42 46;
 
-    --grade-a-plus: 8 122 81;
-    --grade-a: 13 116 110;
-    --grade-b: 161 98 7;
-    --grade-c: 190 24 93;
+    --grade-a-plus: 67 67 72;
+    --grade-a: 85 85 90;
+    --grade-b: 107 107 112;
+    --grade-c: 130 130 135;
 
-    --win: 18 168 112;
-    --win-text: 8 122 81;
-    --win-muted: 18 168 112;
-    --loss: 228 80 79;
-    --loss-text: 194 61 59;
-    --loss-muted: 228 80 79;
-    --be: 102 112 133;
-    --be-muted: 102 112 133;
+    --win: 31 138 91;
+    --win-text: 24 118 77;
+    --win-muted: 31 138 91;
+    --loss: 194 65 63;
+    --loss-text: 194 65 63;
+    --loss-muted: 194 65 63;
+    --be: 107 107 112;
+    --be-muted: 107 107 112;
 
-    --shadow-card: 0 1px 2px rgba(20, 32, 52, 0.025), 0 8px 24px rgba(20, 32, 52, 0.035);
-    --shadow-pop: 0 16px 42px rgba(20, 32, 52, 0.16), 0 3px 10px rgba(20, 32, 52, 0.06);
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.035);
+    --shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.05);
     --shadow-shell: none;
-    --shadow-input: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-input: none;
     --font-data: 'Geist Mono', ui-monospace, monospace;
   }
 
   .dark {
     color-scheme: dark;
-    --bg: 34 36 37;
-    --bg-0: 34 36 37;
-    --bg-1: 22 23 23;
-    --bg-2: 22 23 23;
-    --bg-3: 22 23 23;
-    --bg-4: 22 23 23;
+    --bg: 10 10 11;
+    --bg-0: 10 10 11;
+    --bg-1: 17 17 18;
+    --bg-2: 22 22 23;
+    --bg-3: 30 30 32;
+    --bg-4: 30 30 32;
 
-    --line: 53 59 60;
-    --line-strong: 68 74 75;
-    --line-subtle: 43 48 49;
+    --line: 42 42 45;
+    --line-strong: 58 58 62;
+    --line-subtle: 35 35 38;
 
-    --fg: 240 242 242;
-    --fg-muted: 174 181 183;
-    --fg-dim: 137 146 148;
-    --fg-inverse: 18 21 21;
+    --fg: 236 236 236;
+    --fg-muted: 142 142 147;
+    --fg-dim: 142 142 147;
+    --fg-inverse: 10 10 11;
 
-    --accent: 201 209 210;
-    --accent-hover: 235 239 239;
-    --accent-muted: 146 157 159;
-    --accent-fg: 23 27 28;
+    --accent: 232 232 234;
+    --accent-hover: 244 244 246;
+    --accent-muted: 142 142 147;
+    --accent-fg: 10 10 11;
+    --primary-soft: 255 255 255 / 0.07;
+    --focus: 212 212 216;
 
-    --grade-a-plus: 52 211 153;
-    --grade-a: 45 212 191;
-    --grade-b: 251 191 36;
-    --grade-c: 251 113 133;
+    --grade-a-plus: 232 232 234;
+    --grade-a: 201 201 204;
+    --grade-b: 170 170 174;
+    --grade-c: 142 142 147;
 
-    --win: 53 211 155;
-    --win-text: 53 211 155;
-    --win-muted: 53 211 155;
-    --loss: 255 123 123;
-    --loss-text: 255 123 123;
-    --loss-muted: 255 123 123;
-    --be: 139 149 168;
-    --be-muted: 139 149 168;
+    --win: 95 191 138;
+    --win-text: 95 191 138;
+    --win-muted: 95 191 138;
+    --loss: 229 120 122;
+    --loss-text: 229 120 122;
+    --loss-muted: 229 120 122;
+    --be: 142 142 147;
+    --be-muted: 142 142 147;
 
-    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.16), 0 10px 28px rgba(0, 0, 0, 0.12);
-    --shadow-pop: 0 18px 46px rgba(0, 0, 0, 0.52), 0 3px 10px rgba(0, 0, 0, 0.22);
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.28);
+    --shadow-pop: 0 14px 36px rgba(0, 0, 0, 0.42);
     --shadow-shell: none;
-    --shadow-input: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-input: none;
   }
 
   html, body, #root {
@@ -106,11 +110,11 @@
   }
 
   *:focus-visible {
-    @apply outline-none ring-2 ring-accent/50 ring-offset-2 ring-offset-bg-1;
+    @apply outline-none ring-2 ring-focus ring-offset-2 ring-offset-bg-1;
   }
 
   ::selection {
-    @apply bg-accent/20 text-fg;
+    @apply bg-primary-soft text-fg;
   }
 
   ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -124,8 +128,8 @@
 @layer components {
   .animated-checkbox {
     --checkbox-size: 28px;
-    --checkbox-primary: rgb(var(--win));
-    --checkbox-primary-dark: rgb(var(--win-text));
+    --checkbox-primary: rgb(var(--accent));
+    --checkbox-primary-dark: rgb(var(--accent));
     position: relative;
     display: inline-flex;
     width: fit-content;
@@ -374,7 +378,7 @@
 .landing-nav-icon:focus-visible,
 .landing-nav-join:focus-visible,
 .landing-mobile-theme:focus-visible {
-  outline: 2px solid var(--purple);
+  outline: 2px solid rgb(var(--focus));
   outline-offset: 4px;
   border-radius: 8px;
 }
@@ -635,6 +639,18 @@ html[data-theme='dark'] .landing-nav-logo .brand-logo-dark {
   -webkit-mask-image: radial-gradient(circle, transparent 61%, #000 62%, #000 63%, transparent 64%);
   mask-image: radial-gradient(circle, transparent 61%, #000 62%, #000 63%, transparent 64%);
   animation: loader-spin 3.5s linear infinite;
+}
+
+/* Keep loading feedback neutral and remove the former multitone conic gradients. */
+.loader-ring,
+.loader-ring-primary,
+.loader-ring-secondary,
+.loader-ring-particle {
+  background: none;
+  border: 1.5px solid currentColor;
+  border-left-color: transparent;
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 .loader-text-in {

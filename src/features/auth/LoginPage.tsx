@@ -335,37 +335,29 @@ export function LoginPage() {
       <div className="w-full max-w-5xl rounded-[28px] border border-line shadow-pop overflow-hidden grid grid-cols-1 md:grid-cols-[1.05fr_1fr] bg-bg-2">
 
         {/* ================================================= */}
-        {/* LEFT — brand panel, fixed dark regardless of theme */}
+        {/* LEFT — quiet brand panel */}
         {/* ================================================= */}
 
-        <div className="hidden md:flex relative flex-col justify-between overflow-hidden bg-[#0a0a0c] p-10 min-h-[620px]">
-          <div
-            className="pointer-events-none absolute -top-24 -left-16 h-72 w-72 rounded-full bg-accent/25 blur-3xl"
-            aria-hidden="true"
-          />
+        <div className="hidden md:flex relative flex-col justify-between overflow-hidden bg-bg-1 p-10 min-h-[620px]">
 
           <Link
             to="/"
             className="relative inline-flex items-center gap-3"
           >
-            <img
-              src="/logo-white.png"
-              alt="ThePrecisionLab"
-              className="h-12 w-12 object-contain"
-            />
+            <BrandLogo size="lg" />
 
-            <span className="text-3xl font-bold tracking-tight text-white">
+            <span className="text-3xl font-bold tracking-tight text-fg">
               ThePrecisionLab
             </span>
           </Link>
 
           <div className="relative space-y-4">
-            <h1 className="text-3xl font-semibold leading-snug text-white max-w-xs">
+            <h1 className="text-3xl font-semibold leading-snug text-fg max-w-xs">
               Trade with discipline.
               <br />
               Review with data.
             </h1>
-            <p className="text-sm text-white/60 max-w-xs">
+            <p className="text-sm text-fg-muted max-w-xs">
               Log every trade, spot your patterns, and turn a messy week into
               a clear edge.
             </p>
@@ -393,14 +385,14 @@ export function LoginPage() {
           </Link>
 
           {(localError || error) && (
-            <div className="p-3 rounded-lg bg-loss-fill/10 border border-loss-fill/20 text-loss text-xs flex items-center gap-2">
+            <div className="p-3 rounded-lg bg-bg-3 border border-line text-fg text-xs flex items-center gap-2">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{localError || error}</span>
             </div>
           )}
 
           {emailConfirmed && !forgotPassword && !signupSuccess && (
-            <div className="p-3 rounded-lg bg-win-fill/10 border border-win-fill/20 text-win text-xs flex items-center gap-2">
+            <div className="p-3 rounded-lg bg-bg-3 border border-line text-fg text-xs flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 shrink-0" />
               <span>Email confirmed. You can log in now.</span>
             </div>
@@ -492,8 +484,8 @@ export function LoginPage() {
                 </>
               ) : (
                 <div className="space-y-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-win-fill/10 border border-win-fill/20">
-                    <CheckCircle2 className="h-6 w-6 text-win" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-bg-3 border border-line">
+                    <CheckCircle2 className="h-6 w-6 text-fg-muted" />
                   </div>
 
                   <div className="space-y-1.5">
@@ -663,23 +655,19 @@ export function LoginPage() {
                   size="lg"
                   onClick={handleGoogleSignIn}
                   disabled={loading}
-                  className="h-11 w-full flex items-center justify-center gap-2 border-line hover:border-line-strong bg-bg-2 text-fg font-medium"
+                  className="h-11 w-full flex items-center justify-center gap-2 border-line-strong hover:border-line-strong text-fg font-medium"
                 >
-                  <svg className="h-4 w-4" viewBox="0 0 24 24">
+                  <svg className="h-4 w-4 text-fg-muted" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                     <path
-                      fill="#4285F4"
                       d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
                     />
                     <path
-                      fill="#34A853"
                       d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"
                     />
                     <path
-                      fill="#FBBC05"
                       d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.98 0 12s.45 3.82 1.25 5.42l4.03-3.15z"
                     />
                     <path
-                      fill="#EA4335"
                       d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
                     />
                   </svg>

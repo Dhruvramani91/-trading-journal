@@ -156,7 +156,7 @@ export function Dropdown({
       disabled={disabled}
       onClick={() => setOpen((current) => !current)}
       onKeyDown={triggerKeyDown}
-      className={cn('flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[rgb(var(--input-overlay-border))] bg-[rgb(var(--input-overlay-trigger))] px-3 text-[13px] font-medium text-[rgb(var(--input-overlay-text))] shadow-[0_0_0_2px_rgb(var(--input-overlay-border)/0.18)] transition-colors hover:border-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 disabled:cursor-not-allowed disabled:opacity-50', className)}
+      className={cn('flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-[rgb(var(--input-overlay-border))] bg-[rgb(var(--input-overlay-trigger))] px-3 text-[13px] font-medium text-[rgb(var(--input-overlay-text))] shadow-[0_0_0_2px_rgb(var(--input-overlay-border)/0.18)] transition-colors hover:border-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50 disabled:cursor-not-allowed disabled:opacity-50', className)}
     >
       {selectedOption?.icon}
       <span className={cn('max-w-full truncate', !selectedOption && 'text-fg-dim')}>{selectedOption?.label ?? placeholder}</span>

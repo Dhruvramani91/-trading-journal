@@ -203,7 +203,7 @@ export function AMTemplatePreviewPage() {
                 value={values.notes}
                 onChange={(event) => update('notes', event.target.value)}
                 placeholder="What did you execute well, or where did you deviate?"
-                className="min-h-24 w-full resize-y rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-fg placeholder:text-fg-dim focus:border-accent/60 focus:outline-none focus:ring-2 focus:ring-accent/40"
+                className="min-h-24 w-full resize-y rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-fg placeholder:text-fg-dim focus:border-accent/60 focus:outline-none focus:ring-2 focus:ring-focus/40"
               />
             </FormField>
           </FormSection>
