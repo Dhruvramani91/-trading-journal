@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   BarChart3,
+  FlaskConical,
   CalendarDays,
   LayoutDashboard,
   LogOut,
@@ -23,6 +24,7 @@ import { useAuthStore } from '@/store/authStore';
 const ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/journal', label: 'Journal', icon: ScrollText },
+  { to: '/backtests', label: 'Backtest storage', icon: FlaskConical },
   { to: '/accounts', label: 'Accounts', icon: Wallet },
   { to: '/statistics', label: 'Statistics', icon: BarChart3 },
   { to: '/calendar', label: 'Calendar', icon: CalendarDays },

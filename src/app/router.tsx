@@ -21,6 +21,7 @@ import { AccountsPage } from '@/features/accounts/AccountsPage';
 import { UIComponentsDemoPage } from '@/features/uiComponentsDemo/UIComponentsDemoPage';
 import { RequireAuth, RequireSubscription } from './RequireAuth';
 import { CheckoutPage } from '@/features/billing/CheckoutPage';
+import { BacktestStoragePage } from '@/features/backtests/BacktestStoragePage';
 
 export const router = createBrowserRouter([
   // Public Routes
@@ -52,6 +53,9 @@ export const router = createBrowserRouter([
               { path: 'statistics', element: <StatisticsPage /> },
               { path: 'calendar', element: <CalendarPage /> },
               { path: 'mistakes', element: <MistakesPage /> },
+              { path: 'backtests', element: <BacktestStoragePage /> },
+              { path: 'backtests/:sessionId/trade/:tradeId', element: <BacktestStoragePage /> },
+              { path: 'backtests/:sessionId/:section?', element: <BacktestStoragePage /> },
               { path: 'profile', element: <ProfilePage /> },
               { path: 'accounts', element: <AccountsPage /> },
               { path: 'accounts/:id', element: <AccountSummaryPage /> },

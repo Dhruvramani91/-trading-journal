@@ -12,6 +12,7 @@ import { useTradesStore, bootTradesStore } from '@/store/tradesStore';
 import { byDay, dayKey, summary } from '@/analytics/core';
 import { formatR, formatPct, formatSignedMoney } from '@/lib/format';
 import { cn } from '@/lib/cn';
+import { WeeklySummary } from '@/components/calendar/WeeklySummary';
 import type { Trade } from '@/domain/models/trade';
 import type { DayPerformance } from '@/analytics/core';
 
@@ -138,6 +139,25 @@ export function CalendarPage() {
     ? WEEKDAY_LABELS
     : WEEKDAY_LABELS.slice(0, 5);
 
+  const weeklySummary = useMemo(() => {
+    const weeks = Array.from({ length: calendarRows }, () => ({ count: 0, wins: 0, losses: 0, bes: 0, totalR: 0 }));
+    for (const day of dayMap.values()) {
+      const date = new Date(`${day.date}T00:00:00`);
+      if (date.getFullYear() !== year || date.getMonth() !== month) continue;
+      const dayOfMonth = date.getDate();
+      const weekday = date.getDay();
+      if (!showWeekends && (weekday === 0 || weekday === 6)) continue;
+      const visibleIndex = showWeekends
+        ? dayOfMonth - 1
+        : Array.from({ length: dayOfMonth - 1 }, (_, index) => new Date(year, month, index + 1))
+            .filter((item) => item.getDay() !== 0 && item.getDay() !== 6).length;
+      const week = weeks[Math.floor((offset + visibleIndex) / (showWeekends ? 7 : 5))];
+      if (!week) continue;
+      week.count += day.count; week.wins += day.wins; week.losses += day.losses; week.bes += day.bes; week.totalR += day.totalR;
+    }
+    return weeks;
+  }, [calendarRows, dayMap, month, offset, showWeekends, year]);
+
   function goPrev() {
     if (month === 0) {
       setYear(year - 1);
@@ -236,7 +256,8 @@ export function CalendarPage() {
               description="Add trades from the journal to see calendar performance."
             />
           ) : (
-            <>
+            <div className="grid gap-3 lg:min-h-0 lg:flex-1 xl:grid-cols-[minmax(0,1fr)_150px]">
+              <>
               <div className="w-full overflow-x-auto pb-2 pr-1 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden">
               <div className="min-w-[980px] lg:min-w-0 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
               {/* Weekday header */}
@@ -348,7 +369,9 @@ export function CalendarPage() {
               </div>
               </div>
               </div>
-            </>
+              </>
+              <WeeklySummary weeks={weeklySummary} />
+            </div>
           )}
         </CardBody>
         </Card>

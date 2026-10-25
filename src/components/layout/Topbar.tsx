@@ -9,6 +9,7 @@ const TITLES: Record<string, { title: string; subtitle?: string }> = {
   '/mistakes': { title: 'Mistakes', subtitle: 'Patterns and filters across your trades.' },
   '/profile': { title: 'Profile', subtitle: 'Your account and trading profile.' },
   '/accounts': { title: 'Accounts', subtitle: 'Track account performance and rules.' },
+  '/backtests': { title: 'Backtest storage', subtitle: 'Keep historical practice separate from your live journal.' },
 };
 
 export function Topbar() {
@@ -18,6 +19,8 @@ export function Topbar() {
       ? TITLES['/accounts']!
       : pathname.startsWith('/journal/')
         ? { title: 'Trade Details', subtitle: 'Review this trade.' }
+        : pathname.startsWith('/backtests/')
+          ? { title: 'Backtest session', subtitle: 'An independent workspace for historical testing.' }
         : { title: 'The Precision Lab' }
   );
   return (
