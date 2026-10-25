@@ -3,6 +3,7 @@ import { DEFAULT_TEMPLATE } from './default';
 import { AM_TRADES_TEMPLATE } from './amTrades';
 import { IFVG_TEMPLATE } from './ifvg';
 import { ICT_2022_TEMPLATE } from './ict2022';
+import { ICT_VENOM_TEMPLATE } from './ictVenom';
 
 /**
  * Registry of all known templates. Adding a new strategy = new file + a new entry here.
@@ -13,6 +14,7 @@ export const TEMPLATES: Record<string, TemplateDefinition> = {
   [AM_TRADES_TEMPLATE.id]: AM_TRADES_TEMPLATE,
   [IFVG_TEMPLATE.id]: IFVG_TEMPLATE,
   [ICT_2022_TEMPLATE.id]: ICT_2022_TEMPLATE,
+  [ICT_VENOM_TEMPLATE.id]: ICT_VENOM_TEMPLATE,
 };
 
 export const ACTIVE_TEMPLATE_ID = DEFAULT_TEMPLATE.id;
