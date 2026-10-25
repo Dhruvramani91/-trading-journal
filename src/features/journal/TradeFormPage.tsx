@@ -7,6 +7,7 @@ import { Loader } from '@/components/ui/Loader';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { AnimatedCheckBox } from '@/components/ui/animated-check-box';
 import { DateTimePicker } from '@/components/ui/DateTimePicker';
 import {
   FormField,
@@ -1185,15 +1186,11 @@ export function TradeFormPage() {
                         >
                           {field.type ===
                           'boolean' ? (
-                            <label className="flex min-h-10 cursor-pointer items-center gap-3 rounded-lg border border-line bg-bg-1 px-3 text-sm text-fg transition-colors hover:border-line-strong has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-accent/40">
-                              <input
-                                type="checkbox"
-                                checked={form.templateData[field.key] === true || form.templateData[field.key] === 'YES' || form.templateData[field.key] === 'true'}
-                                onChange={(event) => patchTemplate(field.key, event.target.checked)}
-                                className="h-4 w-4 shrink-0 accent-accent"
-                              />
-                              <span>Applied to this trade</span>
-                            </label>
+                            <AnimatedCheckBox
+                              aria-label={field.label}
+                              checked={form.templateData[field.key] === true || form.templateData[field.key] === 'YES' || form.templateData[field.key] === 'true'}
+                              onChange={(event) => patchTemplate(field.key, event.target.checked)}
+                            />
                           ) : field.type ===
                             'enum' ? (
                             <Select

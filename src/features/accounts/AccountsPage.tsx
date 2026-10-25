@@ -41,6 +41,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { Segmented } from '@/components/ui/Select';
 import { Loader } from '@/components/ui/Loader';
 
@@ -734,25 +735,17 @@ export function AccountsPage() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-fg">
-            Accounts
-          </h1>
-          <p className="mt-1 text-sm text-fg-muted">
-            Manage your trading accounts and track each one against its rules.
-          </p>
-        </div>
-
-        <Button
+      <PageHeader
+        title="Accounts"
+        actions={<Button
           variant="primary"
           size="md"
           leftIcon={<Plus className="h-4 w-4" />}
           onClick={openCreate}
         >
           Add Account
-        </Button>
-      </header>
+        </Button>}
+      />
 
       <div className="flex items-center justify-between">
         <Segmented

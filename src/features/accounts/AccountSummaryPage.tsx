@@ -1163,11 +1163,10 @@ export function AccountSummaryPage() {
       </div>
 
       {/* Dashboard-style account heading */}
-      <header className="flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
+      <header className="flex flex-col gap-4 border-b border-line pb-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-[26px] font-bold tracking-tight leading-tight text-fg">{account.name}</h1>
-          <p className="mt-1 text-[13px] text-fg-muted">A focused view of this account’s performance.</p>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
+          <h1 className="text-2xl font-semibold leading-tight tracking-[-0.025em] text-fg sm:text-3xl">{account.name}</h1>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
             <Badge tone={account.accountType === 'futures' ? 'accent' : 'win'}>{TYPE_LABEL[account.accountType]}</Badge>
             <Badge tone={phaseTone}>{phaseLabel}</Badge>
             <Badge tone={resultTone}>{resultLabel}</Badge>

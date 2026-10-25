@@ -5,25 +5,25 @@
 @layer base {
   :root {
     color-scheme: light;
-    --bg: 232 237 244;
-    --bg-0: 232 237 244;
-    --bg-1: 252 253 254;
-    --bg-2: 255 255 255;
-    --bg-3: 243 245 248;
-    --bg-4: 237 240 245;
+    --bg: 224 224 224;
+    --bg-0: 224 224 224;
+    --bg-1: 242 242 242;
+    --bg-2: 242 242 242;
+    --bg-3: 242 242 242;
+    --bg-4: 242 242 242;
 
-    --line: 228 233 240;
-    --line-strong: 211 218 229;
-    --line-subtle: 238 241 245;
+    --line: 220 226 234;
+    --line-strong: 202 211 222;
+    --line-subtle: 235 239 245;
 
     --fg: 13 13 15;
-    --fg-muted: 74 84 104;
-    --fg-dim: 102 112 133;
+    --fg-muted: 83 96 115;
+    --fg-dim: 106 119 137;
     --fg-inverse: 255 255 255;
 
-    --accent: 71 85 105;
-    --accent-hover: 51 65 85;
-    --accent-muted: 100 116 139;
+    --accent: 77 91 110;
+    --accent-hover: 57 70 88;
+    --accent-muted: 109 123 141;
     --accent-fg: 255 255 255;
 
     --grade-a-plus: 8 122 81;
@@ -49,26 +49,26 @@
 
   .dark {
     color-scheme: dark;
-    --bg: 9 10 13;
-    --bg-0: 9 10 13;
-    --bg-1: 16 18 22;
-    --bg-2: 20 23 28;
-    --bg-3: 23 26 32;
-    --bg-4: 31 34 41;
+    --bg: 34 36 37;
+    --bg-0: 34 36 37;
+    --bg-1: 22 23 23;
+    --bg-2: 22 23 23;
+    --bg-3: 22 23 23;
+    --bg-4: 22 23 23;
 
-    --line: 35 40 51;
-    --line-strong: 38 43 53;
-    --line-subtle: 29 32 39;
+    --line: 53 59 60;
+    --line-strong: 68 74 75;
+    --line-subtle: 43 48 49;
 
-    --fg: 244 246 250;
-    --fg-muted: 169 178 195;
-    --fg-dim: 139 149 168;
-    --fg-inverse: 13 13 15;
+    --fg: 240 242 242;
+    --fg-muted: 174 181 183;
+    --fg-dim: 137 146 148;
+    --fg-inverse: 18 21 21;
 
-    --accent: 203 213 225;
-    --accent-hover: 241 245 249;
-    --accent-muted: 148 163 184;
-    --accent-fg: 15 23 42;
+    --accent: 201 209 210;
+    --accent-hover: 235 239 239;
+    --accent-muted: 146 157 159;
+    --accent-fg: 23 27 28;
 
     --grade-a-plus: 52 211 153;
     --grade-a: 45 212 191;
@@ -122,6 +122,121 @@
 }
 
 @layer components {
+  .animated-checkbox {
+    --checkbox-size: 28px;
+    --checkbox-primary: rgb(var(--win));
+    --checkbox-primary-dark: rgb(var(--win-text));
+    position: relative;
+    display: inline-flex;
+    width: fit-content;
+    height: var(--checkbox-size);
+    flex: none;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+  .animated-checkbox__input {
+    position: absolute;
+    z-index: 2;
+    top: 0;
+    left: 0;
+    width: var(--checkbox-size);
+    height: var(--checkbox-size);
+    margin: 0;
+    cursor: pointer;
+    opacity: 0;
+  }
+  .animated-checkbox__input:disabled { cursor: not-allowed; }
+  .animated-checkbox__frame {
+    position: relative;
+    display: block;
+    width: var(--checkbox-size);
+    height: var(--checkbox-size);
+    flex: none;
+    pointer-events: none;
+  }
+  .animated-checkbox__box {
+    position: absolute;
+    inset: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1.5px solid rgb(var(--line-strong));
+    border-radius: 6px;
+    background: rgb(var(--bg-2));
+    transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease;
+  }
+  .animated-checkbox__input:focus-visible + .animated-checkbox__frame .animated-checkbox__box {
+    outline: 2px solid rgb(var(--accent) / 0.75);
+    outline-offset: 3px;
+  }
+  .animated-checkbox__frame.is-checked .animated-checkbox__box {
+    border-color: var(--checkbox-primary);
+    background: color-mix(in srgb, var(--checkbox-primary) 10%, rgb(var(--bg-2)));
+  }
+  .animated-checkbox__check {
+    width: 80%;
+    height: 80%;
+    fill: none;
+    stroke: var(--checkbox-primary);
+    stroke-width: 3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .animated-checkbox__check path {
+    stroke-dasharray: 40;
+    stroke-dashoffset: 40;
+    transform-origin: center;
+    transition: stroke-dashoffset 320ms cubic-bezier(0.16, 1, 0.3, 1), transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .animated-checkbox__frame.is-checked .animated-checkbox__check path { stroke-dashoffset: 0; transform: scale(1.08); }
+  .animated-checkbox__glow {
+    position: absolute;
+    inset: -3px;
+    border-radius: 8px;
+    background: var(--checkbox-primary);
+    filter: blur(8px);
+    opacity: 0;
+    transition: opacity 220ms ease;
+  }
+  .animated-checkbox__frame.is-checked .animated-checkbox__glow { opacity: 0.13; }
+  .animated-checkbox__borders, .animated-checkbox__effects { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+  .animated-checkbox__border { position: absolute; display: block; background: var(--checkbox-primary); opacity: 0; }
+  .animated-checkbox__frame.is-checked .animated-checkbox__border { opacity: 0.7; }
+  .animated-checkbox__border--top, .animated-checkbox__border--bottom { width: 40px; height: 1px; }
+  .animated-checkbox__border--top { top: 0; left: -100%; animation: borderFlow1 2s linear infinite; }
+  .animated-checkbox__border--right { top: -100%; right: 0; width: 1px; height: 40px; animation: borderFlow2 2s linear infinite; }
+  .animated-checkbox__border--bottom { right: -100%; bottom: 0; animation: borderFlow3 2s linear infinite; }
+  .animated-checkbox__border--left { bottom: -100%; left: 0; width: 1px; height: 40px; animation: borderFlow4 2s linear infinite; }
+  .animated-checkbox__effects { overflow: visible; }
+  .animated-checkbox__particle, .animated-checkbox__spark { position: absolute; top: 50%; left: 50%; display: block; opacity: 0; pointer-events: none; }
+  .animated-checkbox__particle { width: 4px; height: 4px; border-radius: 999px; background: var(--checkbox-primary); box-shadow: 0 0 6px var(--checkbox-primary); }
+  .animated-checkbox__frame.is-checked .animated-checkbox__particle { animation: particleExplosion 600ms ease-out forwards; }
+  .animated-checkbox__ring { position: absolute; inset: -18px; display: block; border: 1px solid var(--checkbox-primary); border-radius: 999px; opacity: 0; pointer-events: none; }
+  .animated-checkbox__frame.is-checked .animated-checkbox__ring { animation: ringPulse 600ms ease-out forwards; }
+  .animated-checkbox__spark { width: 20px; height: 1px; transform: rotate(var(--rotation, 0deg)); background: linear-gradient(90deg, var(--checkbox-primary), transparent); }
+  .animated-checkbox__frame.is-checked .animated-checkbox__spark { animation: sparkFlash 600ms ease-out forwards; }
+  .animated-checkbox.is-disabled { cursor: not-allowed; opacity: 0.55; }
+  .animated-checkbox.is-disabled .animated-checkbox__frame { cursor: not-allowed; }
+
+  @keyframes borderFlow1 { to { transform: translateX(200%); } }
+  @keyframes borderFlow2 { to { transform: translateY(200%); } }
+  @keyframes borderFlow3 { to { transform: translateX(-200%); } }
+  @keyframes borderFlow4 { to { transform: translateY(-200%); } }
+  @keyframes particleExplosion {
+    0% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+    20% { opacity: 1; }
+    100% { transform: translate(calc(-50% + var(--x, 20px)), calc(-50% + var(--y, 20px))) scale(0); opacity: 0; }
+  }
+  @keyframes ringPulse { 0% { transform: scale(0); opacity: 0.8; } 100% { transform: scale(2); opacity: 0; } }
+  @keyframes sparkFlash { 0% { transform: rotate(var(--rotation, 0deg)) translateX(0) scale(1); opacity: 0.8; } 100% { transform: rotate(var(--rotation, 0deg)) translateX(30px) scale(0); opacity: 0; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animated-checkbox__border, .animated-checkbox__particle, .animated-checkbox__ring, .animated-checkbox__spark { animation: none !important; }
+    .animated-checkbox__check path, .animated-checkbox__box, .animated-checkbox__glow { transition: none; }
+  }
+
   .journal-table-scroll {
     scrollbar-color: rgb(var(--line-strong)) rgb(var(--bg-3));
     scrollbar-width: auto;

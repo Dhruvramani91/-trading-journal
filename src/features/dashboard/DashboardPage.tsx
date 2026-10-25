@@ -16,6 +16,7 @@ import { Loader } from '@/components/ui/Loader';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Stat } from '@/components/ui/Stat';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { PageHeader } from '@/components/ui/PageHeader';
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/Table';
 import { ResultPill } from '@/components/ui/ResultPill';
 import { DirectionPill } from '@/components/ui/DirectionPill';
@@ -137,17 +138,14 @@ export function DashboardPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1440px] space-y-5 lg:space-y-6">
-      <header className="flex flex-col gap-3 border-b border-line pb-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-semibold leading-tight tracking-[-0.025em] text-fg">Dashboard</h1>
-          <p className="mt-1 text-sm text-fg-muted">Performance overview from your journaled trades.</p>
-          <p className="mt-1.5 text-xs text-fg-dim">{tradesToUse.length} journaled trade{tradesToUse.length === 1 ? '' : 's'}</p>
-        </div>
-        <Button asChild variant="primary" className="h-10 shrink-0 px-4 text-sm" leftIcon={<TrendingUp className="h-4 w-4" />}>
+    <div className="mx-auto w-full max-w-[1440px] space-y-6">
+      <PageHeader
+        title="Dashboard"
+        className="border-b border-line pb-4"
+        actions={<Button asChild variant="primary" className="h-10 shrink-0 px-4 text-sm" leftIcon={<TrendingUp className="h-4 w-4" />}>
           <Link to="/journal/new">New trade</Link>
-        </Button>
-      </header>
+        </Button>}
+      />
 
       <FilterBar />
 
