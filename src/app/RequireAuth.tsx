@@ -4,6 +4,7 @@ import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 import { PageLoader } from '@/components/ui/Loader';
 import { useEffect, useState } from 'react';
 import { getCachedBillingEntitlement, cacheBillingEntitlement } from '@/lib/billingEntitlementCache';
+import { needsFirstRunOnboarding } from '@/data/onboardingRepository';
 
 /**
  * Guards every workspace route (everything rendered under AppShell).
@@ -97,5 +98,36 @@ export function RequireSubscription() {
   if (check.userId !== user?.id || check.loading) return <PageLoader title="Loading your workspace…" className="min-h-dvh bg-bg-0" />;
   if (check.error) return <Navigate to="/manage-subscription?billing=unavailable" replace />;
   if (!check.entitled) return <Navigate to="/checkout?plan=monthly" replace state={{ from: location.pathname }} />;
+  return <Outlet />;
+}
+
+type OnboardingCheck = { userId: string; loading: boolean; required: boolean; error: boolean };
+
+/** New accounts get a one-time setup before entering the workspace. */
+export function RequireOnboarding() {
+  const { user } = useAuthStore();
+  const location = useLocation();
+  const [check, setCheck] = useState<OnboardingCheck>({ userId: '', loading: true, required: false, error: false });
+  const [retryCount, setRetryCount] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    if (!user?.id) return () => { active = false; };
+
+    setCheck({ userId: user.id, loading: true, required: false, error: false });
+    void needsFirstRunOnboarding().then((required) => {
+      if (active) setCheck({ userId: user.id, loading: false, required, error: false });
+    }).catch(() => {
+      if (active) setCheck({ userId: user.id, loading: false, required: false, error: true });
+    });
+
+    return () => { active = false; };
+  }, [user?.id, retryCount]);
+
+  // Keep billing recovery and account profile reachable even if onboarding lookup fails.
+  if (location.pathname === '/profile' || location.pathname === '/manage-subscription') return <Outlet />;
+  if (check.userId !== user?.id || check.loading) return <PageLoader title="Preparing your workspace…" className="min-h-dvh bg-bg-0" />;
+  if (check.error) return <div role="alert" className="mx-auto max-w-xl rounded-xl border border-line bg-bg-1 p-5 text-sm text-fg-muted">We couldn’t check your setup status. <button type="button" className="ml-1 rounded underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus" onClick={() => setRetryCount((count) => count + 1)}>Try again</button></div>;
+  if (check.required) return <Navigate to="/onboarding" replace state={{ from: location.pathname }} />;
   return <Outlet />;
 }

@@ -4,6 +4,7 @@ import { BrandLogo } from '@/components/layout/Brand';
 import { Loader } from '@/components/ui/Loader';
 import { useAuthStore } from '@/store/authStore';
 import { checkoutPath } from '@/lib/billing';
+import { needsFirstRunOnboarding } from '@/data/onboardingRepository';
 
 export function AuthCallbackPage() {
   const navigate = useNavigate();
@@ -15,9 +16,10 @@ export function AuthCallbackPage() {
       try {
         // Re-initialize auth to pick up the new session from URL fragments
         await init();
+        const firstRun = await needsFirstRunOnboarding().catch(() => false);
         // Small delay to ensure session is processed
         setTimeout(() => {
-          navigate(checkoutPath(), { replace: true });
+          navigate(firstRun ? '/onboarding' : checkoutPath(), { replace: true });
         }, 500);
       } catch (err) {
         console.error('Auth callback error:', err);

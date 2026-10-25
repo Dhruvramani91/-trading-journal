@@ -3,6 +3,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import {
   LandingPage,
   LoginPage,
+  FirstRunOnboardingPage,
   AuthCallbackPage,
   EmailConfirmedPage,
   PasswordResetPage,
@@ -26,7 +27,7 @@ import {
   BacktestStoragePage,
   FigmaTemplatesPage,
 } from './routeComponents';
-import { RequireAuth, RequireSubscription } from './RequireAuth';
+import { RequireAuth, RequireOnboarding, RequireSubscription } from './RequireAuth';
 
 export const router = createBrowserRouter([
   // Public Routes
@@ -41,32 +42,38 @@ export const router = createBrowserRouter([
   {
     element: <RequireAuth />,
     children: [
+      { path: 'onboarding', element: <FirstRunOnboardingPage /> },
       {
         element: <RequireSubscription />,
         children: [
           {
-            element: <AppShell />,
+            element: <RequireOnboarding />,
             children: [
-              { path: 'dashboard', element: <DashboardPage /> },
-              { path: 'journal', element: <JournalPage /> },
-              { path: 'journal/template-preview/am', element: <AMTemplatePreviewPage /> },
-              { path: 'settings', element: <SettingsPage /> },
-              { path: 'tutorials', element: <TutorialsPage /> },
-              { path: 'settings/templates', element: <JournalTemplatesEditorPage /> },
-              { path: 'figma-templates', element: <FigmaTemplatesPage /> },
-              { path: 'journal/new', element: <TradeFormPage /> },
-              { path: 'journal/:id', element: <TradeDetailsPage /> },
-              { path: 'journal/:id/edit', element: <TradeFormPage /> },
-              { path: 'statistics', element: <StatisticsPage /> },
-              { path: 'calendar', element: <CalendarPage /> },
-              { path: 'mistakes', element: <MistakesPage /> },
-              { path: 'backtests', element: <BacktestStoragePage /> },
-              { path: 'backtests/:sessionId/trade/:tradeId', element: <BacktestStoragePage /> },
-              { path: 'backtests/:sessionId/:section?', element: <BacktestStoragePage /> },
-              { path: 'profile', element: <ProfilePage /> },
-              { path: 'manage-subscription', element: <ManageSubscriptionPage /> },
-              { path: 'accounts', element: <AccountsPage /> },
-              { path: 'accounts/:id', element: <AccountSummaryPage /> },
+              {
+                element: <AppShell />,
+                children: [
+                  { path: 'dashboard', element: <DashboardPage /> },
+                  { path: 'journal', element: <JournalPage /> },
+                  { path: 'journal/template-preview/am', element: <AMTemplatePreviewPage /> },
+                  { path: 'settings', element: <SettingsPage /> },
+                  { path: 'tutorials', element: <TutorialsPage /> },
+                  { path: 'settings/templates', element: <JournalTemplatesEditorPage /> },
+                  { path: 'figma-templates', element: <FigmaTemplatesPage /> },
+                  { path: 'journal/new', element: <TradeFormPage /> },
+                  { path: 'journal/:id', element: <TradeDetailsPage /> },
+                  { path: 'journal/:id/edit', element: <TradeFormPage /> },
+                  { path: 'statistics', element: <StatisticsPage /> },
+                  { path: 'calendar', element: <CalendarPage /> },
+                  { path: 'mistakes', element: <MistakesPage /> },
+                  { path: 'backtests', element: <BacktestStoragePage /> },
+                  { path: 'backtests/:sessionId/trade/:tradeId', element: <BacktestStoragePage /> },
+                  { path: 'backtests/:sessionId/:section?', element: <BacktestStoragePage /> },
+                  { path: 'profile', element: <ProfilePage /> },
+                  { path: 'manage-subscription', element: <ManageSubscriptionPage /> },
+                  { path: 'accounts', element: <AccountsPage /> },
+                  { path: 'accounts/:id', element: <AccountSummaryPage /> },
+                ],
+              },
             ],
           },
         ],

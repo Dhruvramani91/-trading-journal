@@ -17,6 +17,7 @@ import { FormField } from '@/components/ui/Select';
 import { MIN_PASSWORD_LENGTH, useAuthStore } from '@/store/authStore';
 import { isSupabaseConfigured } from '@/lib/supabase';
 import { checkoutPath, isBillingPlan, saveBillingPlanIntent } from '@/lib/billing';
+import { needsFirstRunOnboarding } from '@/data/onboardingRepository';
 
 type AuthMode = 'login' | 'signup';
 
@@ -153,7 +154,13 @@ export function LoginPage() {
       return;
     }
 
-    navigate(checkoutPath(), { replace: true });
+    let active = true;
+    void needsFirstRunOnboarding().then((firstRun) => {
+      if (active) navigate(firstRun ? '/onboarding' : checkoutPath(), { replace: true });
+    }).catch(() => {
+      if (active) navigate(checkoutPath(), { replace: true });
+    });
+    return () => { active = false; };
   }, [user, signupSuccess, signOut, clearError, navigate]);
 
   // --------------------------------------------------
@@ -259,7 +266,8 @@ export function LoginPage() {
 
     try {
       await signInWithPassword(email, password);
-      navigate(checkoutPath());
+      const firstRun = await needsFirstRunOnboarding().catch(() => false);
+      navigate(firstRun ? '/onboarding' : checkoutPath());
     } catch {
       setLocalError('Invalid email or password.');
     }

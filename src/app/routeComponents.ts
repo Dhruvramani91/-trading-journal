@@ -2,6 +2,7 @@ import { lazy } from 'react';
 
 const LandingPage = lazy(() => import('@/features/auth/LandingPage').then((m) => ({ default: m.LandingPage })));
 const LoginPage = lazy(() => import('@/features/auth/LoginPage').then((m) => ({ default: m.LoginPage })));
+const FirstRunOnboardingPage = lazy(() => import('@/features/auth/FirstRunOnboardingPage').then((m) => ({ default: m.FirstRunOnboardingPage })));
 const AuthCallbackPage = lazy(() => import('@/features/auth/AuthCallbackPage').then((m) => ({ default: m.AuthCallbackPage })));
 const EmailConfirmedPage = lazy(() => import('@/features/auth/EmailConfirmedPage').then((m) => ({ default: m.EmailConfirmedPage })));
 const PasswordResetPage = lazy(() => import('@/features/auth/PasswordResetPage'));
@@ -28,6 +29,7 @@ const FigmaTemplatesPage = lazy(() => import('@/features/journal/FigmaTemplatesP
 export {
   LandingPage,
   LoginPage,
+  FirstRunOnboardingPage,
   AuthCallbackPage,
   EmailConfirmedPage,
   PasswordResetPage,

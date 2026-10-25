@@ -240,6 +240,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           email: normalizedEmail,
           password,
           options: {
+            data: { onboarding_required: true },
             emailRedirectTo:
               `${window.location.origin}/auth/confirmed`,
           },
