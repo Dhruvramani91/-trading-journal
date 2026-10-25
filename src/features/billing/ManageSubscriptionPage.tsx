@@ -170,7 +170,7 @@ export function ManageSubscriptionPage() {
     <PageHeader
       title="Manage subscription"
       description="Review your plan, payment status, billing dates, and subscription history."
-      actions={<Button asChild variant="secondary" leftIcon={<ArrowLeft className="h-4 w-4" />}><Link to="/profile">Back to profile</Link></Button>}
+      actions={<Button asChild variant="secondary" leftIcon={<ArrowLeft className="h-4 w-4" />}><Link to="/settings">Back to settings</Link></Button>}
     />
 
     <Card>

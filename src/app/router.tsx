@@ -11,6 +11,7 @@ import { TradeFormPage } from '@/features/journal/TradeFormPage';
 import { AMTemplatePreviewPage } from '@/features/journal/AMTemplatePreviewPage';
 import { JournalTemplatesPage } from '@/features/journal/JournalTemplatesPage';
 import { SettingsPage } from '@/features/settings/SettingsPage';
+import { TutorialsPage } from '@/features/settings/TutorialsPage';
 import { TradeDetailsPage } from '@/features/journal/TradeDetailsPage';
 import { StatisticsPage } from '@/features/statistics/StatisticsPage';
 import { CalendarPage } from '@/features/calendar/CalendarPage';
@@ -48,6 +49,7 @@ export const router = createBrowserRouter([
               { path: 'journal', element: <JournalPage /> },
               { path: 'journal/template-preview/am', element: <AMTemplatePreviewPage /> },
               { path: 'settings', element: <SettingsPage /> },
+              { path: 'tutorials', element: <TutorialsPage /> },
               { path: 'settings/templates', element: <JournalTemplatesPage /> },
               { path: 'figma-templates', element: <FigmaTemplatesPage /> },
               { path: 'journal/new', element: <TradeFormPage /> },

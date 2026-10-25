@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { Copy, Eye, Plus, Save, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Copy, Eye, Plus, Save, Trash2, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -19,7 +19,7 @@ export function JournalTemplatesPage() {
   const [defaultId, setDefaultId] = useState('default-ict-2026');
   const [draft, setDraft] = useState<TemplateDefinition | null>(null);
   const [preview, setPreview] = useState<TemplateDefinition | null>(null);
-  const [inlinePreview, setInlinePreview] = useState(false);
+  const [formPreviewOpen, setFormPreviewOpen] = useState(false);
   const [previewValues, setPreviewValues] = useState<Record<string, string>>({});
   const [showBuilder, setShowBuilder] = useState(false);
   const [message, setMessage] = useState('');
@@ -49,14 +49,17 @@ export function JournalTemplatesPage() {
     setMessage('');
   }
 
-  async function saveDraft() {
+  async function saveDraft(selectAfterSave: boolean) {
     if (!draft || !draft.name.trim()) return;
     setBusy(true); setMessage('');
     try {
       const saved = await saveCustomTemplate({ ...draft, name: draft.name.trim(), photoCount: Math.max(0, Math.min(10, draft.photoCount ?? 3)), fields: draft.fields.filter((field) => field.key !== 'mistake').map((f) => f.type === 'enum' ? { ...f, options: (f.options ?? []).filter(Boolean) } : f) });
-      await saveDefaultTemplateId(saved.id);
+      if (selectAfterSave) {
+        await saveDefaultTemplateId(saved.id);
+        setDefaultId(saved.id);
+      }
       await reload(); setDraft({ ...saved, fields: saved.fields.map((f) => ({ ...f, options: f.options ? [...f.options] : undefined })) });
-      setMessage('Saved and selected as your default for new trades.');
+      setMessage(selectAfterSave ? 'Saved and selected for new trades.' : 'Template saved. Your default template was not changed.');
     } catch (e) { setMessage(e instanceof Error ? e.message : 'Could not save template.'); }
     finally { setBusy(false); }
   }
@@ -75,7 +78,7 @@ export function JournalTemplatesPage() {
   const editField = (index: number, patch: Partial<TemplateField>) => setDraft((current) => current ? ({ ...current, fields: current.fields.map((f, i) => i === index ? { ...f, ...patch, key: patch.label ? `${patch.label.replace(/[^a-z0-9]+/gi, '_').replace(/^_|_$/g, '').toLowerCase()}` : f.key } : f) }) : null);
 
   return <div className="space-y-6">
-    <PageHeader title={draft ? draft.name : 'Journal templates'} description={draft ? 'Customize your fields, then save to use this template for new trades.' : 'Choose the form used for new trades, customize a strategy, or build your own template.'} actions={<Button asChild variant="ghost"><Link to="/settings">Back to settings</Link></Button>} />
+    <PageHeader title={draft ? draft.name : 'Journal templates'} description={draft ? 'Customize your fields, then save to use this template for new trades.' : 'Choose the form used for new trades, customize a strategy, or build your own template.'} actions={<Button asChild variant="secondary" leftIcon={<ArrowLeft className="h-4 w-4" />}><Link to="/settings">Back to settings</Link></Button>} />
     {message && <p role="status" className="rounded-lg border border-line bg-bg-2 px-4 py-3 text-sm text-fg-muted">{message}</p>}
     <Card><CardHeader><CardTitle>Default for new trades</CardTitle></CardHeader><CardBody className="space-y-3">
       <FormField label="Your active template"><Select value={defaultId} onChange={(e) => void selectDefault(e.target.value)} disabled={busy} renderOptionAction={(option, closeMenu) => {
@@ -92,10 +95,21 @@ export function JournalTemplatesPage() {
       {draft && <CardBody className="space-y-5"><div className="rounded-lg border border-accent/20 bg-accent/5 px-3 py-2 text-sm text-fg-muted">This personal template is based on <strong className="text-fg">{draft.description?.match(/^Customized from ([^.]+)/)?.[1] ?? 'your custom strategy'}</strong>. Shared basics, mistake tracking, notes, and images are included automatically.</div><div className="grid gap-4 sm:grid-cols-2"><FormField label="Template name" required><Input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} maxLength={80} /></FormField><FormField label="Description"><Input value={draft.description ?? ''} onChange={(e) => setDraft({ ...draft, description: e.target.value })} /></FormField></div>
         <div className="flex flex-wrap items-end justify-between gap-3 rounded-xl border border-line bg-bg-2 p-4"><div><h3 className="text-sm font-semibold text-fg">Common image slots</h3><p className="mt-1 text-xs text-fg-muted">Images appear after basics, strategy fields, mistakes, and notes.</p></div><div className="flex items-center gap-2"><Button type="button" size="icon-sm" variant="secondary" aria-label="Remove an image slot" disabled={(draft.photoCount ?? 3) <= 0} onClick={() => setDraft({ ...draft, photoCount: Math.max(0, (draft.photoCount ?? 3) - 1) })}>−</Button><span className="min-w-20 text-center text-sm font-semibold text-fg">{draft.photoCount ?? 3} images</span><Button type="button" size="icon-sm" variant="secondary" aria-label="Add an image slot" disabled={(draft.photoCount ?? 3) >= 10} onClick={() => setDraft({ ...draft, photoCount: Math.min(10, (draft.photoCount ?? 3) + 1) })}>+</Button></div></div>
         <div className="space-y-3">{draft.fields.map((field, i) => <div key={`${i}-${field.key}`} className="grid items-end gap-3 rounded-xl border border-line p-3 sm:grid-cols-[1fr_160px_1fr_auto]"><FormField label="Field label"><Input value={field.label} onChange={(e) => editField(i, { label: e.target.value })} /></FormField><FormField label="Type"><Select value={field.type} onChange={(e) => editField(i, { type: e.target.value as TemplateFieldType, options: e.target.value === 'enum' ? field.options ?? [] : undefined })}>{['enum','text','number','boolean','date'].map((v) => <option key={v}>{v}</option>)}</Select></FormField><FormField label={field.type === 'enum' ? 'Choices (comma separated)' : 'Section'}><Input value={field.type === 'enum' ? (field.options ?? []).join(', ') : field.group} onChange={(e) => editField(i, field.type === 'enum' ? { options: e.target.value.split(',').map((v) => v.trim()) } : { group: e.target.value })} /></FormField><Button variant="ghost" size="icon" aria-label={`Remove ${field.label}`} onClick={() => setDraft({ ...draft, fields: draft.fields.filter((_, j) => j !== i) })}><Trash2 className="h-4 w-4" /></Button></div>)}</div>
-        <div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={() => setDraft({ ...draft, fields: [...draft.fields, blankField(draft.fields.length + 1)] })} leftIcon={<Plus className="h-4 w-4" />}>Add field</Button><Button variant="secondary" onClick={() => setInlinePreview((open) => !open)} leftIcon={<Eye className="h-4 w-4" />}>{inlinePreview ? 'Hide preview' : 'Preview form'}</Button><Button onClick={() => void saveDraft()} disabled={busy || !draft.name.trim()} leftIcon={<Save className="h-4 w-4" />}>{defaultId === draft.id ? 'Save changes' : 'Save and select template'}</Button>{draft.id && <Button variant="danger" onClick={() => void removeDraft()} disabled={busy}>Archive custom template</Button>}<Button variant="ghost" onClick={() => setDraft(null)}>Close editor</Button></div>
-        {inlinePreview && <div className="space-y-4 border-t border-line pt-5"><div><h3 className="text-base font-semibold text-fg">Form preview</h3><p className="mt-1 text-sm text-fg-muted">Try the controls. Preview entries are temporary and won’t be saved.</p></div><TemplateFormPreview template={draft} values={previewValues} onChange={(key, value) => setPreviewValues((current) => ({ ...current, [key]: value }))} /></div>}
+        <div className="flex flex-wrap gap-2"><Button variant="secondary" onClick={() => setDraft({ ...draft, fields: [...draft.fields, blankField(draft.fields.length + 1)] })} leftIcon={<Plus className="h-4 w-4" />}>Add field</Button><Button variant="secondary" onClick={() => setFormPreviewOpen(true)} leftIcon={<Eye className="h-4 w-4" />}>Preview form</Button><Button variant="secondary" onClick={() => void saveDraft(false)} disabled={busy || !draft.name.trim()} leftIcon={<Save className="h-4 w-4" />}>Save</Button><Button onClick={() => void saveDraft(true)} disabled={busy || !draft.name.trim()} leftIcon={<Save className="h-4 w-4" />}>Save and Select Template</Button>{draft.id && <Button variant="danger" onClick={() => void removeDraft()} disabled={busy}>Archive custom template</Button>}<Button variant="ghost" onClick={() => { setDraft(null); setFormPreviewOpen(false); }}>Cancel</Button></div>
       </CardBody>}
     </Card>
+    {draft && <Dialog.Root open={formPreviewOpen} onOpenChange={setFormPreviewOpen} modal>
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm motion-reduce:animate-none motion-reduce:backdrop-blur-none" />
+        <Dialog.Content data-select-portal className="fixed bottom-3 left-1/2 z-[101] flex max-h-[88dvh] w-[min(1080px,calc(100vw-24px))] -translate-x-1/2 flex-col overflow-hidden rounded-2xl border border-line bg-bg-1 shadow-pop focus:outline-none">
+          <header className="flex shrink-0 items-start justify-between gap-4 border-b border-line bg-bg-1 px-5 py-4">
+            <div><Dialog.Title className="text-lg font-semibold text-fg">{draft.name} · Form preview</Dialog.Title><Dialog.Description className="mt-1 text-sm text-fg-muted">Try the controls below. Preview entries are temporary and won’t be saved.</Dialog.Description></div>
+            <Dialog.Close asChild><Button variant="ghost" size="icon" aria-label="Close preview"><X className="h-5 w-5" /></Button></Dialog.Close>
+          </header>
+          <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6"><TemplateFormPreview template={draft} values={previewValues} portalZIndex={120} onChange={(key, value) => setPreviewValues((current) => ({ ...current, [key]: value }))} /></div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>}
     {preview && <Dialog.Root open={Boolean(preview)} onOpenChange={(open) => { if (!open) setPreview(null); }} modal>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm motion-reduce:animate-none motion-reduce:backdrop-blur-none" />
