@@ -359,7 +359,7 @@ export function ProfilePage() {
                   {displayName}
                 </h2>
 
-                <span className="inline-flex items-center gap-1 rounded-full bg-win/10 px-2 py-1 text-2xs font-semibold text-win">
+                <span className="inline-flex items-center gap-1 rounded-full bg-win-fill/10 px-2 py-1 text-2xs font-semibold text-win">
                   <ShieldCheck className="h-3 w-3" />
                   Verified account
                 </span>
@@ -572,7 +572,7 @@ export function ProfilePage() {
             aria-describedby="cancel-subscription-description"
           >
             <div className="flex items-start gap-3 border-b border-line px-5 py-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-loss/10 text-loss">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-loss-fill/10 text-loss">
                 <X className="h-5 w-5" />
               </div>
               <div className="min-w-0 flex-1">
@@ -601,7 +601,7 @@ export function ProfilePage() {
             </div>
 
             {billingError && (
-              <p role="alert" className="mx-5 mt-4 rounded-lg bg-loss/10 px-3 py-2 text-xs text-loss">
+              <p role="alert" className="mx-5 mt-4 rounded-lg bg-loss-fill/10 px-3 py-2 text-xs text-loss">
                 {billingError}
               </p>
             )}
@@ -737,7 +737,7 @@ export function ProfilePage() {
               </div>
 
               {error && (
-                <div className="rounded-lg border border-loss/20 bg-loss/10 px-3 py-2.5 text-xs text-loss">
+                <div className="rounded-lg border border-loss-fill/20 bg-loss-fill/10 px-3 py-2.5 text-xs text-loss">
                   {error}
                 </div>
               )}

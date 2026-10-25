@@ -5,8 +5,13 @@
     <script>
       (function () {
         try {
-          var stored = localStorage.getItem('pj:theme');
-          if (stored === 'dark') document.documentElement.classList.add('dark');
+          var stored = localStorage.getItem('pj:theme') || localStorage.getItem('theme');
+          var theme = stored === 'dark' || stored === 'light'
+            ? stored
+            : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          document.documentElement.classList.toggle('dark', theme === 'dark');
+          document.documentElement.setAttribute('data-theme', theme);
+          document.documentElement.style.colorScheme = theme;
         } catch (e) {}
       })();
     </script>

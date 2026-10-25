@@ -302,7 +302,7 @@ export function DatePicker({
                 }
                 if (event.key === 'Escape' && open) setOpen(false);
               }}
-              className={cn('h-11 w-full rounded-xl border border-[rgb(var(--input-overlay-border))] bg-[rgb(var(--input-overlay-trigger))] px-3 pr-11 text-sm text-[rgb(var(--input-overlay-text))] shadow-[0_0_0_2px_rgb(var(--input-overlay-border)/0.18)] placeholder:text-[rgb(var(--input-overlay-muted))] transition-colors hover:border-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 disabled:cursor-not-allowed disabled:opacity-50', invalid && 'border-loss focus-visible:ring-loss/40', className)}
+              className={cn('h-11 w-full rounded-xl border border-[rgb(var(--input-overlay-border))] bg-[rgb(var(--input-overlay-trigger))] px-3 pr-11 text-sm text-[rgb(var(--input-overlay-text))] shadow-[0_0_0_2px_rgb(var(--input-overlay-border)/0.18)] placeholder:text-[rgb(var(--input-overlay-muted))] transition-colors hover:border-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 disabled:cursor-not-allowed disabled:opacity-50', invalid && 'border-loss-fill focus-visible:ring-loss-fill/40', className)}
             />
             <button
               type="button"
@@ -389,7 +389,7 @@ export function DatePicker({
                           selectDate(day);
                         }}
                         onKeyDown={(event) => onDayKeyDown(event, day)}
-                        className={cn('relative grid h-9 w-9 place-items-center rounded-lg text-[13px] font-medium tabular-nums outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-accent/60', outsideMonth && 'text-[rgb(var(--input-overlay-muted))]/55', !outsideMonth && 'text-[rgb(var(--input-overlay-text))]', marked && !selected && 'bg-orange-500/10', !selected && !dayDisabled && 'hover:bg-[rgb(var(--input-overlay-hover))]', selected && 'ui-date-selected bg-fg text-fg-inverse dark:bg-white dark:text-neutral-950', dayDisabled && 'cursor-not-allowed opacity-40')}
+                        className={cn('relative grid h-9 w-9 place-items-center rounded-lg text-[13px] font-medium tabular-nums outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-accent/60', outsideMonth && 'text-[rgb(var(--input-overlay-muted))]/55', !outsideMonth && 'text-[rgb(var(--input-overlay-text))]', marked && !selected && 'bg-orange-500/10', !selected && !dayDisabled && 'hover:bg-[rgb(var(--input-overlay-hover))]', selected && 'ui-date-selected bg-accent text-accent-fg', dayDisabled && 'cursor-not-allowed opacity-40')}
                       >
                         <span>{day.getDate()}</span>
                         {isToday && <span aria-hidden="true" className={cn('absolute bottom-1 h-1 w-1 rounded-full', selected ? 'bg-current' : 'bg-accent')} />}

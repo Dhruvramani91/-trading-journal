@@ -765,7 +765,7 @@ export function TradeFormPage() {
       />
 
       {error ? (
-        <div className="rounded-md border border-loss/30 bg-loss/10 px-3 py-2 text-sm text-loss">
+        <div className="rounded-md border border-loss-fill/30 bg-loss-fill/10 px-3 py-2 text-sm text-loss">
           {error}
         </div>
       ) : null}

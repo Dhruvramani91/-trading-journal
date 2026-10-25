@@ -105,12 +105,12 @@ function RuleProgress({
   const filled = reverse ? Math.max(0, 100 - pctClamped) : pctClamped;
 
   const barTone = reverse
-    ? 'bg-win'
+    ? 'bg-win-fill'
     : pctClamped < 33
-      ? 'bg-loss'
+      ? 'bg-loss-fill'
       : pctClamped < 66
         ? 'bg-amber-400'
-        : 'bg-win';
+        : 'bg-win-fill';
 
   return (
     <div className="space-y-1.5">
@@ -479,7 +479,7 @@ function AttachTradesModal({
           {saveError ? (
             <div
               role="alert"
-              className="mx-3 my-3 rounded-lg border border-loss/30 bg-loss/10 px-4 py-3 text-sm text-loss"
+              className="mx-3 my-3 rounded-lg border border-loss-fill/30 bg-loss-fill/10 px-4 py-3 text-sm text-loss"
             >
               {saveError}
             </div>
@@ -802,7 +802,7 @@ function AttachResultStep({
       {(fieldError || saveError) && (
         <div
           role="alert"
-          className="mb-4 rounded-lg border border-loss/30 bg-loss/10 px-4 py-3 text-sm text-loss"
+          className="mb-4 rounded-lg border border-loss-fill/30 bg-loss-fill/10 px-4 py-3 text-sm text-loss"
         >
           {fieldError ?? saveError}
         </div>

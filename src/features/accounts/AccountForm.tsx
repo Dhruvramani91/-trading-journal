@@ -142,7 +142,7 @@ function inputClass(hasError: boolean, extra = ''): string {
     'transition-all focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/60',
     'disabled:cursor-not-allowed disabled:opacity-50',
     hasError
-      ? 'border-loss/60 focus:ring-loss/30'
+      ? 'border-loss-fill/60 focus:ring-loss-fill/30'
       : 'border-line hover:border-line-strong',
     extra
   );
@@ -464,7 +464,7 @@ export function AccountForm({
               {submitError ? (
                 <div
                   role="alert"
-                  className="mb-4 rounded-lg border border-loss/30 bg-loss/10 px-4 py-3 text-sm text-loss"
+                  className="mb-4 rounded-lg border border-loss-fill/30 bg-loss-fill/10 px-4 py-3 text-sm text-loss"
                 >
                   {submitError}
                 </div>

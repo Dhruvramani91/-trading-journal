@@ -422,7 +422,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             'focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/60',
             'disabled:cursor-not-allowed disabled:opacity-50',
             invalid
-              ? 'border-loss/60 bg-loss/5'
+              ? 'border-loss-fill/60 bg-loss-fill/5'
               : 'border-line',
             className,
           )}
@@ -574,9 +574,9 @@ export function Segmented<T extends string>({
         const isActive = opt.value === value;
         const activeTone =
           opt.tone === 'win'
-            ? 'bg-win/15 text-win font-semibold'
+            ? 'bg-win-fill/15 text-win font-semibold'
             : opt.tone === 'loss'
-              ? 'bg-loss/15 text-loss font-semibold'
+              ? 'bg-loss-fill/15 text-loss font-semibold'
               : 'bg-bg-2 text-fg shadow-sm font-semibold';
 
         return (

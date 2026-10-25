@@ -9,8 +9,8 @@ const badgeStyles = cva(
       tone: {
         neutral: 'bg-bg-4 text-fg-muted',
         accent: 'bg-accent/10 text-accent',
-        win: 'bg-win/10 text-win',
-        loss: 'bg-loss/10 text-loss',
+        win: 'bg-win-fill/10 text-win',
+        loss: 'bg-loss-fill/10 text-loss',
         be: 'bg-be/10 text-be',
         outline: 'bg-transparent text-fg-muted border border-line-strong',
       },

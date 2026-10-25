@@ -424,7 +424,7 @@ export function LandingPage() {
 
     // eslint-disable-next-line no-new-func
     const run = new Function(`
-try{var t=localStorage.getItem("theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}
+try{var t=localStorage.getItem("pj:theme")||localStorage.getItem("theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t);}catch(e){}
 
 /* heatmap: 5 weeks, deterministic sample data */
 (function(){

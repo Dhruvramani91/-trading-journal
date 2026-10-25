@@ -52,9 +52,9 @@ function Bar({ pct, tone }: { pct: number; tone: 'win' | 'loss' | 'accent' | 'ne
   const clamped = Math.max(0, Math.min(100, pct));
   const color =
     tone === 'win'
-      ? 'bg-win'
+      ? 'bg-win-fill'
       : tone === 'loss'
-        ? 'bg-loss'
+        ? 'bg-loss-fill'
         : tone === 'accent'
           ? 'bg-accent'
           : 'bg-fg-dim';

@@ -16,8 +16,8 @@ export function DirectionPill({
       className={cn(
         'inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-2xs font-medium border',
         isLong
-          ? 'text-win border-win/30 bg-win/10'
-          : 'text-loss border-loss/30 bg-loss/10',
+          ? 'text-win border-win-fill/30 bg-win-fill/10'
+          : 'text-loss border-loss-fill/30 bg-loss-fill/10',
         className,
       )}
     >

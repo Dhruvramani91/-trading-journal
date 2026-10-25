@@ -1,11 +1,11 @@
 /* Shared visual and motion tokens for Dropdown and DatePicker. */
 :root {
-  --input-overlay-trigger: 255 255 255;
+  --input-overlay-trigger: 252 253 254;
   --input-overlay-panel: 255 255 255;
-  --input-overlay-hover: 243 244 246;
-  --input-overlay-border: 229 231 235;
-  --input-overlay-text: 31 31 32;
-  --input-overlay-muted: 107 114 128;
+  --input-overlay-hover: 243 245 248;
+  --input-overlay-border: 228 233 240;
+  --input-overlay-text: 13 13 15;
+  --input-overlay-muted: 102 112 133;
   --input-overlay-shadow: 0 16px 36px rgba(15, 15, 15, 0.14), 0 2px 8px rgba(15, 15, 15, 0.06);
   --input-overlay-radius: 12px;
   /* Tune these durations and easing to adjust the shared animation feel. */
@@ -16,12 +16,12 @@
 }
 
 .dark {
-  --input-overlay-trigger: 28 28 29;
-  --input-overlay-panel: 24 24 25;
-  --input-overlay-hover: 40 40 42;
-  --input-overlay-border: 60 60 63;
-  --input-overlay-text: 243 243 241;
-  --input-overlay-muted: 166 166 163;
+  --input-overlay-trigger: 16 18 22;
+  --input-overlay-panel: 20 23 28;
+  --input-overlay-hover: 23 26 32;
+  --input-overlay-border: 35 40 51;
+  --input-overlay-text: 244 246 250;
+  --input-overlay-muted: 139 149 168;
   --input-overlay-shadow: 0 16px 36px rgba(0, 0, 0, 0.48), 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 

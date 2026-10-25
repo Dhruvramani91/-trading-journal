@@ -114,7 +114,7 @@ function Toast({
         role={toast.tone === 'error' ? 'alert' : 'status'}
         className={cn(
           'pointer-events-auto flex max-w-[480px] items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-fg-inverse shadow-pop',
-          toast.tone === 'error' ? 'bg-loss' : 'bg-bg-3'
+          toast.tone === 'error' ? 'bg-loss-fill' : 'bg-bg-3'
         )}
       >
         <span className="min-w-0">{toast.message}</span>
@@ -259,7 +259,7 @@ function CardMenu({
             role="menuitem"
             onClick={() => choose(onDelete)}
             className={cn(
-              'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-loss hover:bg-loss/10',
+              'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm font-medium text-loss hover:bg-loss-fill/10',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-2'
             )}
           >
@@ -310,7 +310,7 @@ function AccountCard({
       <div
         className={cn(
           'absolute inset-x-0 top-0 h-1 rounded-b-none rounded-t-xl',
-          account.accountType === 'futures' ? 'bg-accent' : 'bg-win'
+          account.accountType === 'futures' ? 'bg-accent' : 'bg-win-fill'
         )}
       />
       
@@ -319,7 +319,7 @@ function AccountCard({
           <div
             className={cn(
               'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl',
-              account.accountType === 'futures' ? 'bg-accent/10' : 'bg-win/10'
+              account.accountType === 'futures' ? 'bg-accent/10' : 'bg-win-fill/10'
             )}
           >
             {account.accountType === 'futures' ? (
@@ -428,7 +428,7 @@ function AccountCard({
               <div
                 className={cn(
                   'h-full rounded-full transition-all',
-                  drawdownPct >= 85 ? 'bg-loss' : drawdownPct >= 60 ? 'bg-amber-400' : 'bg-win'
+                  drawdownPct >= 85 ? 'bg-loss-fill' : drawdownPct >= 60 ? 'bg-amber-400' : 'bg-win-fill'
                 )}
                 style={{ width: `${drawdownPct}%` }}
               />
@@ -853,14 +853,14 @@ export function AccountsPage() {
       {loadError ? (
         <div
           role="alert"
-          className="flex items-center justify-between gap-4 rounded-lg border border-loss/30 bg-loss/10 px-4 py-3 text-sm text-loss"
+          className="flex items-center justify-between gap-4 rounded-lg border border-loss-fill/30 bg-loss-fill/10 px-4 py-3 text-sm text-loss"
         >
           <span>{loadError}</span>
           <button
             type="button"
             onClick={() => void loadAccounts()}
             className={cn(
-              'shrink-0 rounded-md px-2 py-1 font-semibold underline underline-offset-2 text-loss hover:bg-loss/20',
+              'shrink-0 rounded-md px-2 py-1 font-semibold underline underline-offset-2 text-loss hover:bg-loss-fill/20',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50'
             )}
           >

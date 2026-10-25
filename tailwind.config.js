@@ -31,11 +31,13 @@ export default {
           fg: 'rgb(var(--accent-fg) / <alpha-value>)',
         },
         win: {
-          DEFAULT: 'rgb(var(--win) / <alpha-value>)',
+          DEFAULT: 'rgb(var(--win-text) / <alpha-value>)',
+          fill: 'rgb(var(--win) / <alpha-value>)',
           muted: 'rgb(var(--win-muted) / <alpha-value>)',
         },
         loss: {
-          DEFAULT: 'rgb(var(--loss) / <alpha-value>)',
+          DEFAULT: 'rgb(var(--loss-text) / <alpha-value>)',
+          fill: 'rgb(var(--loss) / <alpha-value>)',
           muted: 'rgb(var(--loss-muted) / <alpha-value>)',
         },
         be: {

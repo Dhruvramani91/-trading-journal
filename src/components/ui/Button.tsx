@@ -12,7 +12,7 @@ const buttonStyles = cva(
         secondary: 'bg-bg-2 text-fg border border-line hover:bg-bg-3 hover:border-line-strong',
         ghost: 'text-fg-muted hover:text-fg hover:bg-bg-4',
         outline: 'border border-line-strong text-fg hover:bg-bg-4',
-        danger: 'bg-loss/10 text-loss hover:bg-loss/20',
+        danger: 'bg-loss-fill/10 text-loss hover:bg-loss-fill/20',
         link: 'text-accent underline-offset-4 hover:underline px-0',
       },
       size: {

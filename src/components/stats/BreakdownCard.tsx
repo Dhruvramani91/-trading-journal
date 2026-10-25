@@ -142,8 +142,8 @@ function BucketRow({
         <span
           className={cn(
             'absolute inset-y-0 rounded-full',
-            tone === 'win' && 'bg-win',
-            tone === 'loss' && 'bg-loss',
+            tone === 'win' && 'bg-win-fill',
+            tone === 'loss' && 'bg-loss-fill',
             !tone && 'bg-fg-dim',
           )}
           style={

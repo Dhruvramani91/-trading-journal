@@ -812,11 +812,11 @@ export function StatisticsPage() {
 
                                   tone ===
                                     'win' &&
-                                    'bg-win',
+                                    'bg-win-fill',
 
                                   tone ===
                                     'loss' &&
-                                    'bg-loss',
+                                    'bg-loss-fill',
 
                                   !tone &&
                                     'bg-fg-dim',

@@ -58,7 +58,7 @@ export function DateTimePicker({
       placeholder={placeholder ?? 'Select date and time'}
       disabled={disabled}
       aria-label={ariaLabel}
-      className={invalid ? 'border-loss focus-visible:ring-loss/40' : undefined}
+      className={invalid ? 'border-loss-fill focus-visible:ring-loss-fill/40' : undefined}
     />
   );
 }

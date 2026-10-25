@@ -62,8 +62,8 @@ function rTone(totalR: number): string {
 }
 
 function rBg(totalR: number): string {
-  if (totalR > 0) return 'bg-win/10 border-win/30 hover:bg-win/20';
-  if (totalR < 0) return 'bg-loss/10 border-loss/30 hover:bg-loss/20';
+  if (totalR > 0) return 'bg-win-fill/10 border-win-fill/30 hover:bg-win-fill/20';
+  if (totalR < 0) return 'bg-loss-fill/10 border-loss-fill/30 hover:bg-loss-fill/20';
   return 'bg-be/10 border-be/30 hover:bg-be/20';
 }
 

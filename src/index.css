@@ -5,33 +5,35 @@
 @layer base {
   :root {
     color-scheme: light;
-    --bg: 244 246 249;
-    --bg-0: 244 246 249;
-    --bg-1: 255 255 255;
+    --bg: 232 237 244;
+    --bg-0: 232 237 244;
+    --bg-1: 252 253 254;
     --bg-2: 255 255 255;
-    --bg-3: 247 249 252;
-    --bg-4: 237 242 249;
+    --bg-3: 243 245 248;
+    --bg-4: 237 240 245;
 
-    --line: 225 231 239;
-    --line-strong: 204 215 229;
-    --line-subtle: 237 241 247;
+    --line: 228 233 240;
+    --line-strong: 211 218 229;
+    --line-subtle: 238 241 245;
 
-    --fg: 20 32 49;
-    --fg-muted: 91 108 130;
-    --fg-dim: 98 113 136;
+    --fg: 13 13 15;
+    --fg-muted: 74 84 104;
+    --fg-dim: 102 112 133;
     --fg-inverse: 255 255 255;
 
-    --accent: 45 103 211;
-    --accent-hover: 34 82 178;
-    --accent-muted: 45 103 211;
+    --accent: 139 60 246;
+    --accent-hover: 121 43 223;
+    --accent-muted: 139 60 246;
     --accent-fg: 255 255 255;
 
-    --win: 19 139 101;
-    --win-muted: 34 157 117;
-    --loss: 195 70 83;
-    --loss-muted: 211 82 97;
-    --be: 128 138 153;
-    --be-muted: 145 154 168;
+    --win: 18 168 112;
+    --win-text: 8 122 81;
+    --win-muted: 18 168 112;
+    --loss: 228 80 79;
+    --loss-text: 194 61 59;
+    --loss-muted: 228 80 79;
+    --be: 102 112 133;
+    --be-muted: 102 112 133;
 
     --shadow-card: 0 1px 2px rgba(20, 32, 52, 0.025), 0 8px 24px rgba(20, 32, 52, 0.035);
     --shadow-pop: 0 16px 42px rgba(20, 32, 52, 0.16), 0 3px 10px rgba(20, 32, 52, 0.06);
@@ -42,33 +44,35 @@
 
   .dark {
     color-scheme: dark;
-    --bg: 12 17 25;
-    --bg-0: 12 17 25;
-    --bg-1: 16 23 33;
-    --bg-2: 20 29 41;
-    --bg-3: 26 37 52;
-    --bg-4: 33 47 66;
+    --bg: 9 10 13;
+    --bg-0: 9 10 13;
+    --bg-1: 16 18 22;
+    --bg-2: 20 23 28;
+    --bg-3: 23 26 32;
+    --bg-4: 31 34 41;
 
-    --line: 37 51 68;
-    --line-strong: 55 73 95;
-    --line-subtle: 29 41 56;
+    --line: 35 40 51;
+    --line-strong: 38 43 53;
+    --line-subtle: 29 32 39;
 
-    --fg: 236 242 249;
-    --fg-muted: 159 176 196;
-    --fg-dim: 116 137 160;
-    --fg-inverse: 10 20 34;
+    --fg: 244 246 250;
+    --fg-muted: 169 178 195;
+    --fg-dim: 139 149 168;
+    --fg-inverse: 13 13 15;
 
-    --accent: 105 165 255;
-    --accent-hover: 137 185 255;
-    --accent-muted: 105 165 255;
-    --accent-fg: 10 20 34;
+    --accent: 165 102 255;
+    --accent-hover: 181 128 255;
+    --accent-muted: 165 102 255;
+    --accent-fg: 13 13 15;
 
-    --win: 81 211 158;
-    --win-muted: 81 211 158;
-    --loss: 255 126 139;
-    --loss-muted: 255 126 139;
-    --be: 157 177 199;
-    --be-muted: 157 177 199;
+    --win: 53 211 155;
+    --win-text: 53 211 155;
+    --win-muted: 53 211 155;
+    --loss: 255 123 123;
+    --loss-text: 255 123 123;
+    --loss-muted: 255 123 123;
+    --be: 139 149 168;
+    --be-muted: 139 149 168;
 
     --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.16), 0 10px 28px rgba(0, 0, 0, 0.12);
     --shadow-pop: 0 18px 46px rgba(0, 0, 0, 0.52), 0 3px 10px rgba(0, 0, 0, 0.22);

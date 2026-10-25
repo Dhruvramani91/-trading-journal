@@ -179,7 +179,7 @@ export function MistakesPage() {
             <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
               {costliest.map((b, i) => (
                 <Card key={b.key} className="overflow-hidden border-t-2 border-t-loss/70">
-                  <CardHeader className="bg-loss/5">
+                  <CardHeader className="bg-loss-fill/5">
                     <CardTitle className="flex items-center gap-2">
                       <TrendingDown className="h-4 w-4 text-loss" />
                       #{i + 1} Costliest

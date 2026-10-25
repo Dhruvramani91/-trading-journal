@@ -9,18 +9,37 @@ interface ThemeState {
 }
 
 const STORAGE_KEY = 'pj:theme';
+const LANDING_STORAGE_KEY = 'theme';
 
 function getInitialTheme(): Theme {
-  if (typeof localStorage === 'undefined') return 'light';
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored === 'light' || stored === 'dark') return stored;
-  return 'light';
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const stored = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LANDING_STORAGE_KEY);
+      if (stored === 'light' || stored === 'dark') return stored;
+    }
+  } catch {
+    // Fall back to the operating system preference if storage is unavailable.
+  }
+  return typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
 }
 
 function applyTheme(theme: Theme) {
   const root = document.documentElement;
   root.classList.toggle('dark', theme === 'dark');
+  root.setAttribute('data-theme', theme);
   root.style.colorScheme = theme;
+}
+
+function persistTheme(theme: Theme) {
+  if (typeof localStorage === 'undefined') return;
+  try {
+    localStorage.setItem(STORAGE_KEY, theme);
+    localStorage.setItem(LANDING_STORAGE_KEY, theme);
+  } catch {
+    // Keep the in-memory theme even when browser storage is unavailable.
+  }
 }
 
 export const useThemeStore = create<ThemeState>((set) => ({
@@ -29,17 +48,13 @@ export const useThemeStore = create<ThemeState>((set) => ({
   toggle: () =>
     set((state) => {
       const next: Theme = state.theme === 'dark' ? 'light' : 'dark';
-      if (typeof localStorage !== 'undefined') {
-        localStorage.setItem(STORAGE_KEY, next);
-      }
+      persistTheme(next);
       applyTheme(next);
       return { theme: next };
     }),
 
   setTheme: (t) => {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(STORAGE_KEY, t);
-    }
+    persistTheme(t);
     applyTheme(t);
     set({ theme: t });
   },

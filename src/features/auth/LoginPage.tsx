@@ -393,14 +393,14 @@ export function LoginPage() {
           </Link>
 
           {(localError || error) && (
-            <div className="p-3 rounded-lg bg-loss/10 border border-loss/20 text-loss text-xs flex items-center gap-2">
+            <div className="p-3 rounded-lg bg-loss-fill/10 border border-loss-fill/20 text-loss text-xs flex items-center gap-2">
               <AlertCircle className="h-4 w-4 shrink-0" />
               <span>{localError || error}</span>
             </div>
           )}
 
           {emailConfirmed && !forgotPassword && !signupSuccess && (
-            <div className="p-3 rounded-lg bg-win/10 border border-win/20 text-win text-xs flex items-center gap-2">
+            <div className="p-3 rounded-lg bg-win-fill/10 border border-win-fill/20 text-win text-xs flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 shrink-0" />
               <span>Email confirmed. You can log in now.</span>
             </div>
@@ -492,7 +492,7 @@ export function LoginPage() {
                 </>
               ) : (
                 <div className="space-y-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-win/10 border border-win/20">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-win-fill/10 border border-win-fill/20">
                     <CheckCircle2 className="h-6 w-6 text-win" />
                   </div>
 

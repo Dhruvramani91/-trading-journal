@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Menu, Moon, Sun, X } from 'lucide-react';
 import { BrandLogo, BRAND_NAME } from '@/components/layout/Brand';
+import { useThemeStore } from '@/store/themeStore';
 
 const NAV_LINKS = [
   { label: 'About', href: '#about' },
@@ -11,28 +12,13 @@ const NAV_LINKS = [
   { label: 'Contact', href: '#contact' },
 ] as const;
 
-function readDarkMode() {
-  const theme = document.documentElement.getAttribute('data-theme');
-  if (theme) return theme === 'dark';
-  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false;
-}
-
 export function LandingNavbar({ isAuthenticated }: { isAuthenticated: boolean }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const { theme, setTheme } = useThemeStore();
+  const darkMode = theme === 'dark';
   const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth);
   const prefersReducedMotion = useReducedMotion();
-
-  useEffect(() => {
-    setDarkMode(readDarkMode());
-    const observer = new MutationObserver(() => setDarkMode(readDarkMode()));
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ['data-theme'],
-    });
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     const onScroll = () => {
@@ -80,14 +66,7 @@ export function LandingNavbar({ isAuthenticated }: { isAuthenticated: boolean })
       };
 
   function toggleTheme() {
-    const next = !darkMode;
-    document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
-    try {
-      localStorage.setItem('theme', next ? 'dark' : 'light');
-    } catch {
-      // The page theme still changes if storage is unavailable.
-    }
-    setDarkMode(next);
+    setTheme(darkMode ? 'light' : 'dark');
   }
 
   function closeMenu() {
@@ -99,8 +78,8 @@ export function LandingNavbar({ isAuthenticated }: { isAuthenticated: boolean })
   }
 
   const glassBackground = darkMode
-    ? 'rgba(21, 21, 22, 0.92)'
-    : 'rgba(255, 255, 255, 0.92)';
+    ? 'rgba(16, 18, 22, 0.92)'
+    : 'rgba(252, 253, 254, 0.92)';
   const borderColor = darkMode
     ? 'rgba(255, 255, 255, 0.09)'
     : 'rgba(0, 0, 0, 0.06)';
