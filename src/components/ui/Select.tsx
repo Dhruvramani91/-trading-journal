@@ -4,6 +4,7 @@ import {
   forwardRef,
   isValidElement,
   useEffect,
+  useId,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -15,6 +16,7 @@ import {
 import { createPortal } from 'react-dom';
 import { Check, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { describedByIds, FormFieldContext, useFormFieldContext } from './FormFieldContext';
 
 export interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   invalid?: boolean;
@@ -92,10 +94,18 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
       name,
       id,
       required,
+      'aria-label': ariaLabel,
+      'aria-labelledby': ariaLabelledBy,
+      'aria-describedby': ariaDescribedBy,
+      'aria-invalid': ariaInvalid,
+      'aria-required': ariaRequired,
       ...props
     },
     ref,
   ) => {
+    const generatedId = useId();
+    const field = useFormFieldContext();
+    const selectId = id ?? generatedId;
     const selectRef = useRef<HTMLSelectElement | null>(null);
     const triggerRef = useRef<HTMLButtonElement | null>(null);
     const menuRef = useRef<HTMLDivElement | null>(null);
@@ -167,12 +177,10 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     useEffect(() => {
       if (!open) return;
 
-      const selectedIndex = options.findIndex(
-        (option) => option.value === currentValue,
-      );
-
-      setHighlightedIndex(selectedIndex >= 0 ? selectedIndex : 0);
-    }, [open]);
+      const selectedIndex = options.findIndex((option) => option.value === currentValue);
+      const firstEnabledIndex = options.findIndex((option) => !option.disabled);
+      setHighlightedIndex(selectedIndex >= 0 ? selectedIndex : Math.max(firstEnabledIndex, 0));
+    }, [open, options, currentValue]);
 
     const portalContainer = typeof document === 'undefined'
       ? null
@@ -228,8 +236,12 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
 
     useEffect(() => {
       if (!open) return;
+      const selectedIndex = options.findIndex((option) => option.value === currentValue);
+      const firstEnabledIndex = options.findIndex((option) => !option.disabled);
+      const initialIndex = selectedIndex >= 0 ? selectedIndex : Math.max(firstEnabledIndex, 0);
+      setHighlightedIndex(initialIndex);
       requestAnimationFrame(() => {
-        menuRef.current?.querySelector<HTMLElement>(`#${CSS.escape(`${id ?? 'select'}-option-${highlightedIndex}`)}`)?.focus({ preventScroll: true });
+        menuRef.current?.querySelector<HTMLElement>(`#${CSS.escape(`${selectId}-option-${initialIndex}`)}`)?.focus({ preventScroll: true });
       });
     }, [open]);
 
@@ -370,6 +382,45 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
       }
     };
 
+    const focusOption = (index: number) => {
+      setHighlightedIndex(index);
+      requestAnimationFrame(() => {
+        menuRef.current?.querySelector<HTMLElement>(`#${CSS.escape(`${selectId}-option-${index}`)}`)?.focus({ preventScroll: true });
+      });
+    };
+
+    const handleOptionKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        focusOption(getNextEnabledIndex(index, event.key === 'ArrowDown' ? 1 : -1));
+      } else if (event.key === 'Home' || event.key === 'End') {
+        event.preventDefault();
+        const step = event.key === 'Home' ? 1 : -1;
+        let target = event.key === 'Home' ? 0 : options.length - 1;
+        while (target >= 0 && target < options.length && options[target]?.disabled) target += step;
+        if (target >= 0 && target < options.length) focusOption(target);
+      } else if (event.key === 'Escape') {
+        event.preventDefault();
+        setOpen(false);
+        triggerRef.current?.focus({ preventScroll: true });
+      } else if (event.key === 'Tab') {
+        if (renderOptionAction && !event.shiftKey) return;
+        // The list is portalled, so let Tab continue from the trigger's place in
+        // the page instead of walking through the menu items one at a time.
+        const trigger = triggerRef.current;
+        const focusableSelector = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+        const focusable = Array.from(document.querySelectorAll<HTMLElement>(focusableSelector))
+          .filter((element) => element.tabIndex >= 0 && element.getClientRects().length > 0 && !menuRef.current?.contains(element));
+        const triggerIndex = trigger ? focusable.indexOf(trigger) : -1;
+        const destination = focusable[triggerIndex + (event.shiftKey ? -1 : 1)];
+        setOpen(false);
+        if (destination) {
+          event.preventDefault();
+          requestAnimationFrame(() => destination.focus({ preventScroll: true }));
+        }
+      }
+    };
+
     return (
       <div className="relative w-full">
         {/* Native select remains in the DOM so existing form behavior,
@@ -406,9 +457,14 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           type="button"
           disabled={disabled}
           aria-haspopup="listbox"
+          role="combobox"
           aria-expanded={open}
-          aria-invalid={invalid || undefined}
-          aria-labelledby={id ? `${id}-label` : undefined}
+          aria-invalid={ariaInvalid ?? (invalid || field?.invalid || undefined)}
+          aria-required={ariaRequired ?? (required || field?.required || undefined)}
+          aria-label={ariaLabel}
+          aria-labelledby={ariaLabel ? undefined : ariaLabelledBy ?? field?.labelId ?? (id ? `${id}-label` : undefined)}
+          aria-describedby={describedByIds(ariaDescribedBy, field?.hintId, field?.errorId)}
+          aria-controls={`${selectId}-listbox`}
           onClick={() => setOpen((current) => !current)}
           onKeyDown={handleKeyDown}
           className={cn(
@@ -421,7 +477,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             'hover:border-accent/40',
             'focus:outline-none focus:ring-2 focus:ring-accent/40 focus:border-accent/60',
             'disabled:cursor-not-allowed disabled:opacity-50',
-            invalid
+            (invalid || field?.invalid)
               ? 'border-loss-fill/60 bg-loss-fill/5'
               : 'border-line',
             className,
@@ -456,16 +512,20 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
               'px-2 pt-2 pb-2',
               'text-fg',
               'shadow-[0_30px_80px_rgba(8,12,24,.18),0_2px_8px_rgba(8,12,24,.08)]',
-              'animate-in fade-in-0 zoom-in-95',
+              'animate-in fade-in-0 zoom-in-95 motion-reduce:animate-none motion-reduce:transition-none',
               'origin-top',
             )}
             role="listbox"
-
-            aria-activedescendant={
-              options[highlightedIndex]
-                ? `${id ?? 'select'}-option-${highlightedIndex}`
-                : undefined
-            }
+            id={`${selectId}-listbox`}
+            aria-label={ariaLabel}
+            aria-labelledby={ariaLabel ? undefined : ariaLabelledBy ?? field?.labelId}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') {
+                event.preventDefault();
+                setOpen(false);
+                triggerRef.current?.focus({ preventScroll: true });
+              }
+            }}
           >
             {options.map((option, index) => {
               const isSelected = option.value === currentValue;
@@ -474,9 +534,10 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
               const optionButton = (
                 <button
                   key={`${option.value}-${index}`}
-                  id={`${id ?? 'select'}-option-${index}`}
+                  id={`${selectId}-option-${index}`}
                   type="button"
                   role="option"
+                  tabIndex={isHighlighted ? 0 : -1}
                   aria-selected={isSelected}
                   aria-disabled={option.disabled || undefined}
                   disabled={option.disabled}
@@ -486,13 +547,14 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
                     }
                   }}
                   onClick={() => chooseOption(option)}
+                  onKeyDown={(event) => handleOptionKeyDown(event, index)}
                   className={cn(
                     'flex min-w-0 items-center gap-3',
                     renderOptionAction ? 'flex-1' : 'w-full',
                     'rounded-xl px-3.5 py-2.5',
                     'text-left text-[16.5px]',
                     'transition-colors duration-100',
-                    'outline-none',
+                    'outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent/60',
                     option.disabled
                       ? 'cursor-not-allowed text-fg-dim'
                       : 'cursor-pointer text-fg',
@@ -543,6 +605,7 @@ export interface SegmentedProps<T extends string> {
     value: T;
     label: string;
     tone?: 'default' | 'win' | 'loss' | 'neutral';
+    disabled?: boolean;
   }>;
   size?: 'sm' | 'md';
   className?: string;
@@ -559,6 +622,27 @@ export function Segmented<T extends string>({
   fullWidth,
   disabled,
 }: SegmentedProps<T>) {
+  const field = useFormFieldContext();
+  const firstEnabledValue = options.find((option) => !option.disabled)?.value;
+  const tabbableValue = options.some((option) => option.value === value) ? value : firstEnabledValue;
+
+  function handleKeyDown(event: React.KeyboardEvent<HTMLButtonElement>, index: number) {
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const enabled = options.map((option, optionIndex) => option.disabled ? -1 : optionIndex).filter((optionIndex) => optionIndex >= 0);
+    if (!enabled.length) return;
+    let nextIndex: number;
+    if (event.key === 'Home') nextIndex = enabled[0]!;
+    else if (event.key === 'End') nextIndex = enabled[enabled.length - 1]!;
+    else {
+      const currentPosition = enabled.indexOf(index);
+      const direction = event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 1;
+      nextIndex = enabled[(currentPosition + direction + enabled.length) % enabled.length]!;
+    }
+    onChange(options[nextIndex]!.value);
+    event.currentTarget.parentElement?.querySelector<HTMLButtonElement>(`[data-segment-index="${nextIndex}"]`)?.focus();
+  }
+
   return (
     <div
       className={cn(
@@ -569,8 +653,12 @@ export function Segmented<T extends string>({
         className,
       )}
       role="radiogroup"
+      aria-labelledby={field?.labelId}
+      aria-describedby={describedByIds(undefined, field?.hintId, field?.errorId)}
+      aria-required={field?.required || undefined}
+      aria-invalid={field?.invalid || undefined}
     >
-      {options.map((opt) => {
+      {options.map((opt, index) => {
         const isActive = opt.value === value;
         const activeTone =
           opt.tone === 'win'
@@ -585,12 +673,16 @@ export function Segmented<T extends string>({
             type="button"
             role="radio"
             aria-checked={isActive}
-            disabled={disabled}
+            tabIndex={opt.value === tabbableValue ? 0 : -1}
+            data-segment-index={index}
+            disabled={disabled || opt.disabled}
             onClick={() => onChange(opt.value)}
+            onKeyDown={(event) => handleKeyDown(event, index)}
             className={cn(
               'flex-1 inline-flex items-center justify-center gap-1 rounded-md text-xs transition-all',
               size === 'sm' ? 'h-6 px-2' : 'h-8 px-3',
               isActive ? activeTone : 'text-fg-muted hover:text-fg',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/60',
             )}
           >
             {opt.label}
@@ -605,28 +697,42 @@ export function FormField({
   label,
   hint,
   required,
+  invalid,
+  fieldKey,
   children,
   className,
 }: {
   label: string;
   hint?: ReactNode;
   required?: boolean;
+  invalid?: boolean;
+  fieldKey?: string;
   children: ReactNode;
   className?: string;
 }) {
+  const id = useId();
+  const fieldContext = {
+    labelId: `${id}-label`,
+    hintId: hint ? `${id}-hint` : undefined,
+    errorId: invalid ? `${id}-error` : undefined,
+    required,
+    invalid,
+  };
   return (
-    <label className={cn('flex flex-col gap-1.5', className)}>
-      <span className="text-xs font-semibold text-fg">
-        {label}
-        {required ? <span className="text-loss"> *</span> : null}
-      </span>
+    <FormFieldContext.Provider value={fieldContext}>
+      <div data-field-key={fieldKey} className={cn('flex flex-col gap-1.5', className)}>
+        <span id={fieldContext.labelId} className="text-xs font-semibold text-fg">
+          {label}
+          {required ? <span className="text-loss"> *</span> : null}
+        </span>
 
-      {children}
+        {children}
 
-      {hint ? (
-        <span className="text-2xs text-fg-dim">{hint}</span>
-      ) : null}
-    </label>
+        {hint ? (
+          <span id={fieldContext.hintId} className="text-2xs text-fg-dim">{hint}</span>
+        ) : null}
+      </div>
+    </FormFieldContext.Provider>
   );
 }
 

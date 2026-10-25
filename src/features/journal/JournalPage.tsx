@@ -623,6 +623,28 @@ function JournalTradeTable({
   onOpen: (id: string) => void;
 }) {
   return (
+    <>
+    <div className="space-y-2 p-3 lg:hidden" aria-label="Trade list">
+      {trades.map((trade) => (
+        <button key={trade.id} type="button" onClick={() => onOpen(trade.id)} aria-label={`Open trade ${trade.number != null ? `number ${trade.number}` : ''} details`} className="w-full rounded-xl border border-line bg-bg-1 p-3.5 text-left transition-colors hover:border-line-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 motion-reduce:transition-none">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <InstrumentMark instrument={trade.instrument} className="h-9 w-9" />
+              <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className="font-semibold text-fg">{trade.instrument}</span><DirectionPill direction={trade.direction} /></div><p className="mt-0.5 text-xs text-fg-muted">{formatDate(trade.openedAt)} · {trade.number != null ? `#${String(trade.number).padStart(2, '0')}` : 'Unnumbered'}</p></div>
+            </div>
+            <div className="flex shrink-0 flex-col items-end gap-1"><ResultPill result={trade.result} /><TradeGradeBadge grade={trade.grade} /></div>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2 rounded-lg bg-bg-2 px-3 py-2.5 text-xs sm:grid-cols-4">
+            <div><p className="text-fg-dim">Realized R</p><p className={cn('mt-0.5 font-mono font-semibold tabular-nums', trade.r > 0 ? 'text-win' : trade.r < 0 ? 'text-loss' : 'text-be')}>{formatR(trade.r)}</p></div>
+            <div><p className="text-fg-dim">P&L</p><p className={cn('mt-0.5 font-mono font-semibold tabular-nums', trade.pnl != null && trade.pnl > 0 ? 'text-win' : trade.pnl != null && trade.pnl < 0 ? 'text-loss' : 'text-fg-muted')}>{trade.pnl == null ? '—' : formatSignedMoney(trade.pnl)}</p></div>
+            <div><p className="text-fg-dim">Entry / exit</p><p className="mt-0.5 font-mono tabular-nums text-fg-muted">{trade.entry ?? '—'} / {trade.exit ?? '—'}</p></div>
+            <div><p className="text-fg-dim">Duration</p><p className="mt-0.5 font-mono tabular-nums text-fg-muted">{formatDuration(trade.durationMin)}</p></div>
+          </div>
+          {fields.length > 0 && <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-line pt-3 sm:grid-cols-3">{fields.map((field) => { const value = readFieldLabel(trade, field.key); return <div key={field.key} className="min-w-0"><dt className="truncate text-[10px] font-semibold uppercase tracking-wide text-fg-dim">{field.label}</dt><dd className="mt-0.5 truncate text-xs text-fg-muted" title={value}>{value}</dd></div>; })}</dl>}
+        </button>
+      ))}
+    </div>
+    <div className="hidden lg:block">
     <Table className="min-w-max table-fixed" containerClassName="journal-table-scroll max-h-[min(72vh,720px)] overflow-auto overscroll-contain">
       <colgroup>
         <col className="w-[90px]" /><col className="w-[170px]" /><col className="w-[130px]" />
@@ -664,6 +686,8 @@ function JournalTradeTable({
         </TR>
       ))}</TBody>
     </Table>
+    </div>
+    </>
   );
 }
 

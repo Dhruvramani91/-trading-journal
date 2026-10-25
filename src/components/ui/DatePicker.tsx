@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent }
 import { CalendarDays, ChevronLeft, ChevronRight, ChevronsUpDown } from 'lucide-react';
 import { AnimatedPopoverContent, PopoverPrimitive, useExclusivePopover } from './AnimatedPopover';
 import { cn } from '@/lib/cn';
+import { describedByIds, useFormFieldContext } from './FormFieldContext';
 
 export type DatePickerValue = Date | string | null;
 
@@ -27,6 +28,10 @@ export interface DatePickerProps {
   id?: string;
   name?: string;
   'aria-label'?: string;
+  'aria-labelledby'?: string;
+  'aria-describedby'?: string;
+  'aria-invalid'?: boolean | 'false' | 'true' | 'grammar' | 'spelling';
+  'aria-required'?: boolean | 'false' | 'true';
 }
 
 type PickerView = 'calendar' | 'month' | 'year';
@@ -103,8 +108,14 @@ export function DatePicker({
   readOnly = false,
   id,
   name,
-  'aria-label': ariaLabel = 'Choose date',
+  'aria-label': ariaLabel,
+  'aria-labelledby': ariaLabelledBy,
+  'aria-describedby': ariaDescribedBy,
+  'aria-invalid': ariaInvalid,
+  'aria-required': ariaRequired,
 }: DatePickerProps) {
+  const field = useFormFieldContext();
+  const resolvedAriaLabel = ariaLabel ?? (!field ? 'Choose date' : undefined);
   const generatedId = useRef(`date-picker-${Math.random().toString(36).slice(2)}`).current;
   const inputId = id ?? generatedId;
   const popoverId = `${generatedId}-popover`;
@@ -116,6 +127,7 @@ export function DatePicker({
   const selectedDate = controlled ? externalDate : internalDate;
   const [draft, setDraft] = useState(() => selectedDate ? formatDate(selectedDate, format, locale) : '');
   const [invalid, setInvalid] = useState(false);
+  const isInvalid = ariaInvalid ?? (invalid || field?.invalid || undefined);
   const today = useMemo(() => {
     const date = new Date();
     return new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -282,10 +294,13 @@ export function DatePicker({
               placeholder={placeholder}
               disabled={disabled}
               readOnly={readOnly}
-              aria-label={ariaLabel}
+              aria-label={resolvedAriaLabel}
+              aria-labelledby={ariaLabelledBy ?? (resolvedAriaLabel ? undefined : field?.labelId)}
+              aria-describedby={describedByIds(ariaDescribedBy, field?.hintId, field?.errorId)}
+              aria-required={ariaRequired ?? (field?.required || undefined)}
               aria-haspopup="dialog"
               aria-expanded={open}
-              aria-invalid={invalid || undefined}
+              aria-invalid={isInvalid}
               autoComplete="off"
               onClick={() => {
                 const initial = selectedDate ?? today;
@@ -302,7 +317,7 @@ export function DatePicker({
                 }
                 if (event.key === 'Escape' && open) setOpen(false);
               }}
-              className={cn('h-11 w-full rounded-xl border border-[rgb(var(--input-overlay-border))] bg-[rgb(var(--input-overlay-trigger))] px-3 pr-11 text-sm text-[rgb(var(--input-overlay-text))] shadow-[0_0_0_2px_rgb(var(--input-overlay-border)/0.18)] placeholder:text-[rgb(var(--input-overlay-muted))] transition-colors hover:border-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 disabled:cursor-not-allowed disabled:opacity-50', invalid && 'border-loss-fill focus-visible:ring-loss-fill/40', className)}
+              className={cn('h-11 w-full rounded-xl border border-[rgb(var(--input-overlay-border))] bg-[rgb(var(--input-overlay-trigger))] px-3 pr-11 text-sm text-[rgb(var(--input-overlay-text))] shadow-[0_0_0_2px_rgb(var(--input-overlay-border)/0.18)] placeholder:text-[rgb(var(--input-overlay-muted))] transition-colors hover:border-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none', isInvalid && 'border-loss-fill focus-visible:ring-loss-fill/40', className)}
             />
             <button
               type="button"

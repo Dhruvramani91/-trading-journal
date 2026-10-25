@@ -24,7 +24,7 @@ export function DateTimePicker({
   disabled,
   invalid,
   clearable = false,
-  'aria-label': ariaLabel = 'Choose date and time',
+  'aria-label': ariaLabel,
 }: DateTimePickerProps) {
   const dateKey = getDateKey(value);
   const selectedDate = useMemo(

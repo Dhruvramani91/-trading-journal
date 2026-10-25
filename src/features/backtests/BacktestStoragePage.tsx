@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { BarChart3, CalendarDays, Camera, Check, ChevronLeft, ChevronRight, FlaskConical, ImagePlus, Pencil, Plus, ScrollText, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
-import { FormField, Select } from '@/components/ui/Select';
+import { FormField, Segmented, Select } from '@/components/ui/Select';
 import { Input } from '@/components/ui/Input';
 import { Switch } from '@/components/ui/switch';
 import { Stat } from '@/components/ui/Stat';
@@ -24,8 +24,31 @@ import { resolveTradePhotoUrl, type TradePhotos } from '@/lib/tradePhotos';
 import { formatMoney, formatPct, formatR } from '@/lib/format';
 import { allBreakdowns, gradePerformance, summary } from '@/analytics/core';
 import { cn } from '@/lib/cn';
+import { describedByIds, useFormFieldContext } from '@/components/ui/FormFieldContext';
 
 const INSTRUMENTS = ['ES', 'NQ', 'YM', 'RTY', 'CL', 'GC', 'SI', '6E', '6B', 'ZN', 'BTC', 'ETH', 'Other'];
+function InstrumentMultiSelect({ selected, onToggle }: { selected: string[]; onToggle: (instrument: string) => void }) {
+  const field = useFormFieldContext();
+  return (
+    <div role="group" aria-labelledby={field?.labelId} aria-describedby={describedByIds(field?.hintId, field?.errorId)} className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+      {INSTRUMENTS.map((instrument) => {
+        const isSelected = selected.includes(instrument);
+        return (
+          <button
+            key={instrument}
+            type="button"
+            aria-pressed={isSelected}
+            onClick={() => onToggle(instrument)}
+            className={`flex h-10 items-center justify-between rounded-lg border px-3 text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 ${isSelected ? 'border-accent/50 bg-accent/10 text-accent' : 'border-line bg-bg-2 text-fg-muted hover:border-line-strong hover:text-fg'}`}
+          >
+            {instrument}
+            {isSelected && <Check className="h-4 w-4" aria-hidden="true" />}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 const SECTIONS: { id: BacktestSection; label: string; icon: typeof BarChart3 }[] = [
   { id: 'journal', label: 'Journal', icon: ScrollText },
   { id: 'statistics', label: 'Statistics', icon: BarChart3 },
@@ -150,15 +173,10 @@ function CreateSessionDialog({ open, onOpenChange, templates, defaultTemplateId,
           <div><Dialog.Title className="text-lg font-semibold text-fg">Create backtest session</Dialog.Title><Dialog.Description id="backtest-create-description" className="mt-1 text-sm text-fg-muted">Choose the scope and strategy for this independent backtest.</Dialog.Description></div>
           <Dialog.Close asChild><Button variant="ghost" size="icon-sm" aria-label="Close"><X className="h-4 w-4" /></Button></Dialog.Close>
         </header>
-        <form onSubmit={submit} className="min-h-0 space-y-5 overflow-y-auto p-5">
+        <form onSubmit={submit} className="max-h-[calc(90dvh-76px)] min-h-0 space-y-5 overflow-y-auto p-5">
           <FormField label="Session name" required><Input autoFocus maxLength={80} required value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. NQ London session replay" /></FormField>
           <FormField label="Instruments" required hint="Choose one or more instruments.">
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{INSTRUMENTS.map((instrument) => {
-              const selected = instruments.includes(instrument);
-              return <button key={instrument} type="button" aria-pressed={selected} onClick={() => toggleInstrument(instrument)} className={`flex h-10 items-center justify-between rounded-lg border px-3 text-sm transition-colors ${selected ? 'border-accent/50 bg-accent/10 text-accent' : 'border-line bg-bg-2 text-fg-muted hover:border-line-strong hover:text-fg'}`}>
-                {instrument}{selected && <Check className="h-4 w-4" />}
-              </button>;
-            })}</div>
+            <InstrumentMultiSelect selected={instruments} onToggle={toggleInstrument} />
             {instruments.length > 0 && <p className="mt-1 text-xs text-fg-dim">Selected: {instruments.join(', ')}</p>}
           </FormField>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -171,7 +189,7 @@ function CreateSessionDialog({ open, onOpenChange, templates, defaultTemplateId,
             </Select>
           </FormField>
           {error && <p role="alert" className="rounded-lg border border-loss-fill/30 bg-loss-fill/5 px-3 py-2 text-sm text-loss">{error}</p>}
-          <footer className="flex justify-end gap-2 border-t border-line pt-4">
+          <footer className="sticky bottom-0 -mx-5 flex justify-end gap-2 border-t border-line bg-bg-1/95 px-5 pt-4 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm motion-reduce:backdrop-blur-none">
             <Dialog.Close asChild><Button type="button" variant="ghost" disabled={busy}>Cancel</Button></Dialog.Close>
             <Button type="submit" disabled={busy || !templates.length} leftIcon={<Plus className="h-4 w-4" />}>{busy ? 'Creating…' : 'Create session'}</Button>
           </footer>
@@ -429,11 +447,11 @@ function BacktestTradeDialog({ open, onOpenChange, session, trade, saving, onSav
     });
   }
   return <Dialog.Root open={open} onOpenChange={onOpenChange}><Dialog.Portal><Dialog.Overlay className="fixed inset-0 z-50 bg-bg-0/75 backdrop-blur-sm" /><Dialog.Content data-select-portal className="fixed left-1/2 top-1/2 z-[51] max-h-[90dvh] w-[min(760px,calc(100vw-24px))] -translate-x-1/2 -translate-y-1/2 overflow-visible rounded-2xl border border-line bg-bg-1 shadow-pop focus:outline-none"><header className="flex items-start justify-between border-b border-line px-5 py-4"><div><Dialog.Title className="text-lg font-semibold text-fg">{trade ? 'Edit backtest trade' : 'Add backtest trade'}</Dialog.Title><Dialog.Description className="mt-1 text-sm text-fg-muted">Saved only inside “{session.name}”.</Dialog.Description></div><Dialog.Close asChild><Button variant="ghost" size="icon-sm" aria-label="Close"><X className="h-4 w-4" /></Button></Dialog.Close></header>
-    <form onSubmit={submit} className="max-h-[calc(90dvh-76px)] space-y-5 overflow-y-auto p-5"><div className="grid gap-4 sm:grid-cols-2"><FormField label="Date" required><Input type="date" required min={session.startDate} max={session.endDate} value={openedAt} onChange={(event) => setOpenedAt(event.target.value)} /></FormField><FormField label="Instrument" required><Select value={instrument} required onChange={(event) => setInstrument(event.target.value)}>{session.instruments.map((item) => <option key={item} value={item}>{item}</option>)}</Select></FormField><FormField label="Direction"><div className="grid grid-cols-2 gap-2">{(['long', 'short'] as const).map((value) => <button key={value} type="button" onClick={() => setDirection(value)} className={`h-9 rounded-lg border text-sm capitalize ${direction === value ? 'border-accent/50 bg-accent/10 text-accent' : 'border-line bg-bg-2 text-fg-muted'}`}>{value}</button>)}</div></FormField><FormField label="Outcome"><div className="grid grid-cols-3 gap-2">{(['win', 'be', 'loss'] as const).map((value) => <button key={value} type="button" onClick={() => setResult(value)} className={`h-9 rounded-lg border text-sm uppercase ${result === value ? 'border-accent/50 bg-accent/10 text-accent' : 'border-line bg-bg-2 text-fg-muted'}`}>{value}</button>)}</div></FormField><FormField label="Trade grade"><Select value={grade} onChange={(event) => setGrade(event.target.value)}><option value="">Not graded</option>{['A+', 'A', 'B', 'C'].map((value) => <option key={value} value={value}>{value}</option>)}</Select></FormField><FormField label="Realized R"><Input type="number" step="any" value={realizedR} onChange={(event) => setRealizedR(event.target.value)} placeholder="e.g. 2.5" /></FormField><FormField label="P&L"><Input type="number" step="any" value={pnl} onChange={(event) => setPnl(event.target.value)} placeholder="e.g. 150" /></FormField></div>
+    <form onSubmit={submit} className="max-h-[calc(90dvh-76px)] space-y-5 overflow-y-auto p-5"><div className="grid gap-4 sm:grid-cols-2"><FormField label="Date" required><Input type="date" required min={session.startDate} max={session.endDate} value={openedAt} onChange={(event) => setOpenedAt(event.target.value)} /></FormField><FormField label="Instrument" required><Select value={instrument} required onChange={(event) => setInstrument(event.target.value)}>{session.instruments.map((item) => <option key={item} value={item}>{item}</option>)}</Select></FormField><FormField label="Direction"><Segmented<'long' | 'short'> value={direction} onChange={setDirection} options={[{ value: 'long', label: 'Long', tone: 'win' }, { value: 'short', label: 'Short', tone: 'loss' }]} fullWidth /></FormField><FormField label="Outcome"><Segmented<'win' | 'be' | 'loss'> value={result} onChange={setResult} options={[{ value: 'win', label: 'Win', tone: 'win' }, { value: 'be', label: 'BE', tone: 'neutral' }, { value: 'loss', label: 'Loss', tone: 'loss' }]} fullWidth /></FormField><FormField label="Trade grade"><Select value={grade} onChange={(event) => setGrade(event.target.value)}><option value="">Not graded</option>{['A+', 'A', 'B', 'C'].map((value) => <option key={value} value={value}>{value}</option>)}</Select></FormField><FormField label="Realized R"><Input type="number" step="any" value={realizedR} onChange={(event) => setRealizedR(event.target.value)} placeholder="e.g. 2.5" /></FormField><FormField label="P&L"><Input type="number" step="any" value={pnl} onChange={(event) => setPnl(event.target.value)} placeholder="e.g. 150" /></FormField></div>
       {fields.length > 0 && <section className="space-y-3 border-t border-line pt-4"><h3 className="text-sm font-semibold text-fg">{session.templateSnapshot.name} details</h3><div className="grid gap-4 sm:grid-cols-2">{fields.map((field) => <FormField key={field.key} label={field.label}>{field.type === 'enum' ? <Select value={String(templateData[field.key] ?? '')} onChange={(event) => setTemplateData((current) => ({ ...current, [field.key]: event.target.value }))}><option value="">Select…</option>{(field.options ?? []).map((option) => <option key={option} value={option}>{option}</option>)}</Select> : field.type === 'boolean' ? <Select value={String(templateData[field.key] ?? '')} onChange={(event) => setTemplateData((current) => ({ ...current, [field.key]: event.target.value === '' ? null : event.target.value === 'true' }))}><option value="">Select…</option><option value="true">Yes</option><option value="false">No</option></Select> : <Input type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'} value={String(templateData[field.key] ?? '')} onChange={(event) => setTemplateData((current) => ({ ...current, [field.key]: event.target.value }))} />}</FormField>)}</div></section>}
-      <FormField label="Mistake / filter"><Input value={mistake} onChange={(event) => setMistake(event.target.value)} placeholder="Optional" /></FormField><FormField label="Notes"><textarea rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} className="w-full rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-fg placeholder:text-fg-dim focus:outline-none focus:ring-2 focus:ring-accent/40" placeholder="Review and observations" /></FormField>
+      <FormField label="Mistake / filter"><Input value={mistake} onChange={(event) => setMistake(event.target.value)} placeholder="Optional" /></FormField><FormField label="Notes"><textarea aria-label="Notes" rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} className="w-full rounded-lg border border-line bg-bg-2 px-3 py-2 text-sm text-fg placeholder:text-fg-dim focus:outline-none focus:ring-2 focus:ring-accent/40" placeholder="Review and observations" /></FormField>
       <section className="space-y-3 border-t border-line pt-4"><div className="flex items-center justify-between gap-3"><div><h3 className="text-sm font-semibold text-fg">Images</h3><p className="text-xs text-fg-dim">Add screenshots to review this setup.</p></div><div className="flex items-center gap-2"><Button type="button" variant="secondary" size="icon-sm" aria-label="Remove image slot" title="Remove image slot" disabled={photoCount <= 1} onClick={() => { if (photoCount <= 1) return; updatePhoto(photoCount - 1, ''); setPhotoCount((count) => count - 1); }}><span aria-hidden="true">−</span></Button><span className="min-w-5 text-center text-xs text-fg-muted">{photoCount}</span><Button type="button" variant="secondary" size="icon-sm" aria-label="Add image slot" title="Add image slot" disabled={photoCount >= 10} onClick={() => setPhotoCount((count) => Math.min(10, count + 1))}><Plus className="h-4 w-4" /></Button></div></div><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{Array.from({ length: photoCount }, (_, index) => <BacktestPhotoSlot key={index} index={index} value={backtestPhotoAt(photos, index)} onChange={(value) => updatePhoto(index, value)} />)}</div></section>
-      <footer className="flex justify-end gap-2 border-t border-line pt-4"><Dialog.Close asChild><Button type="button" variant="ghost" disabled={saving}>Cancel</Button></Dialog.Close><Button type="submit" disabled={saving}>{saving ? 'Saving…' : trade ? 'Save changes' : 'Add trade'}</Button></footer></form>
+      <footer className="sticky bottom-0 flex justify-end gap-2 border-t border-line bg-bg-1/95 pt-4 pb-[env(safe-area-inset-bottom)] backdrop-blur-sm motion-reduce:backdrop-blur-none"><Dialog.Close asChild><Button type="button" variant="ghost" disabled={saving}>Cancel</Button></Dialog.Close><Button type="submit" disabled={saving}>{saving ? 'Saving…' : trade ? 'Save changes' : 'Add trade'}</Button></footer></form>
   </Dialog.Content></Dialog.Portal></Dialog.Root>;
 }
 
@@ -458,7 +476,7 @@ function BacktestPhotoSlot({ index, value, onChange }: { index: number; value: s
     const reader = new FileReader(); reader.onload = () => onChange(String(reader.result)); reader.readAsDataURL(file);
     event.target.value = '';
   }
-  return <div className="overflow-hidden rounded-xl border border-line bg-bg-2"><div className="flex aspect-video items-center justify-center bg-bg-3">{preview ? <img src={preview} alt={`Backtest image ${index + 1}`} className="h-full w-full object-contain" /> : <div className="flex flex-col items-center gap-2 text-xs text-fg-dim"><Camera className="h-5 w-5" />No image selected</div>}</div><div className="flex items-center justify-between gap-2 p-2.5"><span className="text-xs font-medium text-fg-muted">Image {index + 1}</span><div className="flex gap-1"><label className="inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-line px-2.5 text-xs text-fg-muted hover:bg-bg-3 hover:text-fg"><ImagePlus className="h-3.5 w-3.5" />{value ? 'Replace' : 'Upload'}<input type="file" accept="image/*" className="sr-only" onChange={chooseFile} /></label>{value && <Button type="button" size="icon-sm" variant="ghost" aria-label={`Remove image ${index + 1}`} onClick={() => onChange('')}><X className="h-4 w-4" /></Button>}</div></div></div>;
+  return <div className="overflow-hidden rounded-xl border border-line bg-bg-2"><div className="flex aspect-video items-center justify-center bg-bg-3">{preview ? <img src={preview} alt={`Backtest image ${index + 1}`} className="h-full w-full object-contain" /> : <div className="flex flex-col items-center gap-2 text-xs text-fg-dim"><Camera className="h-5 w-5" />No image selected</div>}</div><div className="flex items-center justify-between gap-2 p-2.5"><span className="text-xs font-medium text-fg-muted">Image {index + 1}</span><div className="flex gap-1"><label className="relative inline-flex h-8 cursor-pointer items-center gap-1.5 rounded-lg border border-line px-2.5 text-xs text-fg-muted hover:bg-bg-3 hover:text-fg focus-within:ring-2 focus-within:ring-accent/50"><ImagePlus className="h-3.5 w-3.5" aria-hidden="true" />{value ? 'Replace' : 'Upload'}<input type="file" accept="image/*" aria-label={`Upload image ${index + 1}`} className="absolute inset-0 h-full w-full cursor-pointer opacity-0" onChange={chooseFile} /></label>{value && <Button type="button" size="icon-sm" variant="ghost" aria-label={`Remove image ${index + 1}`} onClick={() => onChange('')}><X className="h-4 w-4" /></Button>}</div></div></div>;
 }
 
 function formatDate(value: string) {

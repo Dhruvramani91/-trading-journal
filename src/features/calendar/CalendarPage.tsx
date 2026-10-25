@@ -18,6 +18,15 @@ import type { DayPerformance } from '@/analytics/core';
 
 const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
+function formatCompactCalendarMoney(value: number): string {
+  const compactValue = new Intl.NumberFormat('en-US', {
+    notation: 'compact',
+    maximumFractionDigits: 1,
+  }).format(Math.abs(value));
+  const sign = value > 0 ? '+' : value < 0 ? '-' : '';
+  return `${sign}$${compactValue}`;
+}
+
 function daysInMonth(year: number, month: number): number {
   return new Date(year, month + 1, 0).getDate();
 }
@@ -258,19 +267,19 @@ export function CalendarPage() {
           ) : (
             <div className="grid gap-3 lg:min-h-0 lg:flex-1 xl:grid-cols-[minmax(0,1fr)_150px]">
               <>
-              <div className="w-full overflow-x-auto pb-2 pr-1 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-hidden">
-              <div className="min-w-[980px] lg:min-w-0 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+              <div className="w-full min-w-0 pb-2 pr-1 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
+              <div className="min-w-0 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
               {/* Weekday header */}
               <div
                 className={cn(
-                  'grid gap-2 mb-2',
+                  'grid gap-0.5 mb-2 sm:gap-2',
                   showWeekends ? 'grid-cols-7' : 'grid-cols-5',
                 )}
               >
                 {visibleWeekdays.map((label) => (
                   <div
                     key={label}
-                    className="text-center text-[11px] uppercase tracking-wider text-fg-dim font-bold py-2"
+                    className="py-2 text-center text-[9px] font-bold uppercase tracking-wider text-fg-dim sm:text-[11px]"
                   >
                     {label}
                   </div>
@@ -280,7 +289,7 @@ export function CalendarPage() {
               {/* Day cells grid */}
               <div
                 className={cn(
-                  'grid min-h-0 flex-1 gap-1.5 lg:gap-1',
+                  'grid min-h-0 flex-1 gap-1 sm:gap-1.5 lg:gap-1',
                   showWeekends ? 'grid-cols-7' : 'grid-cols-5',
                 )}
                 style={{ gridTemplateRows: `repeat(${calendarRows}, minmax(0, 1fr))` }}
@@ -297,6 +306,7 @@ export function CalendarPage() {
 
                   const key = dayKeyFromParts(year, month, day);
                   const perf = dayMap.get(key);
+                  const accessibleDate = date.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
                   const isToday =
                     day === now.getDate() &&
@@ -307,18 +317,22 @@ export function CalendarPage() {
                     <button
                       key={key}
                       type="button"
+                      aria-label={perf
+                        ? `${accessibleDate}: ${perf.count} trade${perf.count === 1 ? '' : 's'}${showR ? `, ${formatR(perf.totalR, 1)} realized R` : ''}${showPnl && perf.totalPnl != null ? `, ${formatSignedMoney(perf.totalPnl)} P&L` : ''}`
+                        : accessibleDate}
+                      disabled={!perf}
                       style={day === 1 ? { gridColumnStart: offset + 1 } : undefined}
                       onClick={() => {
                         if (perf) navigate('/journal');
                       }}
                       className={cn(
-                        'relative flex min-h-[112px] flex-col items-stretch justify-between rounded-xl border p-3 transition-all lg:min-h-0 lg:rounded-lg lg:p-2',
+                        'relative flex min-h-[64px] min-w-0 flex-col items-stretch justify-between rounded-lg border p-1.5 transition-colors sm:min-h-[104px] sm:rounded-xl sm:p-3 lg:min-h-0 lg:rounded-lg lg:p-2',
                         perf
                           ? cn(
                               rBg(perf.totalR),
-                              'cursor-pointer hover:scale-[1.02] shadow-sm',
+                              'cursor-pointer shadow-sm hover:brightness-105',
                             )
-                          : 'border-line/60 bg-bg-2/60 text-fg-dim hover:border-line',
+                          : 'border-line/60 bg-bg-2/60 text-fg-dim',
                         isToday && 'ring-2 ring-accent shadow-sm',
                       )}
                     >
@@ -333,29 +347,30 @@ export function CalendarPage() {
                           {day}
                         </span>
                         {perf && (
-                          <span className="truncate text-[10px] font-medium text-fg-dim lg:text-[9px]">
-                            {perf.count} trade{perf.count === 1 ? '' : 's'}
+                          <span className="truncate text-[9px] font-medium text-fg-dim sm:text-[10px] lg:text-[9px]">
+                            <span className="sm:hidden">{perf.count}</span>
+                            <span className="hidden sm:inline">{perf.count} trade{perf.count === 1 ? '' : 's'}</span>
                           </span>
                         )}
                       </div>
 
                       {perf && (
-                        <div className="mt-2 flex w-full flex-col gap-1.5 lg:mt-1 lg:gap-0.5">
+                        <div className="mt-1 flex w-full min-w-0 flex-col gap-1 sm:mt-2 sm:gap-1.5 lg:mt-1 lg:gap-0.5">
                           {(showR || showPnl) ? (
                             <>
                               {showR && (
-                                <div className="flex items-baseline justify-between gap-2">
-                                  <span className="text-[10px] font-medium uppercase tracking-wide text-fg-dim">R</span>
-                                  <span className={cn('text-sm font-bold tabular-nums lg:text-xs', rTone(perf.totalR))}>
+                                <div className="flex min-w-0 items-baseline justify-start gap-1 sm:justify-between sm:gap-2">
+                                  <span className="sr-only text-[10px] font-medium uppercase tracking-wide text-fg-dim sm:not-sr-only">R</span>
+                                  <span className={cn('min-w-0 truncate text-[10px] font-bold tabular-nums sm:text-sm lg:text-xs', rTone(perf.totalR))}>
                                     {formatR(perf.totalR, 1)}
                                   </span>
                                 </div>
                               )}
                               {showPnl && (
-                                <div className="flex items-baseline justify-between gap-2">
-                                  <span className="text-[10px] font-medium uppercase tracking-wide text-fg-dim">P&amp;L</span>
-                                  <span className={cn('text-[13px] font-bold tabular-nums lg:text-xs', perf.totalPnl == null ? 'text-fg-dim' : perf.totalPnl > 0 ? 'text-win' : perf.totalPnl < 0 ? 'text-loss' : 'text-be')}>
-                                    {perf.totalPnl == null ? '—' : formatSignedMoney(perf.totalPnl)}
+                                <div className="flex min-w-0 items-baseline justify-start gap-1 sm:justify-between sm:gap-2">
+                                  <span className="sr-only text-[10px] font-medium uppercase tracking-wide text-fg-dim sm:not-sr-only">P&amp;L</span>
+                                  <span title={perf.totalPnl == null ? undefined : formatSignedMoney(perf.totalPnl)} className={cn('min-w-0 truncate text-[9px] font-bold tabular-nums sm:text-[13px] lg:text-xs', perf.totalPnl == null ? 'text-fg-dim' : perf.totalPnl > 0 ? 'text-win' : perf.totalPnl < 0 ? 'text-loss' : 'text-be')}>
+                                    {perf.totalPnl == null ? '—' : <><span className="sm:hidden">{formatCompactCalendarMoney(perf.totalPnl)}</span><span className="hidden sm:inline">{formatSignedMoney(perf.totalPnl)}</span></>}
                                   </span>
                                 </div>
                               )}

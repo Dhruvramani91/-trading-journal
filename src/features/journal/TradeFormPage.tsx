@@ -14,6 +14,7 @@ import {
   Segmented,
   Select,
 } from '@/components/ui/Select';
+import { useFormFieldContext } from '@/components/ui/FormFieldContext';
 
 import { useTradesStore, bootTradesStore } from '@/store/tradesStore';
 import { getTemplate } from '@/domain/templates/registry';
@@ -255,6 +256,8 @@ export function TradeFormPage() {
 
   const [fieldErrors, setFieldErrors] =
     useState<FieldErrors>({});
+  const formRef = useRef<HTMLFormElement>(null);
+  const errorSummaryRef = useRef<HTMLDivElement>(null);
 
   /*
    * Boot store on first mount.
@@ -521,6 +524,7 @@ export function TradeFormPage() {
      * The errors are already shown next to their fields.
      */
     if (Object.keys(errors).length > 0) {
+      requestAnimationFrame(() => errorSummaryRef.current?.focus());
       return;
     }
 
@@ -643,6 +647,15 @@ export function TradeFormPage() {
     }
   }
 
+  function focusField(key: string) {
+    const field = formRef.current?.querySelector<HTMLElement>(`[data-field-key="${CSS.escape(key)}"]`);
+    if (!field) return;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    field.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+    const control = field.querySelector<HTMLElement>('input:not([disabled]), button[role="combobox"], [role="radiogroup"] button:not([disabled]), textarea');
+    control?.focus({ preventScroll: true });
+  }
+
   async function onDelete() {
     if (!isEdit || !id) return;
 
@@ -710,6 +723,7 @@ export function TradeFormPage() {
 
   return (
     <form
+      ref={formRef}
       onSubmit={onSave}
       className="space-y-6"
       noValidate
@@ -765,8 +779,17 @@ export function TradeFormPage() {
       />
 
       {error ? (
-        <div className="rounded-md border border-loss-fill/30 bg-loss-fill/10 px-3 py-2 text-sm text-loss">
+        <div role="alert" className="rounded-md border border-loss-fill/30 bg-loss-fill/10 px-3 py-2 text-sm text-loss">
           {error}
+        </div>
+      ) : null}
+
+      {Object.keys(fieldErrors).length > 0 && !error ? (
+        <div ref={errorSummaryRef} role="alert" aria-live="assertive" aria-labelledby="trade-error-summary-title" tabIndex={-1} className="rounded-xl border border-loss-fill/30 bg-loss-fill/5 px-4 py-3 text-sm text-fg focus:outline-none focus:ring-2 focus:ring-loss-fill/50">
+          <h2 id="trade-error-summary-title" className="font-semibold text-loss">Review {Object.keys(fieldErrors).length} field{Object.keys(fieldErrors).length === 1 ? '' : 's'} before saving</h2>
+          <ul className="mt-2 flex flex-wrap gap-x-5 gap-y-1.5">
+            {Object.entries(fieldErrors).map(([key, message]) => <li key={key}><button type="button" onClick={() => focusField(key)} className="text-left text-fg-muted underline decoration-line-strong underline-offset-2 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50">{message}</button></li>)}
+          </ul>
         </div>
       ) : null}
 
@@ -789,6 +812,8 @@ export function TradeFormPage() {
                 <FormField
                   label="Opened at"
                   required
+                  fieldKey="openedAt"
+                  invalid={Boolean(fieldErrors.openedAt)}
                 >
                   <DateTimePicker
                     value={form.openedAt}
@@ -806,6 +831,8 @@ export function TradeFormPage() {
                 <FormField
                   label="Closed at"
                   hint="Leave blank for an open trade."
+                  fieldKey="closedAt"
+                  invalid={Boolean(fieldErrors.closedAt)}
                 >
                   <DateTimePicker
                     value={form.closedAt}
@@ -825,6 +852,8 @@ export function TradeFormPage() {
                 <FormField
                   label="Instrument"
                   required
+                  fieldKey="instrument"
+                  invalid={Boolean(fieldErrors.instrument)}
                 >
                   <Select
                     value={form.instrument}
@@ -893,6 +922,8 @@ export function TradeFormPage() {
                 <FormField
                   label="Direction"
                   required
+                  fieldKey="direction"
+                  invalid={Boolean(fieldErrors.direction)}
                 >
                   <Segmented<TradeDirection | ''>
                     value={form.direction}
@@ -949,6 +980,8 @@ export function TradeFormPage() {
                 <FormField
                   label="Outcome"
                   required
+                  fieldKey="result"
+                  invalid={Boolean(fieldErrors.result)}
                 >
                   <Segmented<TradeResult | ''>
                     value={form.result}
@@ -985,6 +1018,8 @@ export function TradeFormPage() {
                 <FormField
                   label="Realized R"
                   required
+                  fieldKey="r"
+                  invalid={Boolean(fieldErrors.r)}
                   hint={
                     form.result === 'be'
                       ? 'Automatically set to 0 for break-even trades.'
@@ -1028,6 +1063,8 @@ export function TradeFormPage() {
                   label="Entry"
                   hint="Actual price at which the trade was opened."
                   required
+                  fieldKey="entry"
+                  invalid={Boolean(fieldErrors.entry)}
                 >
                   <Input
                     type="number"
@@ -1050,6 +1087,8 @@ export function TradeFormPage() {
                   label="Exit"
                   hint="Actual price at which the trade was closed."
                   required
+                  fieldKey="exit"
+                  invalid={Boolean(fieldErrors.exit)}
                 >
                   <Input
                     type="number"
@@ -1072,6 +1111,8 @@ export function TradeFormPage() {
                   label="P&L"
                   hint="Profit or loss from the trade."
                   required
+                  fieldKey="pnl"
+                  invalid={Boolean(fieldErrors.pnl)}
                 >
                   <Input
                     type="number"
@@ -1139,6 +1180,8 @@ export function TradeFormPage() {
                           required={
                             isSetup
                           }
+                          fieldKey={isSetup ? 'setup' : undefined}
+                          invalid={isSetup && Boolean(fieldErrors.setup)}
                         >
                           {field.type ===
                           'boolean' ? (
@@ -1287,7 +1330,7 @@ export function TradeFormPage() {
 
           <Card>
             <CardHeader><CardTitle>Notes</CardTitle></CardHeader>
-            <CardBody><textarea value={form.notes} onChange={(e) => patch('notes', e.target.value)} rows={4} placeholder="What did you see? What worked, what didn’t?" className="w-full rounded-md border border-line bg-bg-1 px-3 py-2 text-sm text-fg placeholder:text-fg-dim focus:border-accent/40 focus:outline-none focus:ring-2 focus:ring-accent/60" /></CardBody>
+            <CardBody><textarea aria-label="Notes" value={form.notes} onChange={(e) => patch('notes', e.target.value)} rows={4} placeholder="What did you see? What worked, what didn’t?" className="w-full rounded-md border border-line bg-bg-1 px-3 py-2 text-sm text-fg placeholder:text-fg-dim focus:border-accent/40 focus:outline-none focus:ring-2 focus:ring-accent/60" /></CardBody>
           </Card>
 
           <Card>
@@ -1300,7 +1343,7 @@ export function TradeFormPage() {
           {/* =========================
               BOTTOM ACTIONS
           ========================== */}
-          <div className="flex justify-end space-x-3 pt-4">
+          <div className="sticky bottom-0 z-20 -mx-4 flex justify-end gap-3 border-t border-line bg-bg-0/95 px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+0.75rem)] pt-3 backdrop-blur-sm sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 motion-reduce:backdrop-blur-none">
             <Button
               asChild
               variant="ghost"
@@ -1345,10 +1388,11 @@ function FieldError({
 }: {
   message?: string;
 }) {
+  const field = useFormFieldContext();
   if (!message) return null;
 
   return (
-    <p className="mt-1.5 text-xs font-medium text-loss">
+    <p id={field?.errorId} aria-live="polite" className="mt-1.5 text-xs font-medium text-loss">
       {message}
     </p>
   );
