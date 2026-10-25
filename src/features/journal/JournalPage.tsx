@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { Link, useNavigate } from 'react-router-dom';
 
+import * as Dialog from '@radix-ui/react-dialog';
+
 import {
 
   ArrowUpDown,
@@ -12,11 +14,15 @@ import {
 
   Filter,
 
+  Pencil,
+
   Plus,
 
   RotateCcw,
 
   ScrollText,
+
+  Trash2,
 
   X,
 
@@ -28,6 +34,8 @@ import { Loader } from '@/components/ui/Loader';
 import { Card, CardBody } from '@/components/ui/Card';
 
 import { Button } from '@/components/ui/Button';
+
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 import { EmptyState } from '@/components/ui/EmptyState';
 
@@ -41,7 +49,9 @@ import { DirectionPill } from '@/components/ui/DirectionPill';
 
 import { useTradesStore, bootTradesStore } from '@/store/tradesStore';
 
-import { formatDate, formatDuration, formatR, formatSignedMoney } from '@/lib/format';
+import { formatDate, formatDuration, formatPct, formatR, formatSignedMoney } from '@/lib/format';
+
+import { summary } from '@/analytics/core/summary';
 
 import { cn } from '@/lib/cn';
 
@@ -172,6 +182,16 @@ export function JournalPage() {
   const [filters, setFilters] = useState<JournalFilters>(EMPTY_FILTERS);
 
   const [filterOpen, setFilterOpen] = useState(false);
+
+  const [sortOpen, setSortOpen] = useState(false);
+
+  const [selectedTradeId, setSelectedTradeId] = useState<string | null>(null);
+
+  const [deleteTarget, setDeleteTarget] = useState<Trade | null>(null);
+
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const removeTrade = useTradesStore((state) => state.remove);
 
 
 
@@ -370,6 +390,10 @@ export function JournalPage() {
 
   const activeFilterCount = useMemo(() => countActiveFilters(filters), [filters]);
 
+  const filteredSummary = useMemo(() => summary(filtered), [filtered]);
+
+  const selectedTrade = useMemo(() => trades.find((trade) => trade.id === selectedTradeId) ?? null, [trades, selectedTradeId]);
+
 
 
   function toggleSort(key: SortKey) {
@@ -414,6 +438,39 @@ export function JournalPage() {
 
   }
 
+  function removeFilterChip(key: string, value?: string | boolean) {
+    if (key === 'datePreset') {
+      setFilters((current) => ({ ...current, datePreset: 'all', from: '', to: '' }));
+    } else if (key === 'from' || key === 'to') {
+      setFilters((current) => ({ ...current, [key]: '' }));
+    } else if (key === 'instrument' && typeof value === 'string') {
+      setFilters((current) => ({ ...current, instruments: current.instruments.filter((item) => item !== value) }));
+    } else if (key === 'direction' && typeof value === 'string') {
+      setFilters((current) => ({ ...current, directions: current.directions.filter((item) => item !== value) }));
+    } else if (key === 'result' && typeof value === 'string') {
+      setFilters((current) => ({ ...current, results: current.results.filter((item) => item !== value) }));
+    } else if (key.startsWith('field:') && typeof value === 'string') {
+      const fieldKey = key.slice(6);
+      setFilters((current) => ({ ...current, templateValues: { ...current.templateValues, [fieldKey]: (current.templateValues[fieldKey] ?? []).filter((item) => item !== value) } }));
+    } else if (key.startsWith('boolean:') && typeof value === 'boolean') {
+      const fieldKey = key.slice(8);
+      setFilters((current) => ({ ...current, templateBooleans: { ...current.templateBooleans, [fieldKey]: (current.templateBooleans[fieldKey] ?? []).filter((item) => item !== value) } }));
+    }
+  }
+
+  async function confirmDeleteTrade() {
+    if (!deleteTarget) return;
+    try {
+      await removeTrade(deleteTarget.id, deleteTarget);
+      setDeleteTarget(null);
+      setSelectedTradeId(null);
+      setDeleteError(null);
+    } catch (error) {
+      setDeleteError(error instanceof Error ? error.message : 'Could not delete this trade. Try again.');
+      setDeleteTarget(null);
+    }
+  }
+
 
 
   return (
@@ -424,19 +481,11 @@ export function JournalPage() {
 
         title="Journal"
 
-        description={
-
-          activeFilterCount > 0
-
-            ? `${filtered.length} of ${trades.length} trades`
-
-            : `${trades.length} trade${trades.length === 1 ? '' : 's'} recorded`
-
-        }
+        description={`${filtered.length} of ${trades.length} trades · ${formatR(filteredSummary.totalR)} · ${filteredSummary.winRate == null ? '—' : formatPct(filteredSummary.winRate)} win rate`}
 
         actions={
 
-          <div className="relative flex items-center gap-2">
+          <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto">
 
             <Button
 
@@ -472,21 +521,7 @@ export function JournalPage() {
 
 
 
-            <Button
-
-              variant="ghost"
-
-              onClick={clearFilters}
-
-              disabled={activeFilterCount === 0}
-
-              className="px-3 text-fg-muted hover:text-fg"
-
-            >
-
-              Clear
-
-            </Button>
+            <Button variant="secondary" leftIcon={<ArrowUpDown className="h-4 w-4" />} onClick={() => setSortOpen(true)}>Sort</Button>
 
 
 
@@ -498,31 +533,25 @@ export function JournalPage() {
 
 
 
-            {filterOpen ? (
-
-              <JournalFilterPanel
-
-                instruments={instruments}
-
-                fields={filterFields}
-
-                filters={filters}
-
-                onChange={setFilters}
-
-                onClear={clearFilters}
-
-                onClose={() => setFilterOpen(false)}
-
-              />
-
-            ) : null}
-
           </div>
 
         }
 
       />
+
+      <p className="-mt-3 text-sm text-fg-muted" aria-live="polite">{filtered.length} of {trades.length} trades · {formatR(filteredSummary.totalR)} · {filteredSummary.winRate == null ? '—' : formatPct(filteredSummary.winRate)} win rate</p>
+
+      {activeFilterCount > 0 ? <ActiveFilterChips filters={filters} fields={filterFields} onRemove={removeFilterChip} onClear={clearFilters} /> : null}
+
+      {filterOpen ? <JournalFilterPanel instruments={instruments} fields={filterFields} filters={filters} onChange={setFilters} onClear={clearFilters} onClose={() => setFilterOpen(false)} /> : null}
+
+      <JournalSortSheet open={sortOpen} sortKey={sortKey} sortDir={sortDir} onSelect={(key) => { if (sortKey !== key) setSortDir('desc'); setSortKey(key); }} onDirectionChange={setSortDir} onReset={() => { setSortKey('openedAt'); setSortDir('desc'); }} onClose={() => setSortOpen(false)} />
+
+      <TradeDetailSheet trade={selectedTrade} onClose={() => setSelectedTradeId(null)} onEdit={(id) => { setSelectedTradeId(null); navigate(`/journal/${id}/edit`); }} onDelete={(trade) => { setSelectedTradeId(null); setDeleteTarget(trade); }} />
+
+      <ConfirmDialog open={Boolean(deleteTarget)} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }} title="Delete trade?" description={`Trade #${deleteTarget?.number ?? '—'} will be permanently deleted. This action cannot be undone.`} confirmLabel="Delete trade" onConfirm={confirmDeleteTrade} />
+
+      {deleteError ? <div role="alert" className="fixed inset-x-4 bottom-4 z-[120] mx-auto flex max-w-lg items-center justify-between gap-3 rounded-xl border border-loss/40 bg-bg-2 px-4 py-3 text-sm text-loss shadow-lg"><span>{deleteError}</span><button type="button" className="rounded-lg p-2 text-fg-muted hover:bg-bg-3" onClick={() => setDeleteError(null)} aria-label="Dismiss error"><X className="h-4 w-4" /></button></div> : null}
 
 
 
@@ -597,7 +626,7 @@ export function JournalPage() {
                     <span className="text-sm font-medium text-fg">{journalSections.length === 1 ? 'Your trades' : `${section.template.name} trades`}</span>
                     <span className="text-xs text-fg-muted">{section.trades.length} trade{section.trades.length === 1 ? '' : 's'} · Strategy fields shown for this template. Select a row for full details.</span>
                   </div>
-                  <JournalTradeTable trades={section.trades} fields={section.fields} sortKey={sortKey} sortDir={sortDir} toggleSort={toggleSort} onOpen={(id) => navigate(`/journal/${id}`)} />
+                  <JournalTradeTable trades={section.trades} fields={section.fields} sortKey={sortKey} sortDir={sortDir} toggleSort={toggleSort} onOpen={(id) => navigate(`/journal/${id}`)} onSelect={(trade) => setSelectedTradeId(trade.id)} />
                 </section>
               ))}
             </div>
@@ -625,6 +654,7 @@ function JournalTradeTable({
   sortDir,
   toggleSort,
   onOpen,
+  onSelect,
 }: {
   trades: Trade[];
   fields: TemplateField[];
@@ -632,28 +662,12 @@ function JournalTradeTable({
   sortDir: 'asc' | 'desc';
   toggleSort: (key: SortKey) => void;
   onOpen: (id: string) => void;
+  onSelect: (trade: Trade) => void;
 }) {
   return (
     <>
     <div className="space-y-2 p-3 lg:hidden" aria-label="Trade list">
-      {trades.map((trade) => (
-        <button key={trade.id} type="button" onClick={() => onOpen(trade.id)} aria-label={`Open trade ${trade.number != null ? `number ${trade.number}` : ''} details`} className="w-full rounded-xl border border-line bg-bg-1 p-3.5 text-left transition-colors hover:border-line-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50 motion-reduce:transition-none">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-2.5">
-              <InstrumentMark instrument={trade.instrument} className="h-9 w-9" />
-              <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className="font-semibold text-fg">{trade.instrument}</span><DirectionPill direction={trade.direction} /></div><p className="mt-0.5 text-xs text-fg-muted">{formatDate(trade.openedAt)} · {trade.number != null ? `#${String(trade.number).padStart(2, '0')}` : 'Unnumbered'}</p></div>
-            </div>
-            <div className="flex shrink-0 flex-col items-end gap-1"><ResultPill result={trade.result} /><TradeGradeBadge grade={trade.grade} /></div>
-          </div>
-          <div className="mt-3 grid grid-cols-2 gap-2 rounded-lg bg-bg-2 px-3 py-2.5 text-xs sm:grid-cols-4">
-            <div><p className="text-fg-dim">Realized R</p><p className={cn('mt-0.5 font-mono font-semibold tabular-nums', trade.r > 0 ? 'text-win' : trade.r < 0 ? 'text-loss' : 'text-be')}>{formatR(trade.r)}</p></div>
-            <div><p className="text-fg-dim">P&L</p><p className={cn('mt-0.5 font-mono font-semibold tabular-nums', trade.pnl != null && trade.pnl > 0 ? 'text-win' : trade.pnl != null && trade.pnl < 0 ? 'text-loss' : 'text-fg-muted')}>{trade.pnl == null ? '—' : formatSignedMoney(trade.pnl)}</p></div>
-            <div><p className="text-fg-dim">Entry / exit</p><p className="mt-0.5 font-mono tabular-nums text-fg-muted">{trade.entry ?? '—'} / {trade.exit ?? '—'}</p></div>
-            <div><p className="text-fg-dim">Duration</p><p className="mt-0.5 font-mono tabular-nums text-fg-muted">{formatDuration(trade.durationMin)}</p></div>
-          </div>
-          {fields.length > 0 && <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-line pt-3 sm:grid-cols-3">{fields.map((field) => { const value = readFieldLabel(trade, field.key); return <div key={field.key} className="min-w-0"><dt className="break-words text-[10px] font-semibold uppercase tracking-wide text-fg-dim">{field.label}</dt><dd className="mt-0.5 break-words text-xs text-fg-muted" title={value}>{value}</dd></div>; })}</dl>}
-        </button>
-      ))}
+      {trades.map((trade) => <MobileTradeCard key={trade.id} trade={trade} onOpen={() => onSelect(trade)} />)}
     </div>
     <div className="hidden lg:block">
     <Table className="min-w-max table-fixed" containerClassName="journal-table-scroll max-h-[min(72vh,720px)] overflow-auto overscroll-contain">
@@ -700,6 +714,124 @@ function JournalTradeTable({
     </div>
     </>
   );
+}
+
+function MobileTradeCard({ trade, onOpen }: { trade: Trade; onOpen: () => void }) {
+  const resultLabel: Record<Trade['result'], string> = { win: 'Win', loss: 'Loss', be: 'Break even' };
+  const resultTone: Record<Trade['result'], string> = { win: 'text-win', loss: 'text-loss', be: 'text-be' };
+  const strategyFields = orderTemplateFieldsForForm([...(trade.templateSnapshot?.fields ?? [])])
+    .filter((field) => field.inTable)
+    .map((field) => ({ field, value: readFieldLabel(trade, field.key, '') }))
+    .filter(({ value }) => value !== '');
+  const duration = trade.durationMin > 0 && Number.isFinite(trade.durationMin) ? formatDuration(trade.durationMin) : '—';
+
+  return (
+    <button type="button" onClick={onOpen} aria-label={`Open ${trade.instrument} trade details`} className="w-full min-w-0 rounded-xl border border-line bg-bg-1 p-4 text-left transition-colors hover:border-line-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50 motion-reduce:transition-none">
+      <div className="flex min-w-0 items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2.5 pt-1">
+          <InstrumentMark instrument={trade.instrument} className="h-9 w-9 shrink-0" />
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2"><span className="font-semibold text-fg">{trade.instrument}</span><DirectionPill direction={trade.direction} /></div>
+          </div>
+        </div>
+        <div className="shrink-0 text-right">
+          <div className={cn('font-mono text-xl font-semibold leading-tight tabular-nums', resultTone[trade.result])}>{formatR(trade.r)}</div>
+          <div className={cn('mt-1 text-xs font-medium', resultTone[trade.result])}>{resultLabel[trade.result]}</div>
+        </div>
+      </div>
+
+      <div className="mt-3 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs text-fg-muted">
+        <span>{formatDate(trade.openedAt)}</span><span aria-hidden="true">·</span><span>{trade.number != null ? `#${String(trade.number).padStart(2, '0')}` : 'Unnumbered'}</span><span aria-hidden="true">·</span><TradeGradeBadge grade={trade.grade} />
+      </div>
+
+      <div className="mt-3 flex items-center justify-between gap-3 border-t border-line pt-3 text-sm">
+        <div className="min-w-0"><span className="mr-1.5 text-xs text-fg-dim">P&L</span><span className={cn('font-mono font-medium tabular-nums', trade.pnl == null ? 'text-fg-muted' : trade.pnl > 0 ? 'text-win' : trade.pnl < 0 ? 'text-loss' : 'text-be')}>{trade.pnl == null ? '—' : formatSignedMoney(trade.pnl)}</span></div>
+        <div className="shrink-0 text-right"><span className="mr-1.5 text-xs text-fg-dim">Duration</span><span className="font-mono text-fg-muted tabular-nums">{duration}</span></div>
+      </div>
+
+      {strategyFields.length > 0 ? <div className="mt-3 flex min-w-0 flex-wrap items-center gap-1.5 border-t border-line pt-3">
+        {strategyFields.slice(0, 3).map(({ field, value }) => <span key={field.key} title={`${field.label}: ${value}`} className="max-w-full truncate rounded-md border border-line bg-bg-2 px-2 py-1 text-xs text-fg-muted">{field.label}: {value}</span>)}
+        {strategyFields.length > 3 ? <span className="text-xs text-fg-dim">+{strategyFields.length - 3} more · tap to view</span> : null}
+      </div> : null}
+    </button>
+  );
+}
+
+function TradeDetailSheet({ trade, onClose, onEdit, onDelete }: { trade: Trade | null; onClose: () => void; onEdit: (id: string) => void; onDelete: (trade: Trade) => void }) {
+  const fields = trade?.templateSnapshot?.fields ?? [];
+  const duration = trade && trade.durationMin > 0 && Number.isFinite(trade.durationMin) ? formatDuration(trade.durationMin) : '—';
+  const tone = trade?.result === 'win' ? 'text-win' : trade?.result === 'loss' ? 'text-loss' : 'text-be';
+  return <Dialog.Root open={Boolean(trade)} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Dialog.Portal>
+      <Dialog.Overlay className="fixed inset-0 z-[110] bg-black/60" />
+      <Dialog.Content aria-describedby="trade-detail-description" className="fixed inset-x-0 bottom-0 z-[111] mx-auto flex max-h-[90dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-line bg-bg-2 shadow-2xl focus:outline-none sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-h-[86dvh] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl">
+        {trade ? <>
+          <header className="flex shrink-0 items-start justify-between gap-4 border-b border-line bg-bg-1 px-4 py-4 sm:px-6">
+            <div className="min-w-0"><Dialog.Title className="flex flex-wrap items-center gap-2 text-lg font-semibold text-fg"><InstrumentMark instrument={trade.instrument} className="h-8 w-8" />{trade.instrument}<DirectionPill direction={trade.direction} /></Dialog.Title><Dialog.Description id="trade-detail-description" className="mt-1 text-sm text-fg-muted">{formatDate(trade.openedAt)} · Trade {trade.number != null ? `#${String(trade.number).padStart(2, '0')}` : '—'}</Dialog.Description></div>
+            <button type="button" onClick={onClose} className="rounded-lg p-2 text-fg-muted hover:bg-bg-4 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50" aria-label="Close trade details"><X className="h-5 w-5" /></button>
+          </header>
+          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4 sm:p-6">
+            <div className="grid grid-cols-2 gap-3">
+              <TradeDetailMetric label="Realized R" value={formatR(trade.r)} className={tone} />
+              <TradeDetailMetric label="P&L" value={trade.pnl == null ? '—' : formatSignedMoney(trade.pnl)} className={trade.pnl == null ? 'text-fg-muted' : trade.pnl > 0 ? 'text-win' : trade.pnl < 0 ? 'text-loss' : 'text-be'} />
+              <TradeDetailMetric label="Duration" value={duration} />
+              <div className="rounded-xl border border-line bg-bg-1 p-3"><div className="text-xs text-fg-dim">Grade</div><div className="mt-1"><TradeGradeBadge grade={trade.grade} /></div></div>
+            </div>
+            <section>
+              <h3 className="mb-3 text-sm font-semibold text-fg">Strategy answers</h3>
+              {fields.length > 0 ? <dl className="grid grid-cols-2 gap-x-4 gap-y-4">
+                {fields.map((field) => <div key={field.key} className="min-w-0 border-b border-line pb-3"><dt className="text-xs text-fg-dim">{field.label}</dt><dd className="mt-1 break-words text-sm text-fg">{readFieldLabel(trade, field.key)}</dd></div>)}
+              </dl> : <p className="text-sm text-fg-muted">No saved strategy answers for this trade.</p>}
+            </section>
+            {trade.notes ? <section><h3 className="mb-2 text-sm font-semibold text-fg">Notes</h3><p className="whitespace-pre-wrap break-words text-sm text-fg-muted">{trade.notes}</p></section> : null}
+          </div>
+          <footer className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-line bg-bg-1 p-4 sm:px-6">
+            <Button variant="danger" leftIcon={<Trash2 className="h-4 w-4" />} onClick={() => onDelete(trade)}>Delete</Button>
+            <Button variant="primary" leftIcon={<Pencil className="h-4 w-4" />} onClick={() => onEdit(trade.id)}>Edit trade</Button>
+          </footer>
+        </> : null}
+      </Dialog.Content>
+    </Dialog.Portal>
+  </Dialog.Root>;
+}
+
+function TradeDetailMetric({ label, value, className }: { label: string; value: string; className?: string }) {
+  return <div className="min-w-0 rounded-xl border border-line bg-bg-1 p-3"><div className="text-xs text-fg-dim">{label}</div><div className={cn('mt-1 truncate font-mono text-sm font-semibold tabular-nums text-fg', className)}>{value}</div></div>;
+}
+
+const SORT_OPTIONS: { key: SortKey; label: string }[] = [
+  { key: 'openedAt', label: 'Date' }, { key: 'number', label: 'Trade number' }, { key: 'r', label: 'Realized R' },
+  { key: 'pnl', label: 'P&L' }, { key: 'durationMin', label: 'Duration' }, { key: 'result', label: 'Result' },
+  { key: 'instrument', label: 'Instrument' }, { key: 'grade', label: 'Grade' },
+];
+
+function JournalSortSheet({ open, sortKey, sortDir, onSelect, onDirectionChange, onReset, onClose }: { open: boolean; sortKey: SortKey; sortDir: 'asc' | 'desc'; onSelect: (key: SortKey) => void; onDirectionChange: (dir: 'asc' | 'desc') => void; onReset: () => void; onClose: () => void }) {
+  return <Dialog.Root open={open} onOpenChange={(value) => { if (!value) onClose(); }}>
+    <Dialog.Portal><Dialog.Overlay className="fixed inset-0 z-[100] bg-black/60" />
+      <Dialog.Content aria-describedby="journal-sort-description" className="fixed inset-x-0 bottom-0 z-[101] mx-auto flex max-h-[88dvh] w-full max-w-xl flex-col overflow-hidden rounded-t-2xl border border-line bg-bg-2 shadow-2xl focus:outline-none sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-h-[85dvh] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl">
+        <header className="flex items-start justify-between border-b border-line px-4 py-4 sm:px-6"><div><Dialog.Title className="text-base font-semibold text-fg">Sort trades</Dialog.Title><Dialog.Description id="journal-sort-description" className="mt-1 text-sm text-fg-muted">Choose how trades are ordered.</Dialog.Description></div><button type="button" onClick={onClose} className="rounded-lg p-2 text-fg-muted hover:bg-bg-4 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50" aria-label="Close sort"><X className="h-5 w-5" /></button></header>
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:px-6"><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-fg-dim">Sort by</p><div className="grid grid-cols-2 gap-2">{SORT_OPTIONS.map((option) => <button key={option.key} type="button" aria-pressed={sortKey === option.key} onClick={() => onSelect(option.key)} className={cn('flex min-h-11 items-center justify-between gap-2 rounded-xl border px-3 text-left text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50', sortKey === option.key ? 'border-line-strong bg-bg-4 text-fg' : 'border-line bg-bg-1 text-fg-muted hover:bg-bg-3 hover:text-fg')}>{option.label}{sortKey === option.key ? <Check className="h-4 w-4" /> : null}</button>)}</div>
+          <p className="mb-2 mt-5 text-xs font-semibold uppercase tracking-wide text-fg-dim">Direction</p><div className="grid grid-cols-2 gap-2"><button type="button" aria-pressed={sortDir === 'desc'} onClick={() => onDirectionChange('desc')} className={cn('min-h-11 rounded-xl border px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50', sortDir === 'desc' ? 'border-line-strong bg-bg-4 text-fg' : 'border-line bg-bg-1 text-fg-muted hover:bg-bg-3')}>Descending</button><button type="button" aria-pressed={sortDir === 'asc'} onClick={() => onDirectionChange('asc')} className={cn('min-h-11 rounded-xl border px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50', sortDir === 'asc' ? 'border-line-strong bg-bg-4 text-fg' : 'border-line bg-bg-1 text-fg-muted hover:bg-bg-3')}>Ascending</button></div>
+        </div><footer className="flex justify-between border-t border-line bg-bg-1 p-4 sm:px-6"><Button variant="ghost" onClick={onReset}>Reset sort</Button><Button variant="primary" onClick={onClose}>Done</Button></footer>
+      </Dialog.Content>
+    </Dialog.Portal>
+  </Dialog.Root>;
+}
+
+function ActiveFilterChips({ filters, fields, onRemove, onClear }: { filters: JournalFilters; fields: TemplateField[]; onRemove: (key: string, value?: string | boolean) => void; onClear: () => void }) {
+  const chips: { id: string; label: string; key: string; value?: string | boolean }[] = [];
+  if (filters.datePreset !== 'all') chips.push({ id: 'date', key: 'datePreset', label: DATE_OPTIONS.find((option) => option.value === filters.datePreset)?.label ?? 'Date' });
+  if (filters.from) chips.push({ id: 'from', key: 'from', label: `From ${filters.from}` });
+  if (filters.to) chips.push({ id: 'to', key: 'to', label: `To ${filters.to}` });
+  filters.instruments.forEach((value) => chips.push({ id: `instrument:${value}`, key: 'instrument', value, label: value }));
+  filters.directions.forEach((value) => chips.push({ id: `direction:${value}`, key: 'direction', value, label: value === 'long' ? 'Long' : 'Short' }));
+  filters.results.forEach((value) => chips.push({ id: `result:${value}`, key: 'result', value, label: value === 'be' ? 'Breakeven' : value === 'win' ? 'Win' : 'Loss' }));
+  for (const field of fields) {
+    (filters.templateValues[field.key] ?? []).forEach((value) => chips.push({ id: `field:${field.key}:${value}`, key: `field:${field.key}`, value, label: `${field.label}: ${value}` }));
+    (filters.templateBooleans[field.key] ?? []).forEach((value) => chips.push({ id: `boolean:${field.key}:${value}`, key: `boolean:${field.key}`, value, label: `${field.label}: ${value ? 'Yes' : 'No'}` }));
+  }
+  if (!chips.length) return null;
+  return <div className="flex min-w-0 flex-wrap items-center gap-2" aria-label="Active filters">{chips.map((chip) => <button key={chip.id} type="button" onClick={() => onRemove(chip.key, chip.value)} className="inline-flex min-h-10 max-w-full items-center gap-2 rounded-full border border-line bg-bg-2 px-3 text-xs text-fg-muted hover:bg-bg-3 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50"><span className="max-w-[15rem] truncate">{chip.label}</span><X className="h-3.5 w-3.5 shrink-0" /></button>)}<button type="button" onClick={onClear} className="min-h-10 rounded-lg px-3 text-sm font-medium text-fg-muted underline underline-offset-4 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50">Clear all</button></div>;
 }
 
 function JournalFilterPanel({
@@ -822,7 +954,7 @@ function JournalFilterPanel({
 
     <div
 
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-3 backdrop-blur-sm sm:p-6"
+      className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-0 backdrop-blur-sm sm:items-center sm:p-6"
 
       role="presentation"
 
@@ -846,7 +978,7 @@ function JournalFilterPanel({
 
         aria-labelledby="journal-filter-title"
 
-        className="flex max-h-[92dvh] w-full min-w-0 max-w-4xl flex-col overflow-hidden rounded-2xl border border-line bg-bg-2 shadow-2xl"
+        className="flex max-h-[90dvh] w-full min-w-0 max-w-4xl flex-col overflow-hidden rounded-t-2xl border border-line bg-bg-2 shadow-2xl sm:max-h-[92dvh] sm:rounded-2xl"
 
         onMouseDown={(event) => event.stopPropagation()}
 
@@ -1210,7 +1342,7 @@ function CheckOption({
 
       className={
 
-        'flex min-h-10 items-center gap-2.5 rounded-xl border px-3 py-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/40 ' +
+        'flex min-h-11 items-center gap-2.5 rounded-xl border px-3 py-2 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/40 ' +
 
         (checked
 

@@ -16,7 +16,6 @@ import { Loader } from '@/components/ui/Loader';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Stat } from '@/components/ui/Stat';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { PageHeader } from '@/components/ui/PageHeader';
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/Table';
 import { ResultPill } from '@/components/ui/ResultPill';
 import { DirectionPill } from '@/components/ui/DirectionPill';
@@ -139,13 +138,12 @@ export function DashboardPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1440px] space-y-6">
-      <PageHeader
-        title="Dashboard"
-        className="border-b border-line pb-4"
-        actions={<Button asChild variant="primary" className="h-10 shrink-0 px-4 text-sm" leftIcon={<TrendingUp className="h-4 w-4" />}>
+      <header className="flex items-center justify-between gap-3 border-b border-line pb-4">
+        <h1 className="min-w-0 text-2xl font-semibold leading-tight tracking-[-0.025em] text-fg sm:text-3xl">Dashboard</h1>
+        <Button asChild variant="primary" className="h-10 shrink-0 px-3 text-sm sm:px-4" leftIcon={<TrendingUp className="h-4 w-4" />}>
           <Link to="/journal/new">New trade</Link>
-        </Button>}
-      />
+        </Button>
+      </header>
 
       <FilterBar />
 
