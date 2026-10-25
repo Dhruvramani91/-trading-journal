@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ArrowDown, ArrowUp, Copy, GripVertical, Plus, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -6,21 +6,15 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import type { TemplateField, TemplateFieldType } from '@/domain/models/trade';
 import { createTemplateField, duplicateTemplateField, moveField, optionListFromPaste, renameTemplateField, type TemplateIssue } from '@/domain/templates/templateEditor';
+import { groupTemplateFields } from '@/domain/templates/fieldOrder';
 
 const FIELD_TYPES: Array<{ value: TemplateFieldType; label: string }> = [
-  { value: 'enum', label: 'Choice' }, { value: 'text', label: 'Text' }, { value: 'number', label: 'Number' },
-  { value: 'boolean', label: 'Checkbox' }, { value: 'date', label: 'Date' },
-];
-
-const QUICK_ADD: Array<{ label: string; type: TemplateFieldType; options?: string[] }> = [
-  { label: 'Trading session', type: 'enum', options: ['Asia', 'London', 'New York AM', 'New York PM', 'Other'] },
-  { label: 'Higher-timeframe bias', type: 'enum', options: ['Bullish', 'Bearish', 'Neutral', 'Unclear'] },
-  { label: 'Entry timeframe', type: 'enum', options: ['1 minute', '3 minutes', '5 minutes', '15 minutes', 'Other'] },
-  { label: 'Followed the plan', type: 'boolean' },
+  { value: 'enum', label: 'Dropdown' }, { value: 'text', label: 'Text' }, { value: 'number', label: 'Number' },
+  { value: 'boolean', label: 'Checkbox' },
 ];
 
 export function TemplateFieldEditorList({
-  fields, onChange, issues, expandedFieldKey, onExpandedChange, focusFieldKey, focusRequestId, onRemove,
+  fields, onChange, issues, expandedFieldKey, onExpandedChange, focusFieldKey, focusRequestId, onRemove, footer,
 }: {
   fields: readonly TemplateField[];
   onChange: (fields: TemplateField[]) => void;
@@ -30,6 +24,7 @@ export function TemplateFieldEditorList({
   focusFieldKey?: string;
   focusRequestId?: number;
   onRemove: (field: TemplateField, index: number) => void;
+  footer?: ReactNode;
 }) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
   const [optionDraft, setOptionDraft] = useState('');
@@ -45,7 +40,6 @@ export function TemplateFieldEditorList({
     const { label, ...rest } = patch;
     return { ...field, ...rest, ...(label !== undefined ? renameTemplateField(field, label) : {}) };
   }));
-  const usedQuickAdds = new Set(fields.map((field) => field.label.trim().toLocaleLowerCase()));
   const fieldErrors = (key: string) => issues.filter((issue) => issue.fieldKey === key);
 
   const addField = (type: TemplateFieldType, label?: string, options?: string[]) => {
@@ -66,12 +60,17 @@ export function TemplateFieldEditorList({
     </div>
 
     {fields.length === 0 ? <div className="rounded-xl border border-dashed border-line-strong px-4 py-8 text-center">
-      <p className="text-sm font-medium text-fg">No strategy fields yet</p><p className="mt-1 text-sm text-fg-muted">Add a field or start with a quick suggestion.</p>
-    </div> : <ol className="space-y-2" aria-label="Ordered strategy fields">
-      {fields.map((field, index) => {
+      <p className="text-sm font-medium text-fg">No strategy fields yet</p><p className="mt-1 text-sm text-fg-muted">Add a field to start building this section.</p>
+    </div> : <div aria-label="Ordered strategy fields" className="space-y-5">
+      {groupTemplateFields(fields, true).map(([group, groupFields]) => <section key={group} className="space-y-2" aria-label={`${group} fields`}>
+        <h3 className="border-b border-line pb-2 text-sm font-semibold text-fg">{group}</h3>
+        <ol className="space-y-2">
+      {groupFields.map((field) => {
+        const index = fields.indexOf(field);
         const expanded = expandedFieldKey === field.key;
         const errors = fieldErrors(field.key);
-        const typeLabel = FIELD_TYPES.find((type) => type.value === field.type)?.label ?? field.type;
+        const typeLabel = FIELD_TYPES.find((type) => type.value === field.type)?.label ?? (field.type === 'date' ? 'Date (existing)' : field.type);
+        const fieldTypes = field.type === 'date' ? [...FIELD_TYPES, { value: 'date' as const, label: 'Date (existing)' }] : FIELD_TYPES;
         return <li key={`${field.key}-${index}`}>
           <article
             tabIndex={0}
@@ -100,7 +99,7 @@ export function TemplateFieldEditorList({
                   <Input ref={(node) => { if (node) labelRefs.current.set(field.key, node); else labelRefs.current.delete(field.key); }} value={field.label} maxLength={80} aria-label={`Label for ${field.label || 'new field'}`} onChange={(event) => update(index, { label: event.target.value })} />
                 </label>
                 <label className="space-y-1.5 text-xs font-medium text-fg">Field type
-                  <Select aria-label={`Type for ${field.label || 'new field'}`} value={field.type} onChange={(event) => update(index, { type: event.target.value as TemplateFieldType, options: event.target.value === 'enum' ? field.options ?? [] : undefined })}>{FIELD_TYPES.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}</Select>
+                  <Select aria-label={`Type for ${field.label || 'new field'}`} value={field.type} onChange={(event) => update(index, { type: event.target.value as TemplateFieldType, options: event.target.value === 'enum' ? field.options ?? [] : undefined })}>{fieldTypes.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}</Select>
                 </label>
               </div>
               {field.type === 'enum' && <div className="space-y-2">
@@ -126,15 +125,14 @@ export function TemplateFieldEditorList({
           </article>
         </li>;
       })}
-    </ol>}
+        </ol>
+      </section>)}
+    </div>}
 
     <section className="space-y-3 border-t border-line pt-4">
       <div><h3 className="text-sm font-semibold text-fg">Add a field</h3><p className="mt-1 text-xs text-fg-muted">New fields are included in the journal table and statistics by default.</p></div>
       <div className="flex flex-wrap gap-2">{FIELD_TYPES.map((type) => <Button key={type.value} type="button" variant="secondary" size="sm" className="min-h-10" leftIcon={<Plus className="h-3.5 w-3.5" />} onClick={() => addField(type.value, type.value === 'enum' ? undefined : `${type.label} field`)}>{type.label}</Button>)}</div>
     </section>
-    <section className="space-y-3">
-      <div><h3 className="text-sm font-semibold text-fg">Quick add</h3><p className="mt-1 text-xs text-fg-muted">Common fields to get your template started.</p></div>
-      <div className="flex flex-wrap gap-2">{QUICK_ADD.filter((item) => !usedQuickAdds.has(item.label.toLocaleLowerCase())).map((item) => <Button key={item.label} type="button" variant="outline" size="sm" className="min-h-10" onClick={() => addField(item.type, item.label, item.options)}>{item.label}</Button>)}</div>
-    </section>
+    {footer}
   </div>;
 }

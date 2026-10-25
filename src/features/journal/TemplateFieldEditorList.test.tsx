@@ -19,6 +19,16 @@ function Harness({ initial = [makeField('a', 'Session'), makeField('b', 'Bias')]
 }
 
 describe('TemplateFieldEditorList', () => {
+  it('groups fields by their trade form section and offers dropdowns without a date field type', () => {
+    const fields = [makeField('context', 'Session'), { ...makeField('entry', 'Entry'), group: 'Entry' }];
+    render(<Harness initial={fields} />);
+    expect(screen.getByRole('region', { name: 'Context fields' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Entry fields' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Dropdown' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Date' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Quick add')).not.toBeInTheDocument();
+  });
+
   it('reorders a focused row with Alt+ArrowDown', () => {
     render(<Harness />);
     const firstRow = screen.getAllByRole('article')[0]!;

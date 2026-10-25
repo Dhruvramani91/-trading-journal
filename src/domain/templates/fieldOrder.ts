@@ -3,11 +3,11 @@ import type { TemplateField } from '@/domain/models/trade';
 export type TemplateFieldGroup = [string, TemplateField[]];
 
 /** Keep field ordering consistent with the strategy sections rendered in the trade form. */
-export function groupTemplateFields(fields: readonly TemplateField[]): TemplateFieldGroup[] {
+export function groupTemplateFields(fields: readonly TemplateField[], includeMistake = false): TemplateFieldGroup[] {
   const groups: TemplateFieldGroup[] = [];
 
   for (const field of fields) {
-    if (field.key === 'mistake') continue;
+    if (field.key === 'mistake' && !includeMistake) continue;
     const lastGroup = groups.at(-1);
     if (lastGroup?.[0] === field.group) lastGroup[1].push(field);
     else groups.push([field.group, [field]]);
