@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Menu, Moon, Sun, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { BrandLogo, BRAND_NAME } from '@/components/layout/Brand';
-import { useThemeStore } from '@/store/themeStore';
+import { AnimatedThemeToggler } from '@/components/ui/animated-theme-toggler';
 
 const NAV_LINKS = [
   { label: 'About', href: '#about' },
@@ -15,8 +15,6 @@ const NAV_LINKS = [
 export function LandingNavbar({ isAuthenticated }: { isAuthenticated: boolean }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { theme, setTheme } = useThemeStore();
-  const darkMode = theme === 'dark';
   const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth);
   const prefersReducedMotion = useReducedMotion();
 
@@ -64,10 +62,6 @@ export function LandingNavbar({ isAuthenticated }: { isAuthenticated: boolean })
         backgroundColor: { duration: 0.32, delay: collapsed ? 0.08 : 0 },
         boxShadow: { duration: 0.32, delay: collapsed ? 0.08 : 0 },
       };
-
-  function toggleTheme() {
-    setTheme(darkMode ? 'light' : 'dark');
-  }
 
   function closeMenu() {
     setMobileMenuOpen(false);
@@ -130,14 +124,7 @@ export function LandingNavbar({ isAuthenticated }: { isAuthenticated: boolean })
           </motion.nav>
 
           <div className="landing-nav-actions">
-            <button
-              type="button"
-              className="landing-nav-icon hidden sm:grid"
-              onClick={toggleTheme}
-              aria-label={`Switch to ${darkMode ? 'light' : 'dark'} mode`}
-            >
-              {darkMode ? <Sun size={17} aria-hidden="true" /> : <Moon size={17} aria-hidden="true" />}
-            </button>
+            <AnimatedThemeToggler className="landing-nav-icon hidden sm:grid h-9 w-9 border-0 bg-transparent shadow-none hover:bg-bg-3" />
             <Link
               className="landing-nav-join"
               to={isAuthenticated ? '/dashboard' : '/login?mode=signup'}
@@ -174,10 +161,7 @@ export function LandingNavbar({ isAuthenticated }: { isAuthenticated: boolean })
                   {link.label}
                 </a>
               ))}
-              <button type="button" className="landing-mobile-theme" onClick={toggleTheme}>
-                {darkMode ? <Sun size={16} aria-hidden="true" /> : <Moon size={16} aria-hidden="true" />}
-                Switch to {darkMode ? 'light' : 'dark'} mode
-              </button>
+              <AnimatedThemeToggler showLabel className="landing-mobile-theme h-auto w-full justify-start rounded-none border-0 bg-transparent px-3 py-2 text-left text-sm shadow-none hover:bg-bg-3" />
             </motion.nav>
           ) : null}
           </AnimatePresence>
