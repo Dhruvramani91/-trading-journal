@@ -5,36 +5,36 @@
 @layer base {
   :root {
     color-scheme: light;
-    --bg: 243 245 248;
-    --bg-0: 243 245 248;
+    --bg: 244 246 249;
+    --bg-0: 244 246 249;
     --bg-1: 255 255 255;
     --bg-2: 255 255 255;
-    --bg-3: 247 248 250;
-    --bg-4: 238 241 246;
+    --bg-3: 247 249 252;
+    --bg-4: 237 242 249;
 
-    --line: 224 228 235;
-    --line-strong: 204 211 222;
-    --line-subtle: 237 240 245;
+    --line: 225 231 239;
+    --line-strong: 204 215 229;
+    --line-subtle: 237 241 247;
 
-    --fg: 25 31 43;
-    --fg-muted: 95 106 123;
-    --fg-dim: 133 143 158;
+    --fg: 20 32 49;
+    --fg-muted: 91 108 130;
+    --fg-dim: 126 143 164;
     --fg-inverse: 255 255 255;
 
-    --accent: 57 91 190;
-    --accent-hover: 44 73 161;
-    --accent-muted: 57 91 190;
+    --accent: 45 103 211;
+    --accent-hover: 34 82 178;
+    --accent-muted: 45 103 211;
     --accent-fg: 255 255 255;
 
-    --win: 24 133 96;
-    --win-muted: 34 153 111;
-    --loss: 192 70 86;
-    --loss-muted: 208 83 99;
+    --win: 19 139 101;
+    --win-muted: 34 157 117;
+    --loss: 195 70 83;
+    --loss-muted: 211 82 97;
     --be: 128 138 153;
     --be-muted: 145 154 168;
 
-    --shadow-card: 0 1px 2px rgba(20, 32, 52, 0.035), 0 6px 18px rgba(20, 32, 52, 0.035);
-    --shadow-pop: 0 12px 36px rgba(20, 32, 52, 0.14), 0 2px 8px rgba(20, 32, 52, 0.06);
+    --shadow-card: 0 1px 2px rgba(20, 32, 52, 0.025), 0 8px 24px rgba(20, 32, 52, 0.035);
+    --shadow-pop: 0 16px 42px rgba(20, 32, 52, 0.16), 0 3px 10px rgba(20, 32, 52, 0.06);
     --shadow-shell: none;
     --shadow-input: 0 1px 2px rgba(0, 0, 0, 0.04);
     --font-data: 'Geist Mono', ui-monospace, monospace;
@@ -42,36 +42,36 @@
 
   .dark {
     color-scheme: dark;
-    --bg: 13 13 14;
-    --bg-0: 13 13 14;
-    --bg-1: 19 19 20;
-    --bg-2: 24 24 25;
-    --bg-3: 31 31 32;
-    --bg-4: 40 40 42;
+    --bg: 12 17 25;
+    --bg-0: 12 17 25;
+    --bg-1: 16 23 33;
+    --bg-2: 20 29 41;
+    --bg-3: 26 37 52;
+    --bg-4: 33 47 66;
 
-    --line: 41 41 43;
-    --line-strong: 60 60 63;
-    --line-subtle: 31 31 33;
+    --line: 37 51 68;
+    --line-strong: 55 73 95;
+    --line-subtle: 29 41 56;
 
-    --fg: 243 243 241;
-    --fg-muted: 166 166 163;
-    --fg-dim: 123 123 120;
-    --fg-inverse: 13 13 14;
+    --fg: 236 242 249;
+    --fg-muted: 159 176 196;
+    --fg-dim: 116 137 160;
+    --fg-inverse: 10 20 34;
 
-    --accent: 220 220 216;
-    --accent-hover: 242 242 239;
-    --accent-muted: 220 220 216;
-    --accent-fg: 13 13 14;
+    --accent: 105 165 255;
+    --accent-hover: 137 185 255;
+    --accent-muted: 105 165 255;
+    --accent-fg: 10 20 34;
 
-    --win: 78 205 157;
-    --win-muted: 78 205 157;
-    --loss: 244 123 137;
-    --loss-muted: 244 123 137;
-    --be: 153 153 149;
-    --be-muted: 153 153 149;
+    --win: 81 211 158;
+    --win-muted: 81 211 158;
+    --loss: 255 126 139;
+    --loss-muted: 255 126 139;
+    --be: 157 177 199;
+    --be-muted: 157 177 199;
 
-    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.22);
-    --shadow-pop: 0 12px 36px rgba(0, 0, 0, 0.48), 0 2px 8px rgba(0, 0, 0, 0.24);
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.16), 0 10px 28px rgba(0, 0, 0, 0.12);
+    --shadow-pop: 0 18px 46px rgba(0, 0, 0, 0.52), 0 3px 10px rgba(0, 0, 0, 0.22);
     --shadow-shell: none;
     --shadow-input: 0 1px 2px rgba(0, 0, 0, 0.3);
   }
@@ -85,6 +85,10 @@
     font-feature-settings: 'cv11', 'ss01', 'ss03';
     text-rendering: optimizeLegibility;
     transition: background-color 180ms ease, color 180ms ease;
+  }
+
+  button, input, select, textarea {
+    font: inherit;
   }
 
   *:focus-visible {
@@ -114,10 +118,10 @@
   .journal-table-scroll::-webkit-scrollbar-thumb:hover { @apply bg-fg-dim; }
 
   .card {
-    @apply bg-bg-2 border border-line rounded-[14px] shadow-card;
+    @apply bg-bg-2 border border-line rounded-2xl shadow-card;
   }
   .card-hover {
-    @apply transition-colors hover:bg-bg-3;
+    @apply transition-all duration-200 hover:border-line-strong hover:bg-bg-3;
   }
   .stat-num {
     @apply font-semibold tracking-tight text-fg tabular-nums;
@@ -126,7 +130,7 @@
     @apply text-2xs uppercase tracking-wider text-fg-dim font-medium;
   }
   .pill {
-    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium border border-line bg-bg-3 text-fg-muted;
+    @apply inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold border border-line bg-bg-3 text-fg-muted;
   }
   .pill-win  { @apply pill text-win  border-win/25  bg-win/10; }
   .pill-loss { @apply pill text-loss border-loss/25 bg-loss/10; }
@@ -134,6 +138,10 @@
   .pill-accent { @apply pill text-accent border-accent/25 bg-accent/10; }
   .num { @apply tabular-nums; font-family: var(--font-data); }
   .data-value { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+}
+
+@layer utilities {
+  .font-display { font-family: 'DM Serif Display', Georgia, serif; }
 }
 
 /* ThePrecisionLab brand logo theme switching */

@@ -141,21 +141,23 @@ export function DashboardPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1440px] space-y-6 lg:space-y-7">
-      <header className="flex flex-col gap-4 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
+      <header className="relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-line bg-bg-1 px-6 py-6 shadow-card sm:flex-row sm:items-end sm:justify-between sm:px-8 sm:py-7">
         <div className="min-w-0">
-          <h1 className="text-[26px] font-bold tracking-tight text-fg leading-tight">Dashboard</h1>
-          <p className="mt-1 text-[13px] text-fg-muted">A focused view of your trading performance{user?.name ? `, ${user.name.split(/\s+/)[0]}` : ''}.</p>
-          <p className="mt-1.5 text-[11px] text-fg-dim">
+          <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-accent">The Precision Lab · Performance</p>
+          <h1 className="font-display text-4xl leading-none tracking-tight text-fg sm:text-5xl">Your trading, in focus.</h1>
+          <p className="mt-3 text-sm text-fg-muted">A clear read on your performance{user?.name ? `, ${user.name.split(/\s+/)[0]}` : ''}.</p>
+          <p className="mt-2 text-xs text-fg-dim">
             {tradesToUse.length === 0
               ? 'Add your first trade to see your stats.'
               : `${tradesToUse.length} trade${tradesToUse.length === 1 ? '' : 's'} · ${formatDateLong(tradesToUse[0]?.openedAt ?? '')}`}
           </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <Button asChild variant="primary" className="h-10 rounded-lg bg-accent px-4 text-xs font-semibold text-accent-fg shadow-none hover:bg-accent-hover" leftIcon={<TrendingUp className="h-4 w-4" />}>
+          <Button asChild variant="primary" className="h-11 rounded-xl px-5 text-sm" leftIcon={<TrendingUp className="h-4 w-4" />}>
             <Link to="/journal/new">New trade</Link>
           </Button>
         </div>
+        <div aria-hidden="true" className="pointer-events-none absolute -right-10 -top-24 h-64 w-64 rounded-full bg-accent/10 blur-3xl" />
       </header>
 
       <FilterBar />

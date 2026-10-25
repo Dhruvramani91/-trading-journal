@@ -70,13 +70,13 @@ export function Sidebar() {
       aria-label="Main sidebar"
       style={{ width }}
       className={cn(
-        'relative z-20 hidden shrink-0 flex-col bg-bg-1 md:flex',
+        'relative z-20 hidden shrink-0 flex-col bg-bg-1/95 backdrop-blur-xl md:flex',
         collapsed
           ? 'my-3 ml-3 mr-2 h-[calc(100%-24px)] rounded-2xl border border-line shadow-pop'
-          : 'h-full border-r border-line',
+          : 'my-3 ml-3 mr-2 h-[calc(100%-24px)] rounded-2xl border border-line shadow-card',
       )}
     >
-      <div className={cn('flex h-16 shrink-0 items-center', collapsed ? 'justify-center px-2' : 'justify-start px-4')}>
+      <div className={cn('flex h-[76px] shrink-0 items-center', collapsed ? 'justify-center px-2' : 'justify-start px-4')}>
         <button
           type="button"
           onClick={() => navigate('/dashboard')}
@@ -103,11 +103,11 @@ export function Sidebar() {
         {collapsed ? <PanelLeftOpen className="h-3.5 w-3.5" /> : <PanelLeftClose className="h-3.5 w-3.5" />}
       </button>
 
-      <nav className={cn('min-h-0 flex-1 space-y-4 overflow-hidden py-4 max-[650px]:space-y-2 max-[650px]:py-2', collapsed ? 'px-2' : 'px-3')}>
+      <nav className={cn('min-h-0 flex-1 space-y-5 overflow-hidden py-4 max-[650px]:space-y-2 max-[650px]:py-2', collapsed ? 'px-2' : 'px-3')}>
         {GROUPS.map((group) => (
           <div key={group.label}>
-            {!collapsed && <h2 className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-fg-dim">{group.label}</h2>}
-            <div className="space-y-0.5">
+            {!collapsed && <h2 className="mb-2 px-3 text-[9px] font-bold uppercase tracking-[0.2em] text-fg-dim">{group.label}</h2>}
+            <div className="space-y-1">
               {group.links.map((item) => {
                 const Icon = item.icon;
                 return (
@@ -118,10 +118,10 @@ export function Sidebar() {
                     title={collapsed ? item.label : undefined}
                     aria-label={collapsed ? item.label : undefined}
                     className={({ isActive }) => cn(
-                      'group flex h-9 items-center rounded-lg text-[13px] font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 max-[650px]:h-8',
+                      'group relative flex h-10 items-center rounded-xl text-[13px] font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 max-[650px]:h-8',
                       collapsed ? 'justify-center px-0' : 'gap-3 px-3',
                       isActive
-                        ? 'bg-accent/10 text-accent'
+                        ? 'bg-accent/10 text-accent before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:bg-accent'
                         : 'text-fg-muted hover:bg-bg-3 hover:text-fg',
                     )}
                   >
@@ -135,7 +135,7 @@ export function Sidebar() {
           </div>
         ))}
         <div>
-          {!collapsed && <h2 className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-fg-dim">Preferences</h2>}
+          {!collapsed && <h2 className="mb-2 px-3 text-[9px] font-bold uppercase tracking-[0.2em] text-fg-dim">Preferences</h2>}
           <div>
             <NavLink to="/settings" end title={collapsed ? 'Settings' : undefined} aria-label={collapsed ? 'Settings' : undefined} className={({ isActive }) => cn('group flex h-9 items-center rounded-lg text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 max-[650px]:h-8', collapsed ? 'justify-center px-0' : 'gap-3 px-3', isActive ? 'bg-accent/10 text-accent' : 'text-fg-muted hover:bg-bg-3 hover:text-fg')}>
               <Settings className="h-[17px] w-[17px] shrink-0" strokeWidth={1.8} />

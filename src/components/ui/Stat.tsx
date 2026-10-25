@@ -20,10 +20,10 @@ export function Stat({ label, value, hint, tone = 'default', className }: StatPr
           : 'text-fg';
 
   return (
-    <div className={cn('flex flex-col gap-1', className)}>
-      <span className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">{label}</span>
-      <span className={cn('data-value text-2xl font-semibold tracking-tight', valueColor)}>{value}</span>
-      {hint ? <span className="text-2xs text-fg-dim">{hint}</span> : null}
+    <div className={cn('flex min-w-0 flex-col gap-2', className)}>
+      <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-fg-dim">{label}</span>
+      <span className={cn('data-value text-[1.7rem] font-semibold leading-none tracking-tight', valueColor)}>{value}</span>
+      {hint ? <span className="text-xs leading-5 text-fg-muted">{hint}</span> : null}
     </div>
   );
 }
