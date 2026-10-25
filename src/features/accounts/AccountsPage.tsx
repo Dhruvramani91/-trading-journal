@@ -728,7 +728,7 @@ export function AccountsPage() {
       <Loader
         title="Loading accounts…"
         subtitle="Preparing your account performance."
-        className="min-h-[22rem]"
+        className="h-full min-h-[22rem]"
       />
     );
   }

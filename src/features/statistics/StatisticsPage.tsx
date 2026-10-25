@@ -199,7 +199,19 @@ export function StatisticsPage() {
   const usedTemplateIds = useMemo(() => Array.from(new Set(trades.map((trade) => trade.templateId))), [trades]);
   const availableTemplates = useMemo(() => {
     const unique = new Map(templateOptions.map((item) => [item.id, item]));
-    for (const trade of trades) if (trade.templateSnapshot) unique.set(trade.templateId, trade.templateSnapshot);
+    for (const trade of trades) if (trade.templateSnapshot) {
+      const snapshot = trade.templateSnapshot;
+      const current = unique.get(trade.templateId);
+      if (!current) {
+        unique.set(trade.templateId, snapshot);
+        continue;
+      }
+      // Keep fields captured with historical trades, while exposing fields
+      // added to the current template (for example Strength Switch).
+      const fields = new Map(snapshot.fields.map((field) => [field.key, field]));
+      for (const field of current.fields) if (!fields.has(field.key)) fields.set(field.key, field);
+      unique.set(trade.templateId, { ...snapshot, fields: Array.from(fields.values()) });
+    }
     return usedTemplateIds.map((id) => unique.get(id) ?? getTemplate(id));
   }, [templateOptions, trades, usedTemplateIds]);
   const effectiveTemplateId = usedTemplateIds.length === 1

@@ -343,7 +343,17 @@ export function JournalPage() {
     const byTemplate = new Map<string, Trade[]>();
     for (const trade of sorted) byTemplate.set(trade.templateId, [...(byTemplate.get(trade.templateId) ?? []), trade]);
     const definitions = new Map(templateOptions.map((template) => [template.id, template]));
-    for (const trade of sorted) if (trade.templateSnapshot) definitions.set(trade.templateId, trade.templateSnapshot);
+    for (const trade of sorted) if (trade.templateSnapshot) {
+      const snapshot = trade.templateSnapshot;
+      const current = definitions.get(trade.templateId);
+      if (!current) {
+        definitions.set(trade.templateId, snapshot);
+        continue;
+      }
+      const fields = new Map(snapshot.fields.map((field) => [field.key, field]));
+      for (const field of current.fields) if (!fields.has(field.key)) fields.set(field.key, field);
+      definitions.set(trade.templateId, { ...snapshot, fields: Array.from(fields.values()) });
+    }
     return Array.from(byTemplate, ([templateId, sectionTrades]) => {
       const template = definitions.get(templateId) ?? sectionTrades[0]?.templateSnapshot ?? getTemplate();
       return {
@@ -640,7 +650,7 @@ function JournalTradeTable({
             <div><p className="text-fg-dim">Entry / exit</p><p className="mt-0.5 font-mono tabular-nums text-fg-muted">{trade.entry ?? '—'} / {trade.exit ?? '—'}</p></div>
             <div><p className="text-fg-dim">Duration</p><p className="mt-0.5 font-mono tabular-nums text-fg-muted">{formatDuration(trade.durationMin)}</p></div>
           </div>
-          {fields.length > 0 && <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-line pt-3 sm:grid-cols-3">{fields.map((field) => { const value = readFieldLabel(trade, field.key); return <div key={field.key} className="min-w-0"><dt className="truncate text-[10px] font-semibold uppercase tracking-wide text-fg-dim">{field.label}</dt><dd className="mt-0.5 truncate text-xs text-fg-muted" title={value}>{value}</dd></div>; })}</dl>}
+          {fields.length > 0 && <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-line pt-3 sm:grid-cols-3">{fields.map((field) => { const value = readFieldLabel(trade, field.key); return <div key={field.key} className="min-w-0"><dt className="break-words text-[10px] font-semibold uppercase tracking-wide text-fg-dim">{field.label}</dt><dd className="mt-0.5 break-words text-xs text-fg-muted" title={value}>{value}</dd></div>; })}</dl>}
         </button>
       ))}
     </div>
@@ -651,7 +661,7 @@ function JournalTradeTable({
         <col className="w-[110px]" /><col className="w-[110px]" /><col className="w-[120px]" />
         <col className="w-[120px]" /><col className="w-[140px]" /><col className="w-[120px]" />
         <col className="w-[110px]" />
-        {fields.map((field) => <col key={field.key} className="w-[185px]" />)}
+        {fields.map((field) => <col key={field.key} className="w-[200px]" />)}
         <col className="w-[58px]" />
       </colgroup>
       <THead><TR>
@@ -665,8 +675,8 @@ function JournalTradeTable({
         <TH align="center"><SortHeader label="Profit / loss (USD)" active={sortKey === 'pnl'} dir={sortDir} onClick={() => toggleSort('pnl')} align="left" /></TH>
         <TH align="center"><SortHeader label="Realized R" active={sortKey === 'r'} dir={sortDir} onClick={() => toggleSort('r')} align="left" /></TH>
         <TH align="center"><SortHeader label="Duration" active={sortKey === 'durationMin'} dir={sortDir} onClick={() => toggleSort('durationMin')} align="left" /></TH>
-        {fields.map((field) => <TH key={field.key} title={field.label} className="min-w-[185px] text-center">{field.label}</TH>)}
-        <TH aria-label="Open trade" align="center" className="sticky right-0 z-20 w-[58px] bg-bg-3" />
+        {fields.map((field) => <TH key={field.key} title={field.label} className="w-[200px] min-w-[200px] whitespace-normal text-center">{field.label}</TH>)}
+        <TH aria-label="Open trade" align="center" className="w-[58px]" />
       </TR></THead>
       <TBody>{trades.map((trade) => (
         <TR key={trade.id} interactive onClick={() => onOpen(trade.id)} className="h-[64px] odd:bg-bg-2 even:bg-bg-3/35">
@@ -681,8 +691,8 @@ function JournalTradeTable({
           <TD align="center" className="whitespace-nowrap">{trade.pnl == null ? <span className="font-mono text-sm text-fg-dim">—</span> : <span className={trade.pnl > 0 ? 'font-mono text-sm font-semibold text-win' : trade.pnl < 0 ? 'font-mono text-sm font-semibold text-loss' : 'font-mono text-sm font-semibold text-be'}>{formatSignedMoney(trade.pnl)}</span>}</TD>
           <TD align="center" className={cn('whitespace-nowrap font-mono text-sm font-semibold', trade.r > 0 ? 'text-win' : trade.r < 0 ? 'text-loss' : 'text-be')}>{formatR(trade.r)}</TD>
           <TD align="center" className="whitespace-nowrap font-mono num text-xs text-fg-muted">{formatDuration(trade.durationMin)}</TD>
-          {fields.map((field) => { const value = readFieldLabel(trade, field.key); return <TD key={field.key} align="center" className="w-[185px] min-w-[185px] max-w-[185px] truncate text-xs text-fg-muted" title={value}>{value}</TD>; })}
-          <TD align="center" className="sticky right-0 z-[5] w-[58px] bg-bg-2 group-even:bg-bg-3 group-hover:bg-bg-4"><button type="button" aria-label={`View trade ${trade.number ?? ''} details`} title="View full trade details" onClick={(event) => { event.stopPropagation(); onOpen(trade.id); }} className="rounded-md p-2 text-fg-dim transition-colors hover:bg-accent/10 hover:text-accent"><Eye className="h-4 w-4" /></button></TD>
+          {fields.map((field) => { const value = readFieldLabel(trade, field.key); return <TD key={field.key} align="center" className="w-[200px] min-w-[200px] max-w-[240px] whitespace-normal break-words text-xs text-fg-muted" title={value}>{value}</TD>; })}
+          <TD align="center" className="w-[58px]"><button type="button" aria-label={`View trade ${trade.number ?? ''} details`} title="View full trade details" onClick={(event) => { event.stopPropagation(); onOpen(trade.id); }} className="rounded-md p-2 text-fg-dim transition-colors hover:bg-accent/10 hover:text-accent"><Eye className="h-4 w-4" /></button></TD>
         </TR>
       ))}</TBody>
     </Table>
