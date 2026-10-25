@@ -3,6 +3,7 @@ import type { CategoryBreakdown, CategoryBucket } from './types';
 import type { DashboardMetric } from './metrics';
 import { getTemplate } from '@/domain/templates/registry';
 import { ACTIVE_TEMPLATE_ID } from '@/domain/templates/registry';
+import { orderTemplateFieldsForForm } from '@/domain/templates/fieldOrder';
 
 /**
  * Format a single field value as a stable string key.
@@ -126,5 +127,7 @@ export function allBreakdowns(
 ): CategoryBreakdown[] {
   const tpl = typeof templateId === 'string' ? getTemplate(templateId) : templateId;
   const scopedTrades = trades.filter((trade) => trade.templateId === tpl.id);
-  return tpl.fields.filter((f) => f.inStats).map((f) => byCategory(scopedTrades, f.key, tpl));
+  return orderTemplateFieldsForForm(tpl.fields)
+    .filter((field) => field.inStats)
+    .map((field) => byCategory(scopedTrades, field.key, tpl));
 }

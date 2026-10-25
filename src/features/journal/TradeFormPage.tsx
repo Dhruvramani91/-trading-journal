@@ -19,12 +19,12 @@ import { useFormFieldContext } from '@/components/ui/FormFieldContext';
 
 import { useTradesStore, bootTradesStore } from '@/store/tradesStore';
 import { getTemplate } from '@/domain/templates/registry';
+import { groupTemplateFields } from '@/domain/templates/fieldOrder';
 import type { TemplateDefinition } from '@/domain/models/trade';
 import { getDefaultTemplateId, listJournalTemplates } from '@/data/journalTemplateRepository';
 import type {
   Trade,
   TradeGrade,
-  TemplateField,
   TradeDirection,
   TradeResult,
 } from '@/domain/models/trade';
@@ -696,28 +696,7 @@ export function TradeFormPage() {
   }
 
   const groups = useMemo(() => {
-    const map = new Map<
-      string,
-      TemplateField[]
-    >();
-
-    for (const field of template.fields) {
-      if (field.key === 'mistake') continue;
-      if (!map.has(field.group)) {
-        map.set(
-          field.group,
-          [],
-        );
-      }
-
-      map
-        .get(field.group)!
-        .push(field);
-    }
-
-    return Array.from(
-      map.entries(),
-    );
+    return groupTemplateFields(template.fields);
   }, [template]);
 
   const photoSlotCount = Math.max(template.photoCount ?? 3, (form.photos.additional?.length ?? 0) + ((form.photos.additional?.length ?? 0) > 0 ? 3 : 0));

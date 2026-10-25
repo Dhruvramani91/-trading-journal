@@ -48,6 +48,7 @@ import { cn } from '@/lib/cn';
 import { readFieldLabel } from '@/domain/templates/resolve';
 
 import { getTemplate, listTemplates } from '@/domain/templates/registry';
+import { orderTemplateFieldsForForm } from '@/domain/templates/fieldOrder';
 import { listJournalTemplates, getDefaultTemplateId } from '@/data/journalTemplateRepository';
 
 import type { Trade, TemplateDefinition, TemplateField } from '@/domain/models/trade';
@@ -350,9 +351,9 @@ export function JournalPage() {
         definitions.set(trade.templateId, snapshot);
         continue;
       }
-      const fields = new Map(snapshot.fields.map((field) => [field.key, field]));
-      for (const field of current.fields) if (!fields.has(field.key)) fields.set(field.key, field);
-      definitions.set(trade.templateId, { ...snapshot, fields: Array.from(fields.values()) });
+      const fields = new Map(current.fields.map((field) => [field.key, field]));
+      for (const field of snapshot.fields) if (!fields.has(field.key)) fields.set(field.key, field);
+      definitions.set(trade.templateId, { ...current, fields: orderTemplateFieldsForForm(Array.from(fields.values())) });
     }
     return Array.from(byTemplate, ([templateId, sectionTrades]) => {
       const template = definitions.get(templateId) ?? sectionTrades[0]?.templateSnapshot ?? getTemplate();
@@ -360,7 +361,7 @@ export function JournalPage() {
         id: templateId,
         template,
         trades: sectionTrades,
-        fields: template.fields.filter((field) => !['quarterOpen', 'driver', 'mistake'].includes(field.key)),
+        fields: orderTemplateFieldsForForm(template.fields).filter((field) => !['quarterOpen', 'driver', 'mistake'].includes(field.key)),
       };
     });
   }, [sorted, templateOptions]);
@@ -658,9 +659,9 @@ function JournalTradeTable({
     <Table className="min-w-max table-fixed" containerClassName="journal-table-scroll max-h-[min(72vh,720px)] overflow-auto overscroll-contain">
       <colgroup>
         <col className="w-[90px]" /><col className="w-[170px]" /><col className="w-[130px]" />
-        <col className="w-[110px]" /><col className="w-[110px]" /><col className="w-[120px]" />
-        <col className="w-[120px]" /><col className="w-[140px]" /><col className="w-[120px]" />
-        <col className="w-[110px]" />
+        <col className="w-[110px]" /><col className="w-[120px]" /><col className="w-[110px]" />
+        <col className="w-[110px]" /><col className="w-[120px]" /><col className="w-[140px]" />
+        <col className="w-[120px]" /><col className="w-[110px]" />
         {fields.map((field) => <col key={field.key} className="w-[200px]" />)}
         <col className="w-[58px]" />
       </colgroup>
@@ -669,11 +670,11 @@ function JournalTradeTable({
         <TH className="text-center"><SortHeader label="Date" active={sortKey === 'openedAt'} dir={sortDir} onClick={() => toggleSort('openedAt')} /></TH>
         <TH className="text-center"><SortHeader label="Instrument" active={sortKey === 'instrument'} dir={sortDir} onClick={() => toggleSort('instrument')} /></TH>
         <TH className="text-center">Direction</TH>
-        <TH className="text-center"><SortHeader label="Result" active={sortKey === 'result'} dir={sortDir} onClick={() => toggleSort('result')} /></TH>
         <TH className="text-center"><SortHeader label="Grade" active={sortKey === 'grade'} dir={sortDir} onClick={() => toggleSort('grade')} /></TH>
+        <TH className="text-center"><SortHeader label="Result" active={sortKey === 'result'} dir={sortDir} onClick={() => toggleSort('result')} /></TH>
+        <TH align="center"><SortHeader label="Realized R" active={sortKey === 'r'} dir={sortDir} onClick={() => toggleSort('r')} align="left" /></TH>
         <TH align="center">Entry</TH><TH align="center">Exit</TH>
         <TH align="center"><SortHeader label="Profit / loss (USD)" active={sortKey === 'pnl'} dir={sortDir} onClick={() => toggleSort('pnl')} align="left" /></TH>
-        <TH align="center"><SortHeader label="Realized R" active={sortKey === 'r'} dir={sortDir} onClick={() => toggleSort('r')} align="left" /></TH>
         <TH align="center"><SortHeader label="Duration" active={sortKey === 'durationMin'} dir={sortDir} onClick={() => toggleSort('durationMin')} align="left" /></TH>
         {fields.map((field) => <TH key={field.key} title={field.label} className="w-[200px] min-w-[200px] whitespace-normal text-center">{field.label}</TH>)}
         <TH aria-label="Open trade" align="center" className="w-[58px]" />
@@ -684,12 +685,12 @@ function JournalTradeTable({
           <TD align="center" className="whitespace-nowrap text-xs text-fg-muted" title={formatDate(trade.openedAt)}>{formatDate(trade.openedAt)}</TD>
           <TD align="center"><span className="inline-flex items-center gap-2 font-semibold text-fg"><InstrumentMark instrument={trade.instrument} className="h-7 w-7" />{trade.instrument}</span></TD>
           <TD align="center"><DirectionPill direction={trade.direction} /></TD>
-          <TD align="center"><ResultPill result={trade.result} /></TD>
           <TD align="center"><TradeGradeBadge grade={trade.grade} /></TD>
+          <TD align="center"><ResultPill result={trade.result} /></TD>
+          <TD align="center" className={cn('whitespace-nowrap font-mono text-sm font-semibold', trade.r > 0 ? 'text-win' : trade.r < 0 ? 'text-loss' : 'text-be')}>{formatR(trade.r)}</TD>
           <TD align="center" className="whitespace-nowrap font-mono num text-xs text-fg-muted">{trade.entry ?? '—'}</TD>
           <TD align="center" className="whitespace-nowrap font-mono num text-xs text-fg-muted">{trade.exit ?? '—'}</TD>
           <TD align="center" className="whitespace-nowrap">{trade.pnl == null ? <span className="font-mono text-sm text-fg-dim">—</span> : <span className={trade.pnl > 0 ? 'font-mono text-sm font-semibold text-win' : trade.pnl < 0 ? 'font-mono text-sm font-semibold text-loss' : 'font-mono text-sm font-semibold text-be'}>{formatSignedMoney(trade.pnl)}</span>}</TD>
-          <TD align="center" className={cn('whitespace-nowrap font-mono text-sm font-semibold', trade.r > 0 ? 'text-win' : trade.r < 0 ? 'text-loss' : 'text-be')}>{formatR(trade.r)}</TD>
           <TD align="center" className="whitespace-nowrap font-mono num text-xs text-fg-muted">{formatDuration(trade.durationMin)}</TD>
           {fields.map((field) => { const value = readFieldLabel(trade, field.key); return <TD key={field.key} align="center" className="w-[200px] min-w-[200px] max-w-[240px] whitespace-normal break-words text-xs text-fg-muted" title={value}>{value}</TD>; })}
           <TD align="center" className="w-[58px]"><button type="button" aria-label={`View trade ${trade.number ?? ''} details`} title="View full trade details" onClick={(event) => { event.stopPropagation(); onOpen(trade.id); }} className="rounded-md p-2 text-fg-dim transition-colors hover:bg-accent/10 hover:text-accent"><Eye className="h-4 w-4" /></button></TD>
