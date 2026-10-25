@@ -1,0 +1,12 @@
+# ThePrecisionLab
+
+> ThePrecisionLab is a trading journal for recording trades, reviewing strategy performance, and building consistent execution habits.
+
+## Public pages
+
+- [Home](https://www.theprecisionlab.in/): Product overview and feature information.
+- [Sign in](https://www.theprecisionlab.in/login): Access an existing account.
+
+## Product
+
+ThePrecisionLab helps traders record trade details, classify execution quality, review statistics, and organize practice in separate backtest workspaces. Trading results and analysis are user-entered and are not financial advice.

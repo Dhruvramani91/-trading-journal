@@ -36,6 +36,9 @@ export function BrandLogo({
       <img
         src="/logo.png"
         alt={BRAND_NAME}
+        width={256}
+        height={203}
+        decoding="async"
         className={cn(
           img,
           'object-contain brand-logo-light',
@@ -45,6 +48,9 @@ export function BrandLogo({
       <img
         src="/logo-white.png"
         alt={BRAND_NAME}
+        width={256}
+        height={203}
+        decoding="async"
         className={cn(
           img,
           'object-contain brand-logo-dark',

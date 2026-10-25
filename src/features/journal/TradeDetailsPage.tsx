@@ -322,12 +322,12 @@ export function TradeDetailsPage() {
 
       <div className="space-y-4">
         <h2 className="text-sm font-semibold text-fg-muted">{template.name} strategy details</h2>
-        {templateGroups.map(([group, fields]) => <Card key={group}><CardHeader><CardTitle>{group}</CardTitle></CardHeader><CardBody><dl className="grid grid-cols-1 gap-x-6 gap-y-3.5 text-sm sm:grid-cols-2 lg:grid-cols-3">{fields.map((field) => {
+        {templateGroups.map(([group, fields]) => <Card key={group}><CardHeader><CardTitle level={3}>{group}</CardTitle></CardHeader><CardBody><dl className="grid grid-cols-1 gap-x-6 gap-y-3.5 text-sm sm:grid-cols-2 lg:grid-cols-3">{fields.map((field) => {
           const value = trade.templateData[field.key];
           return <div key={field.key}><dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">{field.label}</dt><dd className="font-medium text-fg">{value === undefined || value === null || value === '' ? '—' : readFieldLabel(trade, field.key)}</dd></div>;
         })}</dl></CardBody></Card>)}
-        <Card><CardHeader><CardTitle>Mistakes</CardTitle></CardHeader><CardBody>{trade.templateData.mistake ? <p className="text-sm text-fg">{String(trade.templateData.mistake)}</p> : <p className="text-sm text-fg-dim">No mistake recorded.</p>}</CardBody></Card>
-        <Card><CardHeader><CardTitle>Notes</CardTitle></CardHeader><CardBody>{trade.notes ? <div className="rounded-lg border border-line bg-bg-3 p-3.5 text-sm text-fg whitespace-pre-wrap">{trade.notes}</div> : <p className="text-sm text-fg-dim">No notes recorded.</p>}</CardBody></Card>
+        <Card><CardHeader><CardTitle level={3}>Mistakes</CardTitle></CardHeader><CardBody>{trade.templateData.mistake ? <p className="text-sm text-fg">{String(trade.templateData.mistake)}</p> : <p className="text-sm text-fg-dim">No mistake recorded.</p>}</CardBody></Card>
+        <Card><CardHeader><CardTitle level={3}>Notes</CardTitle></CardHeader><CardBody>{trade.notes ? <div className="rounded-lg border border-line bg-bg-3 p-3.5 text-sm text-fg whitespace-pre-wrap">{trade.notes}</div> : <p className="text-sm text-fg-dim">No notes recorded.</p>}</CardBody></Card>
       </div>
 
         {/* =======================================================
@@ -336,7 +336,7 @@ export function TradeDetailsPage() {
         {trade.photos && Object.values(trade.photos).some((value) => Array.isArray(value) ? value.some(Boolean) : Boolean(value)) && (
           <Card className="lg:col-span-3">
             <CardHeader>
-              <CardTitle>Screenshots</CardTitle>
+              <CardTitle level={3}>Screenshots</CardTitle>
             </CardHeader>
 
             <CardBody>

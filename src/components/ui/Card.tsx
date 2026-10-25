@@ -15,10 +15,13 @@ export const CardHeader = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivEleme
 );
 CardHeader.displayName = 'CardHeader';
 
-export const CardTitle = forwardRef<HTMLHeadingElement, HTMLAttributes<HTMLHeadingElement>>(
-  ({ className, ...props }, ref) => (
-    <h3 ref={ref} className={cn('text-sm font-semibold text-fg tracking-tight', className)} {...props} />
-  ),
+type CardTitleProps = HTMLAttributes<HTMLHeadingElement> & { level?: 2 | 3 | 4 };
+
+export const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(
+  ({ className, level = 2, ...props }, ref) => {
+    const Heading = `h${level}` as const;
+    return <Heading ref={ref} className={cn('text-sm font-semibold text-fg tracking-tight', className)} {...props} />;
+  },
 );
 CardTitle.displayName = 'CardTitle';
 

@@ -67,3 +67,13 @@ export function Loader({
     </div>
   );
 }
+
+/** Shared full-page loading state for route transitions and workspace gates. */
+export function PageLoader({ title = 'Loading…', className }: { title?: string; className?: string }) {
+  return (
+    <Loader
+      title={title}
+      className={cn('min-h-[calc(100dvh-11rem)] md:min-h-[calc(100dvh-7rem)]', className)}
+    />
+  );
+}

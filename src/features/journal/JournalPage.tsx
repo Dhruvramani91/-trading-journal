@@ -726,7 +726,7 @@ function MobileTradeCard({ trade, onOpen }: { trade: Trade; onOpen: () => void }
   const duration = trade.durationMin > 0 && Number.isFinite(trade.durationMin) ? formatDuration(trade.durationMin) : '—';
 
   return (
-    <button type="button" onClick={onOpen} aria-label={`Open ${trade.instrument} trade details`} className="w-full min-w-0 rounded-xl border border-line bg-bg-1 p-4 text-left transition-colors hover:border-line-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50 motion-reduce:transition-none">
+    <button type="button" onClick={onOpen} className="w-full min-w-0 rounded-xl border border-line bg-bg-1 p-4 text-left transition-colors hover:border-line-strong focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50 motion-reduce:transition-none">
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2.5 pt-1">
           <InstrumentMark instrument={trade.instrument} className="h-9 w-9 shrink-0" />

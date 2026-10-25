@@ -52,7 +52,7 @@ function Metric({
   aside?: ReactNode;
 }) {
   return (
-    <div className="flex min-h-[88px] min-w-0 items-start justify-between gap-3 rounded-xl border border-line bg-bg-1 p-4 shadow-sm transition-colors hover:border-line-strong">
+    <div className="flex min-h-[76px] min-w-0 items-start justify-between gap-3 px-1 py-1">
       <div className="min-w-0">
         <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-dim">{label}</p>
 
@@ -372,10 +372,7 @@ export function StatisticsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Statistics"
-        description="How your trades perform, broken down by category."
-      />
+      <PageHeader title="Statistics" />
 
       {availableTemplates.length > 1 && <div className="max-w-sm"><label className="mb-1.5 block text-sm font-medium text-fg-muted" htmlFor="stats-template">Strategy breakdown</label><Select id="stats-template" value={effectiveTemplateId} onChange={(event) => setSelectedTemplateId(event.target.value)}>{availableTemplates.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></div>}
 
@@ -395,7 +392,7 @@ export function StatisticsPage() {
              ========================================================= */}
 
           <Card className="overflow-hidden">
-      <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 sm:p-5 lg:grid-cols-3 xl:grid-cols-5 xl:p-6">
+      <section aria-label="Performance summary" className="grid grid-cols-2 gap-x-4 gap-y-5 p-4 sm:grid-cols-3 sm:p-5 xl:grid-cols-5 xl:gap-x-0 xl:divide-x xl:divide-line xl:p-6 [&>*]:px-3 xl:[&>*:first-child]:pl-0 xl:[&>*:last-child]:pr-0">
 
               {/* EXISTING */}
               <Metric
@@ -457,13 +454,13 @@ export function StatisticsPage() {
                 value={formatR(s.expectancy ?? 0)}
                 tone={toneOf(s.expectancy ?? 0)}
               />
-            </div>
+      </section>
 
             {/* =======================================================
                 SECONDARY METRICS
                ======================================================= */}
 
-            <div className="grid grid-cols-1 gap-3 border-t border-line bg-bg-3/40 px-4 py-4 sm:grid-cols-2 sm:px-5 lg:grid-cols-3 xl:grid-cols-5 xl:px-6">
+            <section aria-label="Additional R and P&L statistics" className="grid grid-cols-2 gap-x-4 gap-y-5 border-t border-line px-4 py-5 sm:grid-cols-3 sm:px-5 xl:grid-cols-5 xl:gap-x-0 xl:divide-x xl:divide-line xl:px-6 [&>*]:px-3 xl:[&>*:first-child]:pl-0 xl:[&>*:last-child]:pr-0">
 
               {/* EXISTING */}
               <Metric
@@ -504,13 +501,9 @@ export function StatisticsPage() {
                 value={formatR(s.maxDrawdownR ?? 0)}
                 tone="loss"
               />
-            </div>
+            </section>
 
-            {/* =======================================================
-                THIRD ROW
-               ======================================================= */}
-
-            <div className="grid grid-cols-1 gap-3 border-t border-line bg-bg-3/20 px-4 py-4 sm:grid-cols-2 sm:px-5 lg:grid-cols-3 xl:grid-cols-5 xl:px-6">
+            <section aria-label="Average performance and streaks" className="grid grid-cols-2 gap-x-4 gap-y-5 border-t border-line px-4 py-5 sm:grid-cols-3 sm:px-5 xl:grid-cols-5 xl:gap-x-0 xl:divide-x xl:divide-line xl:px-6 [&>*]:px-3 xl:[&>*:first-child]:pl-0 xl:[&>*:last-child]:pr-0">
 
               {/* NEW */}
               <Metric
@@ -558,7 +551,7 @@ export function StatisticsPage() {
                   pnlStats.averagePnl,
                 )}`}
               />
-            </div>
+            </section>
           </Card>
 
           {/* =========================================================

@@ -1,7 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
-import { Loader } from '@/components/ui/Loader';
+import { PageLoader } from '@/components/ui/Loader';
 import { useEffect, useState } from 'react';
 import { getCachedBillingEntitlement, cacheBillingEntitlement } from '@/lib/billingEntitlementCache';
 
@@ -23,7 +23,7 @@ export function RequireAuth() {
   }
 
   if (!initialized) {
-    return <Loader title="Loading your workspace…" className="min-h-screen bg-bg-0" />;
+    return <PageLoader title="Loading your workspace…" className="min-h-dvh bg-bg-0" />;
   }
 
   if (!user) {
@@ -94,7 +94,7 @@ export function RequireSubscription() {
 
   // Keep account profile and subscription management accessible for billing recovery.
   if (location.pathname === '/profile' || location.pathname === '/manage-subscription') return <Outlet />;
-  if (check.userId !== user?.id || check.loading) return <Loader title="Checking subscription…" className="min-h-screen bg-bg-0" />;
+  if (check.userId !== user?.id || check.loading) return <PageLoader title="Loading your workspace…" className="min-h-dvh bg-bg-0" />;
   if (check.error) return <Navigate to="/manage-subscription?billing=unavailable" replace />;
   if (!check.entitled) return <Navigate to="/checkout?plan=monthly" replace state={{ from: location.pathname }} />;
   return <Outlet />;

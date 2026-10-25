@@ -17,8 +17,7 @@ export function InstrumentMark({ instrument, className }: { instrument: string; 
 
   return (
     <span
-      aria-label={`${symbol} instrument`}
-      title={symbol}
+      aria-hidden="true"
       className={cn('inline-flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line bg-bg-3', className)}
     >
       {asset ? (
