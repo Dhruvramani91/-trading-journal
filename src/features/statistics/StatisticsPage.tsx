@@ -208,8 +208,11 @@ export function StatisticsPage() {
       }
       // Keep fields captured with historical trades, while exposing fields
       // added to the current template (for example Strength Switch).
-      const fields = new Map(snapshot.fields.map((field) => [field.key, field]));
-      for (const field of current.fields) if (!fields.has(field.key)) fields.set(field.key, field);
+      // Use the current template's field order so breakdown tabs follow the
+      // same sequence as the trade entry form. Keep retired historical fields
+      // after current fields so older trade data remains accessible.
+      const fields = new Map(current.fields.map((field) => [field.key, field]));
+      for (const field of snapshot.fields) if (!fields.has(field.key)) fields.set(field.key, field);
       unique.set(trade.templateId, { ...snapshot, fields: Array.from(fields.values()) });
     }
     return usedTemplateIds.map((id) => unique.get(id) ?? getTemplate(id));

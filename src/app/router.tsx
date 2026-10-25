@@ -21,6 +21,7 @@ import { AccountsPage } from '@/features/accounts/AccountsPage';
 import { UIComponentsDemoPage } from '@/features/uiComponentsDemo/UIComponentsDemoPage';
 import { RequireAuth, RequireSubscription } from './RequireAuth';
 import { CheckoutPage } from '@/features/billing/CheckoutPage';
+import { ManageSubscriptionPage } from '@/features/billing/ManageSubscriptionPage';
 import { BacktestStoragePage } from '@/features/backtests/BacktestStoragePage';
 import { FigmaTemplatesPage } from '@/features/journal/FigmaTemplatesPage';
 
@@ -59,6 +60,7 @@ export const router = createBrowserRouter([
               { path: 'backtests/:sessionId/trade/:tradeId', element: <BacktestStoragePage /> },
               { path: 'backtests/:sessionId/:section?', element: <BacktestStoragePage /> },
               { path: 'profile', element: <ProfilePage /> },
+              { path: 'manage-subscription', element: <ManageSubscriptionPage /> },
               { path: 'accounts', element: <AccountsPage /> },
               { path: 'accounts/:id', element: <AccountSummaryPage /> },
             ],

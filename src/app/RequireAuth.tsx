@@ -92,10 +92,10 @@ export function RequireSubscription() {
     };
   }, [user?.id]);
 
-  // Keep profile accessible for billing recovery and subscription management.
-  if (location.pathname === '/profile') return <Outlet />;
+  // Keep account profile and subscription management accessible for billing recovery.
+  if (location.pathname === '/profile' || location.pathname === '/manage-subscription') return <Outlet />;
   if (check.userId !== user?.id || check.loading) return <Loader title="Checking subscription…" className="min-h-screen bg-bg-0" />;
-  if (check.error) return <Navigate to="/profile?billing=unavailable" replace />;
+  if (check.error) return <Navigate to="/manage-subscription?billing=unavailable" replace />;
   if (!check.entitled) return <Navigate to="/checkout?plan=monthly" replace state={{ from: location.pathname }} />;
   return <Outlet />;
 }

@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import {
   Mail,
   ShieldCheck,
   UserRound,
   CreditCard,
   BarChart3,
-  ArrowUpRight,
   ArrowLeft,
   Camera,
   X,
@@ -23,7 +22,6 @@ import { formatR, formatPct } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { supabase } from '@/lib/supabase';
 import { subscriptionEntitled } from '@/lib/billingEntitlement';
-import { formatBillingPrice } from '@/lib/billingRegion';
 import { cacheBillingEntitlement, invalidateBillingEntitlement } from '@/lib/billingEntitlementCache';
 
 type BillingSubscription = {
@@ -43,49 +41,6 @@ type BillingSubscription = {
   trial_claimed_at: string | null;
 };
 
-function billingStatusLabel(status: string) {
-  const labels: Record<string, string> = {
-    created: 'Payment pending',
-    authenticated: 'Trial / authorization',
-    active: 'Active',
-    halted: 'Payment needs attention',
-    paused: 'Paused',
-    cancelled: 'Cancelled',
-    completed: 'Ended',
-  };
-  return labels[status] || 'Pending confirmation';
-}
-
-function billingDate(timestamp: number | null) {
-  if (!timestamp) return null;
-  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(timestamp * 1000));
-}
-
-function trialTimeRemaining(chargeAt: number, nowSeconds: number) {
-  const remainingSeconds = Math.max(0, chargeAt - nowSeconds);
-  const days = Math.floor(remainingSeconds / 86_400);
-  const hours = Math.floor((remainingSeconds % 86_400) / 3_600);
-  const minutes = Math.max(1, Math.ceil((remainingSeconds % 3_600) / 60));
-  if (days > 0) return `${days}d ${hours}h left`;
-  if (hours > 0) return `${hours}h ${minutes}m left`;
-  return `${minutes}m left`;
-}
-
-function hasTrialAccess(subscription: BillingSubscription, nowSeconds = Math.floor(Date.now() / 1000)) {
-  const claimedAtSeconds = subscription.trial_claimed_at
-    ? Math.floor(Date.parse(subscription.trial_claimed_at) / 1000)
-    : Number.NaN;
-  const trialWindowEndsAt = claimedAtSeconds + subscription.trial_days * 86_400;
-  return subscription.plan_key === 'monthly'
-    && subscription.trial_days === 7
-    && Boolean(subscription.trial_claimed_at)
-    && Number.isFinite(claimedAtSeconds)
-    && trialWindowEndsAt > nowSeconds
-    && ['active', 'authenticated', 'cancelled'].includes(subscription.status)
-    && subscription.charge_at !== null
-    && subscription.charge_at > nowSeconds;
-}
-
 function getInitials(name: string) {
   return (
     name
@@ -98,7 +53,6 @@ function getInitials(name: string) {
 }
 
 export function ProfilePage() {
-  const location = useLocation();
   const { user, updateProfile, error, clearError } = useAuthStore();
   const { trades, loaded, load } = useTradesStore();
 
@@ -114,10 +68,6 @@ export function ProfilePage() {
   const [legacyAccess, setLegacyAccess] = useState(false);
   const [billingCheckedAt, setBillingCheckedAt] = useState<number | null>(null);
   const [billingLoading, setBillingLoading] = useState(true);
-  const [billingBusy, setBillingBusy] = useState(false);
-  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
-  const [billingError, setBillingError] = useState('');
-  const [billingNotice, setBillingNotice] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const canViewTradingSnapshot = legacyAccess || (billingSubscription
     ? subscriptionEntitled(
@@ -145,7 +95,6 @@ export function ProfilePage() {
     setBillingLoading(true);
     setBillingSubscription(null);
     setLegacyAccess(false);
-    setBillingError('');
     const [{ data, error: loadError }, entitlementResult] = await Promise.all([
       supabase
       .from('billing_subscriptions')
@@ -159,7 +108,6 @@ export function ProfilePage() {
       invalidateBillingEntitlement(user.id);
       setBillingSubscription(null);
       setLegacyAccess(false);
-      setBillingError('Could not load billing details right now.');
     } else {
       cacheBillingEntitlement(user.id, entitlementResult.data === true);
       const subscriptions = (data || []) as BillingSubscription[];
@@ -177,7 +125,6 @@ export function ProfilePage() {
       ));
       setBillingSubscription(entitledSubscription || subscriptions[0] || null);
       setLegacyAccess(entitlementResult.data === true && !entitledSubscription);
-      setBillingError('');
     }
     setBillingCheckedAt(Math.floor(Date.now() / 1000));
     setBillingLoading(false);
@@ -192,51 +139,6 @@ export function ProfilePage() {
     const interval = window.setInterval(updateBillingClock, 30_000);
     return () => window.clearInterval(interval);
   }, []);
-
-  useEffect(() => {
-    if (location.hash !== '#billing-subscription') return;
-    const frame = window.requestAnimationFrame(() => {
-      document.getElementById('billing-subscription')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [location.hash]);
-
-  useEffect(() => {
-    if (!cancelConfirmOpen) return;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !billingBusy) setCancelConfirmOpen(false);
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [cancelConfirmOpen, billingBusy]);
-
-  async function cancelBillingSubscription() {
-    if (!billingSubscription || !supabase || billingBusy) return;
-    const canCancelAtCycleEnd = billingSubscription.status === 'active'
-      && billingSubscription.current_end !== null
-      && billingSubscription.current_end > Math.floor(Date.now() / 1000);
-
-    setBillingBusy(true);
-    setBillingError('');
-    setBillingNotice('');
-    const { error: cancelError } = billingSubscription.payment_provider === 'dodo'
-      ? await supabase.functions.invoke('cancel-dodo-subscription', { body: { billingSubscriptionId: billingSubscription.id } })
-      : await supabase.functions.invoke('cancel-razorpay-subscription', { body: { subscriptionId: billingSubscription.razorpay_subscription_id } });
-    if (cancelError) {
-      setBillingError(cancelError.message || 'Could not schedule cancellation. Please try again.');
-    } else {
-      setBillingNotice(['created', 'paused'].includes(billingSubscription.status)
-        ? 'The subscription was canceled. You can choose a new plan.'
-        : canCancelAtCycleEnd
-          ? 'Cancellation is scheduled. Your plan remains available through the current period.'
-          : hasTrialAccess(billingSubscription)
-            ? `Renewal is cancelled. Your trial access continues until ${billingDate(billingSubscription.charge_at) || 'the end of the original trial'}; no further charge is scheduled.`
-            : 'The subscription was canceled before its first billing period. No future subscription charge is scheduled.');
-      setCancelConfirmOpen(false);
-      await loadBilling();
-    }
-    setBillingBusy(false);
-  }
 
   useEffect(() => {
     bootTradesStore();
@@ -341,8 +243,8 @@ export function ProfilePage() {
     <div className="space-y-5 sm:space-y-6 animate-fade-in">
       <PageHeader
         title="Profile"
-        description="Your ThePrecisionLab account and plan details."
-        actions={<Button asChild variant="secondary" leftIcon={<ArrowLeft className="h-4 w-4" />}><Link to="/settings">Back to settings</Link></Button>}
+        description="Your personal account details and trading snapshot."
+        actions={<div className="flex flex-wrap gap-2"><Button asChild variant="secondary" leftIcon={<CreditCard className="h-4 w-4" />}><Link to="/manage-subscription">Manage subscription</Link></Button><Button asChild variant="secondary" leftIcon={<ArrowLeft className="h-4 w-4" />}><Link to="/settings">Back to settings</Link></Button></div>}
       />
 
       <Card className="overflow-hidden">
@@ -418,15 +320,6 @@ export function ProfilePage() {
               <span className="text-sm font-medium text-fg">{traderLevelLabel}</span>
             </div>
 
-            <div className="flex items-center justify-between gap-4 py-3">
-              <div className="flex items-center gap-3">
-                <CreditCard className="h-4 w-4 text-fg-dim shrink-0" />
-                <span className="text-sm text-fg-muted">Current plan</span>
-              </div>
-              <span className="inline-flex items-center rounded-full bg-accent/10 px-2.5 py-1 text-xs font-semibold text-accent">
-                {billingLoading ? 'Loading…' : billingError ? 'Unavailable' : legacyAccess ? 'Legacy access' : billingSubscription ? `${billingSubscription.plan_key === 'monthly' ? 'Monthly' : 'Quarterly'} plan` : 'Free Plan'}
-              </span>
-            </div>
           </CardBody>
         </Card>
 
@@ -482,151 +375,6 @@ export function ProfilePage() {
           </CardBody>
         </Card>
       </div>
-
-      <Card id="billing-subscription" className="scroll-mt-6">
-        <CardBody className="p-5 sm:p-6">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4 text-accent" />
-                <h3 className="text-sm font-bold text-fg">Billing & subscription</h3>
-              </div>
-              {billingLoading ? (
-                <p className="mt-2 text-xs text-fg-muted">Loading your subscription…</p>
-              ) : legacyAccess ? (
-                <p className="mt-2 text-xs text-fg-muted">Your account existed before subscriptions launched. Your existing workspace access is grandfathered.</p>
-              ) : billingSubscription ? (
-                <div className="mt-2 space-y-1 text-xs text-fg-muted">
-                  <p><span className="font-semibold text-fg">{billingSubscription.plan_key === 'monthly' ? (billingSubscription.currency === 'INR' ? '₹400 monthly' : '$4.50 monthly') : (billingSubscription.currency === 'INR' ? '₹1,000 quarterly' : '$10 quarterly')}</span> · {hasTrialAccess(billingSubscription, billingCheckedAt ?? 0) ? '7-day free trial' : billingStatusLabel(billingSubscription.status)}</p>
-                  {billingSubscription.cancel_at_cycle_end ? (
-                    <p>Your plan ends {billingDate(billingSubscription.current_end) || 'at the end of this billing period'}.</p>
-                  ) : billingSubscription.status === 'cancelled' && hasTrialAccess(billingSubscription, billingCheckedAt ?? 0) ? (
-                    <>
-                      <p role="timer" aria-live="polite" className="font-semibold text-accent">Trial access: {trialTimeRemaining(billingSubscription.charge_at!, billingCheckedAt ?? 0)}</p>
-                      <p>Access ends {billingDate(billingSubscription.charge_at)}. Renewal is cancelled, so no further charge is scheduled.</p>
-                    </>
-                  ) : ['cancelled', 'completed', 'expired'].includes(billingSubscription.status) ? (
-                    <p>No further billing is scheduled.</p>
-                  ) : ['active', 'authenticated'].includes(billingSubscription.status) && hasTrialAccess(billingSubscription, billingCheckedAt ?? 0) ? (
-                    <>
-                      <p role="timer" aria-live="polite" className="font-semibold text-accent">7-day trial: {trialTimeRemaining(billingSubscription.charge_at!, billingCheckedAt ?? 0)}</p>
-                      <p>Trial ends {billingDate(billingSubscription.charge_at)}. The first {formatBillingPrice(billingSubscription.currency, 'monthly')} charge is scheduled then.</p>
-                    </>
-                  ) : billingSubscription.charge_at ? (
-                    <p>Next billing date: {billingDate(billingSubscription.charge_at)}.</p>
-                  ) : billingSubscription.status === 'authenticated' ? (
-                    <p>{billingSubscription.payment_provider === 'dodo' ? 'Dodo Payments has authorized this subscription.' : 'Razorpay has authorized this subscription.'} Access is pending payment confirmation.</p>
-                  ) : null}
-                </div>
-              ) : billingError ? (
-                <p className="mt-2 text-xs text-fg-muted">Your current plan could not be verified. Try refreshing the billing details.</p>
-              ) : (
-                <p className="mt-2 text-xs text-fg-muted">You are currently using the free plan. Choose a subscription to continue.</p>
-              )}
-              {billingError && <p role="alert" className="mt-2 text-xs text-fg-muted">{billingError}</p>}
-              {billingNotice && <p role="status" className="mt-2 text-xs text-fg-muted">{billingNotice}</p>}
-            </div>
-
-            <div className="flex shrink-0 flex-wrap gap-2">
-              {billingSubscription?.status === 'created' ? (
-                billingSubscription.payment_provider === 'dodo' && billingSubscription.dodo_checkout_url ? (
-                  <Button asChild variant="secondary" size="sm"><a href={billingSubscription.dodo_checkout_url} target="_blank" rel="noreferrer">Complete checkout</a></Button>
-                ) : billingSubscription.payment_provider === 'razorpay' ? (
-                  <Button asChild variant="secondary" size="sm"><Link to={`/checkout?plan=${billingSubscription.plan_key}`}>Complete checkout</Link></Button>
-                ) : null
-              ) : billingSubscription ? (
-                <>
-                  {!billingSubscription.cancel_at_cycle_end && ['active', 'authenticated', 'paused'].includes(billingSubscription.status) && (
-                    <Button variant="secondary" size="sm" onClick={() => setCancelConfirmOpen(true)} disabled={billingBusy}>
-                      {billingBusy ? 'Working…' : billingSubscription.status === 'paused' ? 'Cancel paused plan' : 'Cancel plan'}
-                    </Button>
-                  )}
-                  {['halted', 'cancelled', 'completed', 'expired'].includes(billingSubscription.status)
-                    && !hasTrialAccess(billingSubscription, billingCheckedAt ?? 0) && (
-                    <Button asChild variant="secondary" size="sm" rightIcon={<ArrowUpRight className="h-3.5 w-3.5" />}>
-                      <Link to="/#pricing">Choose a plan</Link>
-                    </Button>
-                  )}
-                </>
-              ) : (
-                <Button asChild variant="secondary" size="sm" rightIcon={<ArrowUpRight className="h-3.5 w-3.5" />}>
-                  <Link to="/#pricing">View plans</Link>
-                </Button>
-              )}
-              {billingSubscription?.status === 'created' && billingSubscription.payment_provider === 'razorpay' && (
-                <Button variant="ghost" size="sm" onClick={() => setCancelConfirmOpen(true)} disabled={billingBusy}>
-                  {billingBusy ? 'Working…' : 'Cancel checkout'}
-                </Button>
-              )}
-              <Button variant="ghost" size="sm" onClick={() => void loadBilling()} disabled={billingLoading}>
-                Refresh
-              </Button>
-            </div>
-          </div>
-        </CardBody>
-      </Card>
-
-      {cancelConfirmOpen && billingSubscription && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 p-4 backdrop-blur-[2px]"
-          onMouseDown={(event) => {
-            if (event.currentTarget === event.target && !billingBusy) setCancelConfirmOpen(false);
-          }}
-        >
-          <div
-            className="w-full max-w-md overflow-hidden rounded-2xl border border-line bg-bg-1 shadow-2xl animate-fade-in"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="cancel-subscription-title"
-            aria-describedby="cancel-subscription-description"
-          >
-            <div className="flex items-start gap-3 border-b border-line px-5 py-4">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-bg-3 text-fg-muted">
-                <X className="h-5 w-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h3 id="cancel-subscription-title" className="text-base font-bold text-fg">
-                  {billingSubscription.status === 'created' ? 'Cancel checkout?' : 'Cancel subscription?'}
-                </h3>
-                <p id="cancel-subscription-description" className="mt-1 text-sm leading-6 text-fg-muted">
-                  {billingSubscription.status === 'created'
-                    ? 'This unfinished checkout will be cancelled. No subscription payment has been completed.'
-                    : billingSubscription.status === 'paused'
-                      ? 'This paused subscription will be cancelled now. It is not currently granting access.'
-                      : billingSubscription.status === 'active' && billingSubscription.current_end !== null && billingSubscription.current_end > Math.floor(Date.now() / 1000)
-                        ? `Your subscription will remain available until ${billingDate(billingSubscription.current_end) || 'the end of this billing period'}, then it will be cancelled.`
-                        : 'This subscription has not started a billing period yet. Cancelling now will end the trial or authorization and prevent the scheduled first charge.'}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setCancelConfirmOpen(false)}
-                disabled={billingBusy}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-fg-dim hover:bg-bg-4 hover:text-fg disabled:opacity-50"
-                aria-label="Close cancellation dialog"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            {billingError && (
-              <p role="alert" className="mx-5 mt-4 rounded-lg bg-bg-3 px-3 py-2 text-xs text-fg">
-                {billingError}
-              </p>
-            )}
-
-            <div className="flex justify-end gap-2 p-5">
-              <Button autoFocus variant="ghost" size="sm" onClick={() => setCancelConfirmOpen(false)} disabled={billingBusy}>
-                Keep subscription
-              </Button>
-              <Button variant="danger" size="sm" onClick={() => void cancelBillingSubscription()} disabled={billingBusy}>
-                {billingBusy && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                {billingBusy ? 'Cancelling…' : 'Confirm cancellation'}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {editing && (
         <div

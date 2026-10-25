@@ -8,6 +8,7 @@ const TITLES: Record<string, string> = {
   '/calendar': 'Calendar',
   '/mistakes': 'Mistakes',
   '/profile': 'Profile',
+  '/manage-subscription': 'Manage subscription',
   '/accounts': 'Accounts',
   '/backtests': 'Backtest storage',
   '/figma-templates': 'Figma templates',

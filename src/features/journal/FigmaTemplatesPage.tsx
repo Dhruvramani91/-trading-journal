@@ -1,4 +1,4 @@
-import { ExternalLink, Image, Layers } from 'lucide-react';
+import { ExternalLink, Layers } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -7,7 +7,7 @@ const FIGMA_TEMPLATE_URL = 'https://www.figma.com/community/file/164862087403823
 const FIGMA_EMBED_URL = `https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(FIGMA_TEMPLATE_URL)}`;
 
 export function FigmaTemplatesPage() {
-  return <div className="flex h-full min-h-0 flex-col gap-5 overflow-hidden">
+  return <div className="flex h-[calc(100dvh-6rem)] min-h-0 flex-col gap-5 overflow-hidden sm:h-[calc(100dvh-6.5rem)] md:h-[calc(100dvh-3rem)] lg:h-[calc(100dvh-3.5rem)]">
     <PageHeader
       title="Figma templates"
       description="Browse trade image templates and open them in Figma to make your own copy."
@@ -16,7 +16,15 @@ export function FigmaTemplatesPage() {
     <Card className="flex min-h-0 flex-1 flex-col overflow-hidden">
       <CardHeader className="shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-line bg-bg-3 text-accent"><Image className="h-5 w-5" /></span>
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-line bg-bg-3" aria-label="Figma">
+            <svg viewBox="0 0 38 57" className="h-6 w-4" aria-hidden="true" focusable="false">
+              <path d="M19 28.5c0-5.247 4.253-9.5 9.5-9.5 5.247 0 9.5 4.253 9.5 9.5 0 5.247-4.253 9.5-9.5 9.5-5.247 0-9.5-4.253-9.5-9.5z" fill="#1ABCFE" />
+              <path d="M0 47.5C0 42.253 4.253 38 9.5 38H19v9.5c0 5.247-4.253 9.5-9.5 9.5C4.253 57 0 52.747 0 47.5z" fill="#0ACF83" />
+              <path d="M19 0v19h9.5c5.247 0 9.5-4.253 9.5-9.5C38 4.253 33.747 0 28.5 0H19z" fill="#FF7262" />
+              <path d="M0 9.5C0 14.747 4.253 19 9.5 19H19V0H9.5C4.253 0 0 4.253 0 9.5z" fill="#F24E1E" />
+              <path d="M0 28.5C0 33.747 4.253 38 9.5 38H19V19H9.5C4.253 19 0 23.253 0 28.5z" fill="#A259FF" />
+            </svg>
+          </span>
           <div className="min-w-0">
             <CardTitle className="truncate">Trade image template</CardTitle>
             <p className="mt-1 text-xs text-fg-muted">Figma Community</p>
