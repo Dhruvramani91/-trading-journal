@@ -5,7 +5,9 @@ import { Button } from '@/components/ui/Button';
 import { BrandLogo } from '@/components/layout/Brand';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/store/authStore';
-import { consumeBillingPlanIntent, isBillingPlan, type BillingPlan } from '@/lib/billing';
+import { consumeBillingPlanIntent, isBillingPlan, type BillingPlan, checkBillingEntitlement } from '@/lib/billing';
+import { cacheBillingEntitlement } from '@/lib/billingEntitlementCache';
+import { needsFirstRunOnboarding } from '@/data/onboardingRepository';
 import { formatBillingPrice, useBillingRegion } from '@/lib/billingRegion';
 
 type CreateSubscriptionResponse = {
@@ -109,6 +111,18 @@ export function CheckoutPage() {
     consumeBillingPlanIntent();
   }, [plan]);
 
+  useEffect(() => {
+    if (!user?.id) return;
+    let active = true;
+    void checkBillingEntitlement(user.id).then(async (entitled) => {
+      if (active && entitled) {
+        const firstRun = await needsFirstRunOnboarding().catch(() => false);
+        if (active) navigate(firstRun ? '/onboarding' : '/dashboard', { replace: true });
+      }
+    });
+    return () => { active = false; };
+  }, [user?.id, navigate]);
+
   async function changeAccount() {
     setSwitchingAccount(true);
     setError('');
@@ -194,10 +208,12 @@ export function CheckoutPage() {
           });
           if (verifyError || !verified?.verified) {
             setError('Razorpay authorized the subscription, but we could not verify it yet. Your subscription will update after confirmation.');
+            setLoading(false);
           } else {
-            setSuccess(true);
+            if (user?.id) cacheBillingEntitlement(user.id, true);
+            const firstRun = await needsFirstRunOnboarding().catch(() => false);
+            navigate(firstRun ? '/onboarding' : '/dashboard', { replace: true });
           }
-          setLoading(false);
         },
       });
       checkout.on('payment.failed', (event) => {

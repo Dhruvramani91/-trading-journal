@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { BrandLogo } from '@/components/layout/Brand';
 import { Loader } from '@/components/ui/Loader';
 import { useAuthStore } from '@/store/authStore';
-import { checkoutPath } from '@/lib/billing';
+import { checkoutPath, checkBillingEntitlement } from '@/lib/billing';
 import { needsFirstRunOnboarding } from '@/data/onboardingRepository';
 
 export function AuthCallbackPage() {
@@ -16,11 +16,19 @@ export function AuthCallbackPage() {
       try {
         // Re-initialize auth to pick up the new session from URL fragments
         await init();
+        const user = useAuthStore.getState().user;
+        const entitled = await checkBillingEntitlement(user?.id);
+        if (!entitled) {
+          setTimeout(() => {
+            navigate(checkoutPath(), { replace: true });
+          }, 300);
+          return;
+        }
         const firstRun = await needsFirstRunOnboarding().catch(() => false);
         // Small delay to ensure session is processed
         setTimeout(() => {
-          navigate(firstRun ? '/onboarding' : checkoutPath(), { replace: true });
-        }, 500);
+          navigate(firstRun ? '/onboarding' : '/dashboard', { replace: true });
+        }, 300);
       } catch (err) {
         console.error('Auth callback error:', err);
         navigate('/login?error=callback_failed', { replace: true });

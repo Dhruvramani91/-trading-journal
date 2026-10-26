@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/Input';
 import { FormField } from '@/components/ui/Select';
 import { MIN_PASSWORD_LENGTH, useAuthStore } from '@/store/authStore';
 import { isSupabaseConfigured } from '@/lib/supabase';
-import { checkoutPath, isBillingPlan, saveBillingPlanIntent } from '@/lib/billing';
+import { checkoutPath, isBillingPlan, saveBillingPlanIntent, checkBillingEntitlement } from '@/lib/billing';
 import { needsFirstRunOnboarding } from '@/data/onboardingRepository';
 
 type AuthMode = 'login' | 'signup';
@@ -155,11 +155,21 @@ export function LoginPage() {
     }
 
     let active = true;
-    void needsFirstRunOnboarding().then((firstRun) => {
-      if (active) navigate(firstRun ? '/onboarding' : checkoutPath(), { replace: true });
-    }).catch(() => {
-      if (active) navigate(checkoutPath(), { replace: true });
-    });
+    void (async () => {
+      try {
+        const entitled = await checkBillingEntitlement(user.id);
+        if (!active) return;
+        if (!entitled) {
+          navigate(checkoutPath(), { replace: true });
+          return;
+        }
+        const firstRun = await needsFirstRunOnboarding().catch(() => false);
+        if (!active) return;
+        navigate(firstRun ? '/onboarding' : '/dashboard', { replace: true });
+      } catch {
+        if (active) navigate(checkoutPath(), { replace: true });
+      }
+    })();
     return () => { active = false; };
   }, [user, signupSuccess, signOut, clearError, navigate]);
 
@@ -266,8 +276,14 @@ export function LoginPage() {
 
     try {
       await signInWithPassword(email, password);
+      const currentUser = useAuthStore.getState().user;
+      const entitled = await checkBillingEntitlement(currentUser?.id);
+      if (!entitled) {
+        navigate(checkoutPath());
+        return;
+      }
       const firstRun = await needsFirstRunOnboarding().catch(() => false);
-      navigate(firstRun ? '/onboarding' : checkoutPath());
+      navigate(firstRun ? '/onboarding' : '/dashboard');
     } catch {
       setLocalError('Invalid email or password.');
     }

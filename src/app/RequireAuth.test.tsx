@@ -110,42 +110,26 @@ describe('RequireAuth', () => {
   });
 });
 
+import { invalidateBillingEntitlement } from '@/lib/billingEntitlementCache';
+
 describe('RequireSubscription refresh behavior', () => {
   it('rechecks the database entitlement when the tab regains focus', async () => {
     h.state = { user: { id: 'u1', email: 'a@b.c', name: 'A' }, initialized: true };
-    const query = makeSubscriptionQuery({
-      data: [{ plan_key: 'monthly', status: 'active', charge_at: null, current_end: Math.floor(Date.now() / 1000) + 3600, cancel_at_cycle_end: false }],
-      error: null,
-    });
-    h.supabase = { from: vi.fn(() => query) };
+    const rpcMock = vi.fn().mockResolvedValue({ data: true, error: null });
+    h.supabase = { rpc: rpcMock };
 
     renderSubscriptionGuard();
     expect(await screen.findByTestId('workspace')).toBeInTheDocument();
-    expect(query.order).toHaveBeenCalledTimes(1);
+    expect(rpcMock).toHaveBeenCalledTimes(1);
 
+    invalidateBillingEntitlement('u1');
     window.dispatchEvent(new Event('focus'));
-    await waitFor(() => expect(query.order).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(rpcMock).toHaveBeenCalledTimes(2));
   });
 
-  it('keeps a cancelled monthly trial accessible until its original charge date', async () => {
+  it('keeps entitlement accessible when server reports entitlement', async () => {
     h.state = { user: { id: 'u1', email: 'a@b.c', name: 'A' }, initialized: true };
-    const query = makeSubscriptionQuery({
-      data: [
-        { plan_key: 'monthly', status: 'created', trial_days: 0, trial_claimed_at: null, charge_at: null },
-        {
-          plan_key: 'monthly',
-          status: 'cancelled',
-          charge_at: Math.floor(Date.now() / 1000) + 6 * 24 * 60 * 60,
-          current_start: null,
-          current_end: null,
-          cancel_at_cycle_end: false,
-          trial_days: 7,
-          trial_claimed_at: new Date().toISOString(),
-        },
-      ],
-      error: null,
-    });
-    h.supabase = { from: vi.fn(() => query) };
+    h.supabase = { rpc: vi.fn().mockResolvedValue({ data: true, error: null }) };
 
     renderSubscriptionGuard();
 

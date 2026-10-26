@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { needsFirstRunOnboarding } from '@/data/onboardingRepository';
 import {
   Mail,
   ShieldCheck,
@@ -53,6 +54,7 @@ function getInitials(name: string) {
 }
 
 export function ProfilePage() {
+  const navigate = useNavigate();
   const { user, updateProfile, error, clearError } = useAuthStore();
   const { trades, loaded, load } = useTradesStore();
 
@@ -125,10 +127,16 @@ export function ProfilePage() {
       ));
       setBillingSubscription(entitledSubscription || subscriptions[0] || null);
       setLegacyAccess(entitlementResult.data === true && !entitledSubscription);
+
+      if (window.location.search.includes('checkout=dodo') && entitlementResult.data === true) {
+        void needsFirstRunOnboarding().then((firstRun) => {
+          if (firstRun) navigate('/onboarding', { replace: true });
+        });
+      }
     }
     setBillingCheckedAt(Math.floor(Date.now() / 1000));
     setBillingLoading(false);
-  }, [user]);
+  }, [user, navigate]);
 
   useEffect(() => {
     void loadBilling();

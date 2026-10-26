@@ -55,12 +55,12 @@ describe('workspace navigation', () => {
       </MemoryRouter>,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Open navigation menu' }));
-    expect(screen.getByRole('navigation', { name: 'Main navigation' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('navigation', { name: 'Main navigation' }).querySelector('a[href="/accounts"]')!);
+    fireEvent.click(screen.getByRole('button', { name: 'More navigation' }));
+    expect(screen.getByRole('navigation', { name: 'More navigation' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('navigation', { name: 'More navigation' }).querySelector('a[href="/accounts"]')!);
 
     expect(screen.getByLabelText('Current route')).toHaveTextContent('/accounts');
-    expect(screen.queryByRole('navigation', { name: 'Main navigation' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'More navigation' })).not.toBeInTheDocument();
   });
 
   it('toggles the global theme and updates the accessible control label', () => {

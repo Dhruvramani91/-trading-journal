@@ -42,10 +42,10 @@ export const router = createBrowserRouter([
   {
     element: <RequireAuth />,
     children: [
-      { path: 'onboarding', element: <FirstRunOnboardingPage /> },
       {
         element: <RequireSubscription />,
         children: [
+          { path: 'onboarding', element: <FirstRunOnboardingPage /> },
           {
             element: <RequireOnboarding />,
             children: [

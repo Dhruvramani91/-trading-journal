@@ -1,3 +1,6 @@
+import { supabase } from '@/lib/supabase';
+import { getCachedBillingEntitlement, cacheBillingEntitlement } from '@/lib/billingEntitlementCache';
+
 export type BillingPlan = 'monthly' | 'quarterly';
 
 const PLAN_INTENT_KEY = 'theprecisionlab:checkout-plan';
@@ -34,5 +37,20 @@ export function consumeBillingPlanIntent(): BillingPlan | null {
 }
 
 export function checkoutPath(plan: BillingPlan | null = getBillingPlanIntent()) {
-  return plan ? `/checkout?plan=${plan}` : '/dashboard';
+  return `/checkout?plan=${plan ?? 'monthly'}`;
+}
+
+export async function checkBillingEntitlement(userId?: string | null): Promise<boolean> {
+  if (!userId || !supabase) return false;
+  const cached = getCachedBillingEntitlement(userId);
+  if (cached !== null) return cached.entitled;
+  try {
+    const { data, error } = await supabase.rpc('current_user_has_billing_entitlement');
+    if (error) return false;
+    const entitled = data === true;
+    cacheBillingEntitlement(userId, entitled);
+    return entitled;
+  } catch {
+    return false;
+  }
 }
