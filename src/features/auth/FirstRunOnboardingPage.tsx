@@ -1,20 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  AlertCircle,
   ArrowLeft,
   ArrowRight,
+  Camera,
   Check,
   CircleHelp,
-  Layers3,
-  NotebookPen,
-  Camera,
-  X,
   Compass,
-  TrendingUp,
-  Sparkles,
-  ShieldCheck,
-  AlertCircle,
+  Layers3,
   LoaderCircle,
+  NotebookPen,
+  ShieldCheck,
+  Sparkles,
+  TrendingUp,
+  X,
 } from 'lucide-react';
 import { BrandLogo } from '@/components/layout/Brand';
 import { Button } from '@/components/ui/Button';
@@ -49,21 +49,21 @@ const TRADER_LEVELS: Array<{
     id: 'beginner',
     title: 'Beginner',
     badge: 'Building Foundations',
-    description: 'Learning market mechanics, risk discipline, and finding a consistent approach.',
+    description: 'I’m learning the basics and building good habits.',
     icon: Compass,
   },
   {
     id: 'intermediate',
     title: 'Intermediate',
     badge: 'Executing System',
-    description: 'Trading a defined edge and working on consistency, execution quality, and patience.',
+    description: 'I have a routine and I’m working on consistency.',
     icon: TrendingUp,
   },
   {
     id: 'advanced',
     title: 'Advanced',
     badge: 'Refining Edge',
-    description: 'Optimizing capital allocation, trade psychology, sizing, and advanced statistics.',
+    description: 'I’m refining a well-established approach.',
     icon: Sparkles,
   },
 ];
@@ -83,13 +83,12 @@ function getInitials(name?: string): string {
 export function FirstRunOnboardingPage() {
   const navigate = useNavigate();
   const { user, updateProfile } = useAuthStore();
-
   const [step, setStep] = useState<OnboardingStep>('profile');
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  // Step 1: Profile state
+  // Profile state
   const [name, setName] = useState(user?.name || '');
   const [traderLevel, setTraderLevel] = useState<TraderLevel>(user?.traderLevel || 'beginner');
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
@@ -97,11 +96,10 @@ export function FirstRunOnboardingPage() {
   const [nameError, setNameError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Step 2: Strategy template state
+  // Strategy template state
   const [templates, setTemplates] = useState<TemplateDefinition[]>([]);
   const [selectedId, setSelectedId] = useState('default-ict-2026');
 
-  // Check onboarding eligibility and load available templates
   async function loadInitialData() {
     setLoading(true);
     setError('');
@@ -134,7 +132,6 @@ export function FirstRunOnboardingPage() {
     void loadInitialData();
   }, []);
 
-  // Sync state if user hydrates
   useEffect(() => {
     if (user) {
       if (!name && user.name) setName(user.name);
@@ -143,12 +140,9 @@ export function FirstRunOnboardingPage() {
     }
   }, [user]);
 
-  // Clean up object URLs on unmount
   useEffect(() => {
     return () => {
-      if (avatarPreview?.startsWith('blob:')) {
-        URL.revokeObjectURL(avatarPreview);
-      }
+      if (avatarPreview?.startsWith('blob:')) URL.revokeObjectURL(avatarPreview);
     };
   }, [avatarPreview]);
 
@@ -157,8 +151,8 @@ export function FirstRunOnboardingPage() {
     [templates, selectedId]
   );
 
-  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+  function handleAvatarChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
@@ -166,36 +160,30 @@ export function FirstRunOnboardingPage() {
       return;
     }
 
-    if (avatarPreview?.startsWith('blob:')) {
-      URL.revokeObjectURL(avatarPreview);
-    }
-
+    if (avatarPreview?.startsWith('blob:')) URL.revokeObjectURL(avatarPreview);
     setAvatarFile(file);
     setAvatarPreview(URL.createObjectURL(file));
     setError('');
   }
 
   function handleRemoveAvatar() {
-    if (avatarPreview?.startsWith('blob:')) {
-      URL.revokeObjectURL(avatarPreview);
-    }
+    if (avatarPreview?.startsWith('blob:')) URL.revokeObjectURL(avatarPreview);
     setAvatarFile(null);
     setAvatarPreview(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
-  // Handle Step 1 Profile save & advance
-  async function handleProfileSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleProfileSubmit(event: React.FormEvent) {
+    event.preventDefault();
     const cleanName = name.trim();
     if (!cleanName) {
       setNameError('Please enter your name to continue.');
       return;
     }
+
     setNameError('');
     setError('');
     setBusy(true);
-
     try {
       await updateProfile(cleanName, avatarFile, traderLevel);
       setStep('strategy');
@@ -210,7 +198,6 @@ export function FirstRunOnboardingPage() {
     }
   }
 
-  // Handle Strategy setup completion with chosen template
   async function handleUseTemplate(templateId: string) {
     setBusy(true);
     setError('');
@@ -220,15 +207,12 @@ export function FirstRunOnboardingPage() {
       navigate('/journal/new', { replace: true });
     } catch (cause) {
       setError(
-        cause instanceof Error
-          ? cause.message
-          : 'Could not set default template. Please try again.'
+        cause instanceof Error ? cause.message : 'Could not set default template. Please try again.'
       );
       setBusy(false);
     }
   }
 
-  // Handle Custom template creation during onboarding
   async function handleCreateCustomTemplate() {
     setBusy(true);
     setError('');
@@ -246,15 +230,12 @@ export function FirstRunOnboardingPage() {
       navigate('/settings/templates', { replace: true });
     } catch (cause) {
       setError(
-        cause instanceof Error
-          ? cause.message
-          : 'Could not create your template. Please try again.'
+        cause instanceof Error ? cause.message : 'Could not create your template. Please try again.'
       );
       setBusy(false);
     }
   }
 
-  // Handle safe Strategy skip
   async function handleSkipStrategy() {
     setBusy(true);
     setError('');
@@ -262,11 +243,7 @@ export function FirstRunOnboardingPage() {
       await completeFirstRunOnboarding();
       navigate('/dashboard', { replace: true });
     } catch (cause) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : 'Could not finish setup. Please try again.'
-      );
+      setError(cause instanceof Error ? cause.message : 'Could not finish setup. Please try again.');
       setBusy(false);
     }
   }
@@ -275,316 +252,236 @@ export function FirstRunOnboardingPage() {
     return <PageLoader title="Preparing your workspace…" className="min-h-dvh bg-bg-0" />;
   }
 
+  const activeLevel = TRADER_LEVELS.find((level) => level.id === traderLevel);
+
   return (
-    <main className="min-h-dvh bg-bg-0 px-4 py-6 text-fg sm:px-8 sm:py-8">
-      <div className="mx-auto flex min-h-[calc(100dvh-3rem)] w-full max-w-5xl flex-col">
-        {/* Top Header */}
-        <header className="flex items-center justify-between gap-4 border-b border-line pb-5">
-          <BrandLogo size="sm" />
-
-          {/* Stepper progress indicator */}
-          <nav aria-label="Onboarding progress" className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <span
-                className={`inline-flex h-7 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-colors ${
-                  step === 'profile'
-                    ? 'bg-fg text-bg-0 shadow-sm'
-                    : 'bg-accent/15 text-accent'
-                }`}
-              >
-                {step === 'strategy' ? <Check className="h-3.5 w-3.5" /> : '1'}
-                <span>Profile</span>
-              </span>
-
-              <span className="h-0.5 w-4 bg-line-strong" aria-hidden="true" />
-
-              <span
-                className={`inline-flex h-7 items-center gap-1.5 rounded-full px-3 text-xs font-semibold transition-colors ${
-                  step === 'strategy'
-                    ? 'bg-fg text-bg-0 shadow-sm'
-                    : 'bg-bg-3 text-fg-dim'
-                }`}
-              >
-                2 Strategy
-              </span>
+    <main className="min-h-dvh bg-bg-0 px-4 py-5 text-fg sm:px-8 sm:py-7">
+      <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-6xl flex-col sm:min-h-[calc(100dvh-3.5rem)]">
+        <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4 border-b border-line pb-5">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <BrandLogo size="md" />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold tracking-tight text-fg">ThePrecisionLab</p>
+              <p className="text-xs text-fg-muted">A journal for deliberate trading</p>
             </div>
+          </div>
 
+          <div className="flex items-center gap-3 sm:gap-5">
+            <nav aria-label="Onboarding progress" className="flex items-center gap-2 sm:gap-3">
+              <div
+                aria-current={step === 'profile' ? 'step' : undefined}
+                aria-label={`Step 1 of 2: Profile${step === 'strategy' ? ', complete' : ', current'}`}
+                className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium sm:px-3 ${
+                  step === 'profile' ? 'bg-bg-3 text-fg' : 'text-fg-muted'
+                }`}
+              >
+                <span className={`grid h-5 w-5 place-items-center rounded-full text-2xs ${step === 'profile' ? 'bg-accent text-accent-fg' : 'bg-bg-3 text-fg-muted'}`}>
+                  {step === 'strategy' ? <Check className="h-3 w-3" /> : '1'}
+                </span>
+                <span className="hidden sm:inline">Profile</span>
+              </div>
+              <span aria-hidden="true" className="h-px w-4 bg-line-strong sm:w-8" />
+              <div
+                aria-current={step === 'strategy' ? 'step' : undefined}
+                aria-label={`Step 2 of 2: Strategy${step === 'strategy' ? ', current' : ''}`}
+                className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium sm:px-3 ${
+                  step === 'strategy' ? 'bg-bg-3 text-fg' : 'text-fg-muted'
+                }`}
+              >
+                <span className={`grid h-5 w-5 place-items-center rounded-full text-2xs ${step === 'strategy' ? 'bg-accent text-accent-fg' : 'bg-bg-3 text-fg-muted'}`}>
+                  2
+                </span>
+                <span className="hidden sm:inline">Strategy</span>
+              </div>
+            </nav>
             <ThemeToggle />
-          </nav>
+          </div>
         </header>
 
-        {/* Global Error Banner if any */}
         {error && (
-          <div
-            role="alert"
-            className="mt-6 flex items-start gap-3 rounded-xl border border-loss/30 bg-loss/10 p-4 text-sm text-loss-text"
-          >
-            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
-            <div className="flex-1">
-              <p className="font-medium">{error}</p>
-            </div>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => setError('')}
-              className="text-xs"
-            >
+          <div role="alert" className="mt-5 flex items-start gap-3 rounded-xl border border-loss/30 bg-loss/10 p-4 text-sm text-loss-text">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <p className="min-w-0 flex-1 font-medium">{error}</p>
+            <Button type="button" variant="ghost" size="sm" onClick={() => setError('')} className="shrink-0 text-xs">
               Dismiss
             </Button>
           </div>
         )}
 
-        {/* Two-Column Layout */}
-        <div className="grid flex-1 items-start gap-10 py-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)] lg:gap-14">
-          {/* Main Action Form Area */}
-          <section className="min-w-0 max-w-2xl">
+        <div className="grid flex-1 items-start gap-7 py-7 sm:py-9 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_350px]">
+          <section className="min-w-0">
             {step === 'profile' ? (
-              /* ================================================= */
-              /* STEP 1: PROFILE SETUP                             */
-              /* ================================================= */
-              <div>
-                <div className="mb-2 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent">
-                  <span>Step 1 of 2</span>
-                  <span>·</span>
-                  <span>Personalize your account</span>
+              <>
+                <div className="max-w-2xl">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">Your profile <span className="px-1 text-line-strong">/</span> 01 of 02</p>
+                  <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-tight text-fg sm:text-[2.15rem]">
+                    Set up your trader profile.
+                  </h1>
+                  <p className="mt-2 max-w-xl text-sm leading-6 text-fg-muted">
+                    A couple of details make your journal feel like yours. You can update them anytime.
+                  </p>
                 </div>
-                <h1 className="text-3xl font-semibold leading-tight tracking-tight text-fg sm:text-4xl">
-                  Set up your trader profile.
-                </h1>
-                <p className="mt-2 text-sm leading-6 text-fg-muted">
-                  Your name and experience level shape your journal review prompts and analytics insights.
-                </p>
 
-                <form onSubmit={handleProfileSubmit} className="mt-8 space-y-7">
-                  {/* Name Input */}
-                  <div>
-                    <label
-                      htmlFor="onboarding-name"
-                      className="block text-sm font-semibold text-fg"
-                    >
-                      Your name <span className="text-accent">*</span>
-                    </label>
-                    <div className="mt-2">
+                <Card className="mt-6 overflow-hidden rounded-2xl bg-bg-1 shadow-card">
+                  <form onSubmit={handleProfileSubmit} className="space-y-7 p-5 sm:p-7">
+                    <div>
+                      <label htmlFor="onboarding-name" className="block text-sm font-semibold text-fg">
+                        Your name <span className="text-fg-muted" aria-hidden="true">*</span>
+                      </label>
+                      <p id="onboarding-name-hint" className="mt-1 text-xs text-fg-muted">This is how your journal will greet you.</p>
                       <Input
                         id="onboarding-name"
                         type="text"
                         placeholder="e.g. Alex Rivera"
                         value={name}
-                        onChange={(e) => {
-                          setName(e.target.value);
+                        onChange={(event) => {
+                          setName(event.target.value);
                           if (nameError) setNameError('');
                         }}
-                        error={nameError}
-                        className="h-11"
+                        invalid={Boolean(nameError)}
+                        aria-describedby={nameError ? 'onboarding-name-hint onboarding-name-error' : 'onboarding-name-hint'}
+                        className="mt-3 h-11 max-w-xl rounded-xl"
                         autoFocus
+                        required
                       />
+                      {nameError && (
+                        <p id="onboarding-name-error" role="alert" className="mt-1.5 text-xs text-loss-text">{nameError}</p>
+                      )}
                     </div>
-                    {nameError && (
-                      <p className="mt-1.5 text-xs text-loss-text">{nameError}</p>
-                    )}
-                  </div>
 
-                  {/* Experience Level */}
-                  <fieldset>
-                    <legend className="text-sm font-semibold text-fg">
-                      Trading experience level
-                    </legend>
-                    <p className="mt-1 text-xs text-fg-muted">
-                      Select where you are in your trading journey today.
-                    </p>
-
-                    <div className="mt-3.5 grid gap-3 sm:grid-cols-3" role="radiogroup">
-                      {TRADER_LEVELS.map((level) => {
-                        const selected = traderLevel === level.id;
-                        const Icon = level.icon;
-                        return (
-                          <label
-                            key={level.id}
-                            className={`relative flex cursor-pointer flex-col justify-between rounded-xl border p-4 transition-all focus-within:ring-2 focus-within:ring-focus ${
-                              selected
-                                ? 'border-line-strong bg-primary-soft shadow-sm ring-1 ring-line-strong'
-                                : 'border-line bg-bg-1 hover:border-line-strong hover:bg-bg-3/60'
-                            }`}
-                          >
-                            <input
-                              type="radio"
-                              name="trader-experience-level"
-                              value={level.id}
-                              checked={selected}
-                              onChange={() => setTraderLevel(level.id)}
-                              className="sr-only"
-                            />
-                            <div>
-                              <div className="flex items-center justify-between">
-                                <span
-                                  className={`flex h-8 w-8 items-center justify-center rounded-lg ${
-                                    selected
-                                      ? 'bg-fg text-bg-0'
-                                      : 'bg-bg-3 text-fg-muted'
-                                  }`}
-                                >
-                                  <Icon className="h-4 w-4" />
+                    <fieldset>
+                      <legend className="text-sm font-semibold text-fg">Trading experience</legend>
+                      <p className="mt-1 text-xs text-fg-muted">Choose what feels closest. There’s no wrong answer.</p>
+                      <div className="mt-3 grid gap-2.5 sm:grid-cols-3" role="radiogroup" aria-label="Trading experience level">
+                        {TRADER_LEVELS.map((level) => {
+                          const selected = traderLevel === level.id;
+                          const Icon = level.icon;
+                          return (
+                            <label
+                              key={level.id}
+                              className={`relative flex min-h-[142px] cursor-pointer flex-col rounded-xl border p-4 transition-colors motion-reduce:transition-none focus-within:ring-2 focus-within:ring-focus focus-within:ring-offset-2 focus-within:ring-offset-bg-1 ${
+                                selected
+                                  ? 'border-line-strong bg-bg-2 ring-1 ring-line-strong'
+                                  : 'border-line bg-bg-2 hover:border-line-strong hover:bg-bg-3'
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                name="trader-experience-level"
+                                value={level.id}
+                                checked={selected}
+                                onChange={() => setTraderLevel(level.id)}
+                                className="sr-only"
+                              />
+                              <span className="flex items-center justify-between">
+                                <span className={`grid h-8 w-8 place-items-center rounded-lg ${selected ? 'bg-accent text-accent-fg' : 'bg-bg-3 text-fg-muted'}`}>
+                                  <Icon className="h-4 w-4" aria-hidden="true" />
                                 </span>
-                                {selected && (
-                                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-fg text-bg-0">
-                                    <Check className="h-3 w-3 stroke-[3]" />
-                                  </span>
-                                )}
-                              </div>
-                              <h3 className="mt-3 text-sm font-semibold text-fg">
-                                {level.title}
-                              </h3>
-                              <p className="mt-1 text-xs leading-relaxed text-fg-muted">
-                                {level.description}
-                              </p>
-                            </div>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </fieldset>
+                                <span className={`grid h-5 w-5 place-items-center rounded-full border ${selected ? 'border-fg bg-fg text-bg-0' : 'border-line-strong text-transparent'}`}>
+                                  {selected && <Check className="h-3 w-3 stroke-[2.5]" aria-hidden="true" />}
+                                </span>
+                              </span>
+                              <span className="mt-3 text-sm font-semibold text-fg">{level.title}</span>
+                              <span className="mt-1 text-xs leading-relaxed text-fg-muted">{level.description}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </fieldset>
 
-                  {/* Optional Avatar / Photo */}
-                  <div className="rounded-2xl border border-line bg-bg-1 p-5">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="relative">
+                    <div className="flex flex-col gap-4 rounded-xl border border-line bg-bg-2 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
+                      <div className="flex min-w-0 items-center gap-3.5">
+                        <div className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full border border-line bg-bg-3 text-sm font-semibold text-fg-muted">
                           {avatarPreview ? (
-                            <img
-                              src={avatarPreview}
-                              alt="Avatar preview"
-                              className="h-16 w-16 rounded-2xl border border-line object-cover shadow-sm"
-                            />
+                            <img src={avatarPreview} alt="Avatar preview" className="h-full w-full object-cover" />
                           ) : (
-                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-accent/20 bg-accent/10 text-xl font-bold text-accent">
-                              {getInitials(name)}
-                            </div>
+                            <span aria-label="Initials preview">{getInitials(name)}</span>
                           )}
                         </div>
-
-                        <div>
-                          <p className="text-sm font-semibold text-fg">
-                            Profile avatar <span className="text-xs font-normal text-fg-dim">(optional)</span>
-                          </p>
-                          <p className="mt-0.5 text-xs text-fg-muted">
-                            Personalize your journal or skip this step for later.
-                          </p>
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-fg">Profile photo <span className="font-normal text-fg-muted">(optional)</span></p>
+                          <p className="mt-1 text-xs leading-5 text-fg-muted">Add a photo, or leave it for later.</p>
                         </div>
                       </div>
-
-                      <div className="flex items-center gap-2">
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/*"
-                          onChange={handleAvatarChange}
-                          className="hidden"
-                          aria-label="Upload profile avatar"
-                        />
+                      <div className="flex shrink-0 items-center gap-2">
+                        <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" aria-label="Upload profile avatar" />
                         <Button
                           type="button"
                           variant="secondary"
                           size="sm"
                           onClick={() => fileInputRef.current?.click()}
-                          leftIcon={<Camera className="h-3.5 w-3.5" />}
+                          leftIcon={<Camera className="h-3.5 w-3.5" aria-hidden="true" />}
+                          className="motion-reduce:transition-none"
                         >
-                          {avatarPreview ? 'Change' : 'Upload photo'}
+                          {avatarPreview ? 'Change photo' : 'Upload photo'}
                         </Button>
-
                         {avatarPreview && (
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={handleRemoveAvatar}
-                            leftIcon={<X className="h-3.5 w-3.5" />}
-                          >
-                            Skip photo
+                          <Button type="button" variant="ghost" size="sm" onClick={handleRemoveAvatar} leftIcon={<X className="h-3.5 w-3.5" aria-hidden="true" />}>
+                            Remove
                           </Button>
                         )}
                       </div>
                     </div>
-                  </div>
 
-                  {/* Continue Button */}
-                  <div className="pt-2">
-                    <Button
-                      type="submit"
-                      variant="primary"
-                      size="lg"
-                      disabled={busy}
-                      rightIcon={
-                        busy ? (
-                          <LoaderCircle className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <ArrowRight className="h-4 w-4" />
-                        )
-                      }
-                      className="w-full sm:w-auto"
-                    >
-                      {busy ? 'Saving profile…' : 'Continue to strategy'}
-                    </Button>
-                  </div>
-                </form>
-              </div>
+                    <div className="flex flex-col gap-3 border-t border-line pt-5 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="text-xs leading-5 text-fg-muted">Your profile details stay private to your account.</p>
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        size="lg"
+                        disabled={busy}
+                        rightIcon={busy ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <ArrowRight className="h-4 w-4" aria-hidden="true" />}
+                        className="w-full motion-reduce:transition-none sm:w-auto"
+                      >
+                        {busy ? 'Saving profile…' : 'Continue to strategy'}
+                      </Button>
+                    </div>
+                  </form>
+                </Card>
+              </>
             ) : (
-              /* ================================================= */
-              /* STEP 2: STRATEGY SETUP                            */
-              /* ================================================= */
-              <div>
-                <div className="flex items-center justify-between">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setStep('profile');
-                      setError('');
-                    }}
-                    className="inline-flex min-h-9 items-center gap-2 rounded-lg text-sm font-medium text-fg-muted transition-colors hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
-                    disabled={busy}
-                  >
-                    <ArrowLeft className="h-4 w-4" /> Back to profile
-                  </button>
-
+              <>
+                <div className="flex items-center justify-between gap-3">
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() => void handleSkipStrategy()}
+                    onClick={() => {
+                      setStep('profile');
+                      setError('');
+                    }}
                     disabled={busy}
-                    className="text-fg-muted hover:text-fg"
+                    leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden="true" />}
+                    className="-ml-2 motion-reduce:transition-none"
                   >
+                    Back to profile
+                  </Button>
+                  <Button type="button" variant="secondary" size="sm" onClick={() => void handleSkipStrategy()} disabled={busy} className="motion-reduce:transition-none">
                     Skip for now
                   </Button>
                 </div>
 
-                <div className="mt-4">
-                  <div className="mb-2 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-accent">
-                    <span>Step 2 of 2</span>
-                    <span>·</span>
-                    <span>Journal Strategy</span>
-                  </div>
-                  <h1 className="text-3xl font-semibold leading-tight tracking-tight text-fg sm:text-4xl">
+                <div className="mt-5 max-w-2xl">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">Strategy setup <span className="px-1 text-line-strong">/</span> 02 of 02</p>
+                  <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-tight text-fg sm:text-[2.15rem]">
                     Choose your starting template.
                   </h1>
-                  <p className="mt-2 text-sm leading-6 text-fg-muted">
-                    This shapes your trade logging form and metrics breakdown. You can switch templates or customize fields anytime in Settings.
+                  <p className="mt-2 max-w-xl text-sm leading-6 text-fg-muted">
+                    Templates shape the details you record with each trade. Pick one to start, make your own, or skip this and decide later in Settings.
                   </p>
                 </div>
 
-                {/* Templates list */}
-                <fieldset className="mt-7 space-y-3" aria-label="Available strategy templates">
-                  {templates.map((template) => {
+                <fieldset className="mt-6 space-y-3" aria-label="Available strategy templates">
+                  {templates.length > 0 ? templates.map((template) => {
                     const selected = selectedId === template.id;
                     const statsCount = template.fields.filter((field) => field.inStats).length;
-
                     return (
                       <label
                         key={template.id}
-                        className={`flex cursor-pointer items-start gap-4 rounded-2xl border p-4 transition-all focus-within:ring-2 focus-within:ring-focus ${
+                        className={`flex cursor-pointer items-start gap-3.5 rounded-xl border p-4 transition-colors motion-reduce:transition-none focus-within:ring-2 focus-within:ring-focus focus-within:ring-offset-2 focus-within:ring-offset-bg-0 sm:p-5 ${
                           selected
-                            ? 'border-line-strong bg-primary-soft shadow-sm ring-1 ring-line-strong'
-                            : 'border-line bg-bg-1 hover:border-line-strong hover:bg-bg-3/60'
+                            ? 'border-line-strong bg-bg-1 ring-1 ring-line-strong'
+                            : 'border-line bg-bg-1 hover:border-line-strong hover:bg-bg-3'
                         }`}
                       >
                         <input
@@ -595,223 +492,138 @@ export function FirstRunOnboardingPage() {
                           onChange={() => setSelectedId(template.id)}
                           className="sr-only"
                         />
-
-                        <span
-                          aria-hidden="true"
-                          className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition-colors ${
-                            selected
-                              ? 'border-fg bg-fg text-bg-0'
-                              : 'border-line-strong bg-bg-0'
-                          }`}
-                        >
-                          {selected && <Check className="h-3.5 w-3.5 stroke-[2.5]" />}
+                        <span aria-hidden="true" className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border ${selected ? 'border-fg bg-fg text-bg-0' : 'border-line-strong bg-bg-2 text-transparent'}`}>
+                          {selected && <Check className="h-3 w-3 stroke-[2.5]" />}
                         </span>
-
-                        <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <span className="font-semibold text-fg">{template.name}</span>
-                            <span className="inline-flex items-center rounded-md bg-bg-3 px-2 py-0.5 text-2xs font-medium text-fg-muted">
-                              {template.fields.length} strategy fields
+                        <span className="min-w-0 flex-1">
+                          <span className="flex flex-wrap items-start justify-between gap-2">
+                            <span className="text-sm font-semibold text-fg">{template.name}</span>
+                            <span className="rounded-md border border-line bg-bg-2 px-2 py-1 text-2xs font-medium text-fg-muted">
+                              {template.fields.length} {template.fields.length === 1 ? 'prompt' : 'prompts'}
                             </span>
-                          </div>
-
-                          <p className="mt-1 text-sm leading-relaxed text-fg-muted">
-                            {template.description}
-                          </p>
-
-                          <div className="mt-2.5 flex flex-wrap gap-1.5">
-                            {template.fields.slice(0, 4).map((f) => (
-                              <span
-                                key={f.key}
-                                className="inline-block rounded-md border border-line bg-bg-2 px-2 py-0.5 text-2xs text-fg-dim"
-                              >
-                                {f.label}
-                              </span>
-                            ))}
-                            {template.fields.length > 4 && (
-                              <span className="inline-block px-1 py-0.5 text-2xs text-fg-dim">
-                                +{template.fields.length - 4} more
-                              </span>
-                            )}
-                            {statsCount > 0 && (
-                              <span className="ml-auto inline-block text-2xs font-medium text-accent">
-                                {statsCount} analytics breakdowns
-                              </span>
-                            )}
-                          </div>
-                        </div>
+                          </span>
+                          <span className="mt-1 block text-sm leading-relaxed text-fg-muted">{template.description}</span>
+                          {template.fields.length > 0 && (
+                            <span className="mt-3 flex flex-wrap gap-1.5">
+                              {template.fields.slice(0, 3).map((field) => (
+                                <span key={field.key} className="rounded-md border border-line bg-bg-2 px-2 py-1 text-2xs text-fg-muted">{field.label}</span>
+                              ))}
+                              {template.fields.length > 3 && <span className="px-1 py-1 text-2xs text-fg-dim">+{template.fields.length - 3} more</span>}
+                              {statsCount > 0 && <span className="ml-auto self-center text-2xs text-fg-dim">{statsCount} in performance reviews</span>}
+                            </span>
+                          )}
+                        </span>
                       </label>
                     );
-                  })}
+                  }) : (
+                    <div className="rounded-xl border border-dashed border-line-strong bg-bg-1 px-5 py-6 text-center">
+                      <p className="text-sm font-medium text-fg">No templates are available yet</p>
+                      <p className="mt-1 text-xs leading-5 text-fg-muted">You can create one now or continue with the standard journal and decide later.</p>
+                    </div>
+                  )}
                 </fieldset>
 
-                {/* Strategy Actions */}
-                <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="mt-5 rounded-xl border border-line bg-bg-1 p-4 sm:p-5">
+                  <div className="flex items-start gap-3">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-bg-3 text-fg-muted"><Layers3 className="h-4 w-4" aria-hidden="true" /></span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-fg">Prefer to shape your own?</p>
+                      <p className="mt-1 text-xs leading-5 text-fg-muted">Start with a blank template and customize its fields in Settings.</p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => void handleCreateCustomTemplate()}
+                      disabled={busy}
+                      className="shrink-0 motion-reduce:transition-none"
+                    >
+                      Create my own template
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="mt-5 flex flex-col gap-3 border-t border-line pt-5 sm:flex-row sm:items-center">
                   <Button
                     type="button"
                     variant="primary"
                     size="lg"
                     disabled={busy || !selectedTemplate}
                     onClick={() => void handleUseTemplate(selectedId)}
-                    leftIcon={
-                      busy ? (
-                        <LoaderCircle className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Check className="h-4 w-4" />
-                      )
-                    }
+                    leftIcon={busy ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Check className="h-4 w-4" aria-hidden="true" />}
+                    className="w-full motion-reduce:transition-none sm:w-auto"
                   >
-                    {busy
-                      ? 'Saving setup…'
-                      : `Use ${selectedTemplate?.name ?? 'selected template'}`}
+                    {busy ? 'Saving setup…' : `Use ${selectedTemplate?.name ?? 'selected template'}`}
                   </Button>
-
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="lg"
-                    disabled={busy}
-                    onClick={() => void handleCreateCustomTemplate()}
-                    leftIcon={<Layers3 className="h-4 w-4" />}
-                  >
-                    Create my own template
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="lg"
-                    disabled={busy}
-                    onClick={() => void handleSkipStrategy()}
-                    className="text-fg-muted hover:text-fg"
-                  >
+                  <Button type="button" variant="ghost" size="lg" onClick={() => void handleSkipStrategy()} disabled={busy} className="w-full motion-reduce:transition-none sm:w-auto">
                     Skip for now
                   </Button>
+                  <p className="text-xs leading-5 text-fg-muted sm:ml-auto sm:max-w-[190px] sm:text-right">
+                    You can choose or change a template later in Settings.
+                  </p>
                 </div>
-
-                <p className="mt-3 text-xs leading-5 text-fg-dim">
-                  You can select, create, or customize templates anytime in{' '}
-                  <span className="font-medium text-fg-muted">Settings → Strategy templates</span>.
-                  Skipping completes setup and opens the app with standard defaults.
-                </p>
-              </div>
+              </>
             )}
           </section>
 
-          {/* Right-Hand Reassuring Preview Card */}
-          <aside className="hidden lg:block" aria-label="Setup guide and preview">
-            <Card className="sticky top-8 overflow-hidden border-line bg-bg-1 shadow-sm">
-              <div className="border-b border-line px-5 py-4">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-bg-3 text-fg">
-                    <NotebookPen className="h-5 w-5" />
-                  </span>
-                  <div>
-                    <h2 className="text-sm font-semibold text-fg">
-                      {step === 'profile' ? 'Trader Profile Preview' : 'Strategy & Reviews'}
-                    </h2>
-                    <p className="text-xs text-fg-muted">
-                      {step === 'profile'
-                        ? 'Calibrated for your trading journey'
-                        : 'Structured execution & analysis'}
-                    </p>
-                  </div>
+          <aside aria-label="Onboarding details" className="lg:sticky lg:top-8">
+            <Card className="overflow-hidden rounded-2xl bg-bg-1 shadow-card">
+              <div className="flex items-center gap-3 border-b border-line px-5 py-4">
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-bg-3 text-fg"><NotebookPen className="h-5 w-5" aria-hidden="true" /></span>
+                <div>
+                  <h2 className="text-sm font-semibold text-fg">{step === 'profile' ? 'Your profile preview' : 'Your journal, your way'}</h2>
+                  <p className="mt-0.5 text-xs text-fg-muted">{step === 'profile' ? 'A few details, all editable later' : 'Start simple; refine when you’re ready'}</p>
                 </div>
               </div>
 
               {step === 'profile' ? (
                 <div className="p-5">
-                  <div className="rounded-2xl border border-line bg-bg-2 p-4">
+                  <div className="rounded-xl border border-line bg-bg-2 p-4">
                     <div className="flex items-center gap-3">
-                      {avatarPreview ? (
-                        <img
-                          src={avatarPreview}
-                          alt="Trader preview"
-                          className="h-12 w-12 rounded-xl border border-line object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-accent/20 bg-accent/15 text-sm font-bold text-accent">
-                          {getInitials(name)}
-                        </div>
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-semibold text-fg">
-                          {name.trim() || 'Your Name'}
-                        </p>
-                        <p className="mt-0.5 text-xs text-fg-muted">
-                          {TRADER_LEVELS.find((l) => l.id === traderLevel)?.badge ||
-                            'Trader'}
-                        </p>
+                      <div className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full border border-line bg-bg-3 text-sm font-semibold text-fg-muted">
+                        {avatarPreview ? <img src={avatarPreview} alt="Profile preview" className="h-full w-full object-cover" /> : getInitials(name)}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-fg">{name.trim() || 'Your name'}</p>
+                        <p className="mt-0.5 text-xs text-fg-muted">{activeLevel?.badge ?? 'Trader profile'}</p>
                       </div>
                     </div>
-
-                    <div className="mt-4 border-t border-line/60 pt-3 text-xs text-fg-muted">
-                      <div className="flex items-center justify-between py-1">
-                        <span>Journal Edition</span>
-                        <span className="font-medium text-fg">ThePrecisionLab</span>
-                      </div>
-                      <div className="flex items-center justify-between py-1">
-                        <span>Experience Level</span>
-                        <span className="font-medium capitalize text-fg">
-                          {traderLevel}
-                        </span>
-                      </div>
+                    <div className="mt-4 flex items-center justify-between border-t border-line pt-3 text-xs">
+                      <span className="text-fg-muted">Experience</span>
+                      <span className="font-medium capitalize text-fg">{traderLevel}</span>
                     </div>
                   </div>
-
-                  <ul className="mt-5 space-y-3 text-xs text-fg-muted">
-                    <li className="flex items-start gap-2.5">
-                      <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                      <span>
-                        Your identity and trades are private to your authenticated account.
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2.5">
-                      <CircleHelp className="mt-0.5 h-4 w-4 shrink-0 text-fg-dim" />
-                      <span>
-                        You can update your name, photo, and level anytime in your profile settings.
-                      </span>
-                    </li>
-                  </ul>
+                  <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-bg-2 p-3.5 text-xs leading-5 text-fg-muted">
+                    <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-fg" aria-hidden="true" />
+                    <span>Your profile and journal are private to your account.</span>
+                  </div>
+                  <p className="mt-4 text-xs leading-5 text-fg-dim">Your photo is optional, and you can update your profile whenever you like.</p>
                 </div>
               ) : (
                 <div className="p-5">
-                  <div className="rounded-2xl border border-line bg-bg-2 p-4">
-                    <p className="text-2xs font-semibold uppercase tracking-wider text-accent">
-                      Selected Template
-                    </p>
-                    <p className="mt-1 text-base font-semibold text-fg">
-                      {selectedTemplate?.name ?? 'Standard Template'}
-                    </p>
-                    <p className="mt-1 text-xs leading-relaxed text-fg-muted">
-                      {selectedTemplate?.description}
-                    </p>
-
-                    <div className="mt-3.5 border-t border-line/60 pt-3">
-                      <p className="text-2xs font-medium uppercase tracking-wider text-fg-dim">
-                        Template fields included
-                      </p>
-                      <ul className="mt-2 space-y-1.5 text-xs text-fg">
-                        {selectedTemplate?.fields.map((field) => (
-                          <li key={field.key} className="flex items-center justify-between">
-                            <span className="truncate text-fg-muted">{field.label}</span>
-                            <span className="text-2xs text-fg-dim">
-                              {field.type}
-                              {field.inStats ? ' · in stats' : ''}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                  <div className="rounded-xl border border-line bg-bg-2 p-4">
+                    <p className="text-xs font-medium text-fg-muted">Selected template</p>
+                    <p className="mt-1.5 text-base font-semibold text-fg">{selectedTemplate?.name ?? 'Choose a template'}</p>
+                    <p className="mt-1.5 text-xs leading-5 text-fg-muted">{selectedTemplate?.description ?? 'Pick a starting point or create your own.'}</p>
+                    {selectedTemplate && selectedTemplate.fields.length > 0 && (
+                      <div className="mt-4 border-t border-line pt-3">
+                        <p className="text-2xs font-medium uppercase tracking-wider text-fg-dim">A few prompts inside</p>
+                        <ul className="mt-2 space-y-2 text-xs text-fg-muted">
+                          {selectedTemplate.fields.slice(0, 4).map((field) => (
+                            <li key={field.key} className="flex items-center justify-between gap-3">
+                              <span className="truncate">{field.label}</span>
+                              <Check className="h-3.5 w-3.5 shrink-0 text-fg-dim" aria-hidden="true" />
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                   </div>
-
-                  <div className="mt-5 flex items-start gap-2 text-xs leading-5 text-fg-muted">
-                    <CircleHelp className="mt-0.5 h-4 w-4 shrink-0 text-fg-dim" />
-                    <span>
-                      Every saved trade keeps its original fields permanently, even if you
-                      customize or switch templates later.
-                    </span>
+                  <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-bg-2 p-3.5 text-xs leading-5 text-fg-muted">
+                    <CircleHelp className="mt-0.5 h-4 w-4 shrink-0 text-fg" aria-hidden="true" />
+                    <span>Nothing is permanent here. You can adjust your template later in Settings.</span>
                   </div>
+                  <p className="mt-4 text-xs leading-5 text-fg-dim">A good journal grows with your process. Start with what you know today.</p>
                 </div>
               )}
             </Card>

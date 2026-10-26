@@ -212,7 +212,7 @@ describe('FirstRunOnboardingPage', () => {
     await screen.findByText('Choose your starting template.');
 
     const skipButtons = screen.getAllByRole('button', { name: /Skip for now/i });
-    fireEvent.click(skipButtons[0]);
+    fireEvent.click(skipButtons[0]!);
 
     await waitFor(() => {
       expect(onboardingRepo.completeFirstRunOnboarding).toHaveBeenCalled();

@@ -102,7 +102,6 @@ export function CheckoutPage() {
   const [loading, setLoading] = useState(false);
   const [switchingAccount, setSwitchingAccount] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState(false);
   const [actualTrialDays, setActualTrialDays] = useState<number | null>(null);
   const [notice, setNotice] = useState('');
   const hasMonthlyTrial = plan === 'monthly' && actualTrialDays === 7;
@@ -297,17 +296,9 @@ export function CheckoutPage() {
 
             {notice && <div role="status" className="mb-4 rounded-xl border border-accent/30 bg-accent/5 px-3 py-2.5 text-sm text-fg-muted">{notice}</div>}
             {error && <div role="alert" className="mb-4 rounded-xl border border-line bg-bg-3 px-3 py-2.5 text-sm text-fg">{error}</div>}
-            {success ? (
-              <div role="status" className="rounded-xl border border-line bg-bg-3 p-4 text-sm text-fg">
-                <p className="font-semibold">Authorization received</p>
-                <p className="mt-1 text-xs leading-5">Your Razorpay status is being confirmed. Paid access is available only after subscription activation or during the monthly trial. You can review your status in your profile.</p>
-                <Button asChild variant="primary" className="mt-4 w-full"><Link to="/profile">View subscription status</Link></Button>
-              </div>
-            ) : (
-              <Button onClick={() => void startCheckout()} disabled={loading || !billingRegion.ready || !billingAvailable} variant="primary" size="lg" className="w-full">
-                {loading ? <><LoaderCircle className="h-4 w-4 animate-spin" />Connecting…</> : <><CreditCard className="h-4 w-4" />{plan === 'monthly' && actualTrialDays === 0 ? 'Continue without free trial' : plan === 'monthly' ? 'Review trial & continue' : `Continue with ${billingRegion.currency === 'USD' ? 'Dodo Payments' : 'Razorpay'}`}</>}
-              </Button>
-            )}
+            <Button onClick={() => void startCheckout()} disabled={loading || !billingRegion.ready || !billingAvailable} variant="primary" size="lg" className="w-full">
+              {loading ? <><LoaderCircle className="h-4 w-4 animate-spin" />Connecting…</> : <><CreditCard className="h-4 w-4" />{plan === 'monthly' && actualTrialDays === 0 ? 'Continue without free trial' : plan === 'monthly' ? 'Review trial & continue' : `Continue with ${billingRegion.currency === 'USD' ? 'Dodo Payments' : 'Razorpay'}`}</>}
+            </Button>
             <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-fg-dim"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />Payments are securely processed by {billingRegion.currency === 'USD' ? 'Dodo Payments' : 'Razorpay'}. Your card details are not stored by ThePrecisionLab.</p>
             <div className="mt-5 flex flex-wrap items-center justify-center gap-x-2 gap-y-2 text-center text-xs text-fg-dim">
               <span className="break-all">Signed in as {user?.email || 'your account'}</span>

@@ -51,16 +51,6 @@ function renderSubscriptionGuard() {
   );
 }
 
-function makeSubscriptionQuery(result: { data: unknown; error: null }) {
-  const query = {
-    select: vi.fn(() => query),
-    eq: vi.fn(() => query),
-    order: vi.fn(() => query),
-    then: (resolve: (value: typeof result) => unknown) => Promise.resolve(result).then(resolve),
-  };
-  return query;
-}
-
 describe('RequireAuth', () => {
   beforeEach(() => {
     h.isSupabaseConfigured = true;
