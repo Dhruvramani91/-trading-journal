@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import * as Dialog from '@radix-ui/react-dialog';
 import {
   AlertCircle,
   ArrowLeft,
@@ -8,9 +9,12 @@ import {
   Check,
   CircleHelp,
   Compass,
+  Eye,
   Layers3,
   LoaderCircle,
   NotebookPen,
+  Pencil,
+  Save,
   ShieldCheck,
   Sparkles,
   TrendingUp,
@@ -34,6 +38,9 @@ import {
   completeFirstRunOnboarding,
   needsFirstRunOnboarding,
 } from '@/data/onboardingRepository';
+import { TemplateLivePreview } from '@/features/journal/TemplateLivePreview';
+import { TemplateFieldEditorList } from '@/features/journal/TemplateFieldEditorList';
+import { validateTemplate, type TemplateIssue } from '@/domain/templates/templateEditor';
 
 type OnboardingStep = 'profile' | 'strategy';
 type TraderLevel = 'beginner' | 'intermediate' | 'advanced';
@@ -99,6 +106,11 @@ export function FirstRunOnboardingPage() {
   // Strategy template state
   const [templates, setTemplates] = useState<TemplateDefinition[]>([]);
   const [selectedId, setSelectedId] = useState('default-ict-2026');
+  const [previewTemplate, setPreviewTemplate] = useState<TemplateDefinition | null>(null);
+  const [editDraft, setEditDraft] = useState<TemplateDefinition | null>(null);
+  const [editIssues, setEditIssues] = useState<TemplateIssue[]>([]);
+  const [expandedFieldKey, setExpandedFieldKey] = useState<string | null>(null);
+  const [previewValues, setPreviewValues] = useState<Record<string, string | boolean>>({});
 
   async function loadInitialData() {
     setLoading(true);
@@ -232,6 +244,52 @@ export function FirstRunOnboardingPage() {
       setError(
         cause instanceof Error ? cause.message : 'Could not create your template. Please try again.'
       );
+      setBusy(false);
+    }
+  }
+
+  function startTemplatePreview(template: TemplateDefinition) {
+    setPreviewTemplate(template);
+    setPreviewValues({});
+  }
+
+  function startTemplateEdit(template: TemplateDefinition) {
+    setEditDraft({
+      ...structuredClone(template),
+      id: '',
+      name: `My ${template.name}`,
+      description: template.description ?? '',
+      photoCount: template.photoCount ?? 3,
+      fields: template.fields.map((field) => ({ ...field, options: field.options ? [...field.options] : undefined })),
+    });
+    setEditIssues([]);
+    setExpandedFieldKey(null);
+    setPreviewTemplate(null);
+  }
+
+  async function saveEditedTemplate() {
+    if (!editDraft) return;
+    const issues = validateTemplate(editDraft.name, editDraft.fields);
+    setEditIssues(issues);
+    if (issues.length) return;
+
+    setBusy(true);
+    setError('');
+    try {
+      const saved = await saveCustomTemplate({
+        ...editDraft,
+        name: editDraft.name.trim(),
+        description: editDraft.description?.trim() ?? '',
+        photoCount: Math.max(0, Math.min(10, editDraft.photoCount ?? 3)),
+        fields: editDraft.fields.map((field) => field.type === 'enum'
+          ? { ...field, options: (field.options ?? []).map((option) => option.trim()).filter(Boolean) }
+          : field),
+      });
+      await saveDefaultTemplateId(saved.id);
+      await completeFirstRunOnboarding();
+      navigate('/dashboard', { replace: true });
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Could not save this strategy. Please try again.');
       setBusy(false);
     }
   }
@@ -476,44 +534,39 @@ export function FirstRunOnboardingPage() {
                     const selected = selectedId === template.id;
                     const statsCount = template.fields.filter((field) => field.inStats).length;
                     return (
-                      <label
+                      <div
                         key={template.id}
-                        className={`flex cursor-pointer items-start gap-3.5 rounded-xl border p-4 transition-colors motion-reduce:transition-none focus-within:ring-2 focus-within:ring-focus focus-within:ring-offset-2 focus-within:ring-offset-bg-0 sm:p-5 ${
+                        className={`rounded-xl border p-4 transition-colors motion-reduce:transition-none focus-within:ring-2 focus-within:ring-focus focus-within:ring-offset-2 focus-within:ring-offset-bg-0 sm:p-5 ${
                           selected
                             ? 'border-line-strong bg-bg-1 ring-1 ring-line-strong'
-                            : 'border-line bg-bg-1 hover:border-line-strong hover:bg-bg-3'
+                            : 'border-line bg-bg-1 hover:border-line-strong'
                         }`}
                       >
-                        <input
-                          type="radio"
-                          name="journal-strategy-template"
-                          value={template.id}
-                          checked={selected}
-                          onChange={() => setSelectedId(template.id)}
-                          className="sr-only"
-                        />
-                        <span aria-hidden="true" className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border ${selected ? 'border-fg bg-fg text-bg-0' : 'border-line-strong bg-bg-2 text-transparent'}`}>
-                          {selected && <Check className="h-3 w-3 stroke-[2.5]" />}
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="flex flex-wrap items-start justify-between gap-2">
-                            <span className="text-sm font-semibold text-fg">{template.name}</span>
-                            <span className="rounded-md border border-line bg-bg-2 px-2 py-1 text-2xs font-medium text-fg-muted">
-                              {template.fields.length} {template.fields.length === 1 ? 'prompt' : 'prompts'}
+                        <div className="flex items-start gap-3.5">
+                          <input type="radio" id={`strategy-template-${template.id}`} name="journal-strategy-template" value={template.id} checked={selected} onChange={() => setSelectedId(template.id)} className="sr-only" />
+                          <label htmlFor={`strategy-template-${template.id}`} className="flex min-w-0 flex-1 cursor-pointer items-start gap-3.5 rounded-lg focus-within:outline-none">
+                            <span aria-hidden="true" className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border ${selected ? 'border-fg bg-fg text-bg-0' : 'border-line-strong bg-bg-2 text-transparent'}`}>
+                              {selected && <Check className="h-3 w-3 stroke-[2.5]" />}
                             </span>
-                          </span>
-                          <span className="mt-1 block text-sm leading-relaxed text-fg-muted">{template.description}</span>
-                          {template.fields.length > 0 && (
-                            <span className="mt-3 flex flex-wrap gap-1.5">
-                              {template.fields.slice(0, 3).map((field) => (
-                                <span key={field.key} className="rounded-md border border-line bg-bg-2 px-2 py-1 text-2xs text-fg-muted">{field.label}</span>
-                              ))}
-                              {template.fields.length > 3 && <span className="px-1 py-1 text-2xs text-fg-dim">+{template.fields.length - 3} more</span>}
-                              {statsCount > 0 && <span className="ml-auto self-center text-2xs text-fg-dim">{statsCount} in performance reviews</span>}
+                            <span className="min-w-0 flex-1">
+                              <span className="flex flex-wrap items-start justify-between gap-2">
+                                <span className="text-sm font-semibold text-fg">{template.name}</span>
+                                <span className="rounded-md border border-line bg-bg-2 px-2 py-1 text-2xs font-medium text-fg-muted">{template.fields.length} {template.fields.length === 1 ? 'prompt' : 'prompts'}</span>
+                              </span>
+                              <span className="mt-1 block text-sm leading-relaxed text-fg-muted">{template.description}</span>
+                              {template.fields.length > 0 && <span className="mt-3 flex flex-wrap gap-1.5">
+                                {template.fields.slice(0, 3).map((field) => <span key={field.key} className="rounded-md border border-line bg-bg-2 px-2 py-1 text-2xs text-fg-muted">{field.label}</span>)}
+                                {template.fields.length > 3 && <span className="px-1 py-1 text-2xs text-fg-dim">+{template.fields.length - 3} more</span>}
+                                {statsCount > 0 && <span className="ml-auto self-center text-2xs text-fg-dim">{statsCount} in performance reviews</span>}
+                              </span>}
                             </span>
-                          )}
-                        </span>
-                      </label>
+                          </label>
+                          <div className="flex shrink-0 gap-2">
+                            <Button type="button" variant="secondary" size="sm" aria-label={`Preview ${template.name}`} onClick={() => startTemplatePreview(template)} leftIcon={<Eye className="h-4 w-4" aria-hidden="true" />} className="min-h-10">Preview</Button>
+                            <Button type="button" variant="secondary" size="sm" aria-label={`Edit ${template.name}`} onClick={() => startTemplateEdit(template)} leftIcon={<Pencil className="h-4 w-4" aria-hidden="true" />} className="min-h-10">Edit</Button>
+                          </div>
+                        </div>
+                      </div>
                     );
                   }) : (
                     <div className="rounded-xl border border-dashed border-line-strong bg-bg-1 px-5 py-6 text-center">
@@ -630,6 +683,42 @@ export function FirstRunOnboardingPage() {
           </aside>
         </div>
       </div>
+      {previewTemplate && <Dialog.Root open onOpenChange={(open) => { if (!open) setPreviewTemplate(null); }} modal>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm motion-reduce:animate-none" />
+          <Dialog.Content className="fixed left-1/2 top-1/2 z-[101] flex max-h-[92dvh] w-[min(960px,calc(100vw-24px))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border border-line bg-bg-1 shadow-pop focus:outline-none">
+            <header className="flex shrink-0 items-start justify-between gap-4 border-b border-line px-5 py-4">
+              <div><Dialog.Title className="text-lg font-semibold text-fg">{previewTemplate.name} · Form preview</Dialog.Title><Dialog.Description className="mt-1 text-sm text-fg-muted">Explore the form fields. Preview values are temporary and will not be saved.</Dialog.Description></div>
+              <Dialog.Close asChild><Button type="button" variant="ghost" size="icon" aria-label="Close preview"><X className="h-5 w-5" /></Button></Dialog.Close>
+            </header>
+            <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6"><TemplateLivePreview template={previewTemplate} values={previewValues} onChange={(key, value) => setPreviewValues((current) => ({ ...current, [key]: value }))} onFocusField={() => undefined} /></div>
+            <footer className="flex shrink-0 justify-end gap-2 border-t border-line px-5 py-3"><Button type="button" variant="ghost" onClick={() => setPreviewTemplate(null)}>Close</Button><Button type="button" onClick={() => startTemplateEdit(previewTemplate)} leftIcon={<Pencil className="h-4 w-4" />}>Customize strategy</Button></footer>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>}
+      {editDraft && <Dialog.Root open onOpenChange={(open) => { if (!open && !busy) setEditDraft(null); }} modal>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm motion-reduce:animate-none" />
+          <Dialog.Content className="fixed left-1/2 top-1/2 z-[101] flex max-h-[92dvh] w-[min(1040px,calc(100vw-24px))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border border-line bg-bg-1 shadow-pop focus:outline-none">
+            <header className="flex shrink-0 items-start justify-between gap-4 border-b border-line px-5 py-4">
+              <div><Dialog.Title className="text-lg font-semibold text-fg">Customize your strategy</Dialog.Title><Dialog.Description className="mt-1 text-sm text-fg-muted">This creates your own editable copy and makes it the default for new trades.</Dialog.Description></div>
+              <Dialog.Close asChild><Button type="button" variant="ghost" size="icon" aria-label="Close editor" disabled={busy}><X className="h-5 w-5" /></Button></Dialog.Close>
+            </header>
+            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto p-4 sm:p-6">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="space-y-1.5 text-sm font-medium text-fg">Template name<Input value={editDraft.name} maxLength={80} onChange={(event) => setEditDraft((current) => current ? { ...current, name: event.target.value } : current)} placeholder="Name your strategy" /></label>
+                <label className="space-y-1.5 text-sm font-medium text-fg">Description<Input value={editDraft.description ?? ''} maxLength={180} onChange={(event) => setEditDraft((current) => current ? { ...current, description: event.target.value } : current)} placeholder="What does this template track?" /></label>
+              </div>
+              {editIssues.some((issue) => !issue.fieldKey) && <p role="alert" className="text-sm text-loss">{editIssues.find((issue) => !issue.fieldKey)?.message}</p>}
+              <TemplateFieldEditorList fields={editDraft.fields} onChange={(fields) => setEditDraft((current) => current ? { ...current, fields } : current)} issues={editIssues} expandedFieldKey={expandedFieldKey} onExpandedChange={setExpandedFieldKey} onRemove={(_field, index) => setEditDraft((current) => current ? { ...current, fields: current.fields.filter((_, fieldIndex) => fieldIndex !== index) } : current)} />
+            </div>
+            <footer className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-line px-5 py-3">
+              <Button type="button" variant="ghost" onClick={() => setEditDraft(null)} disabled={busy}>Cancel</Button>
+              <Button type="button" variant="primary" onClick={() => void saveEditedTemplate()} disabled={busy || !editDraft.name.trim()} leftIcon={busy ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}>{busy ? 'Saving…' : 'Save and go to dashboard'}</Button>
+            </footer>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>}
     </main>
   );
 }
