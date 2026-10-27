@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Check, CreditCard, LoaderCircle, LogOut, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, BookOpen, CalendarDays, CreditCard, LoaderCircle, LogOut, ShieldCheck, TrendingUp } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { BrandLogo } from '@/components/layout/Brand';
 import { supabase } from '@/lib/supabase';
@@ -105,6 +105,16 @@ export function CheckoutPage() {
   const [actualTrialDays, setActualTrialDays] = useState<number | null>(null);
   const [notice, setNotice] = useState('');
   const hasMonthlyTrial = plan === 'monthly' && actualTrialDays === 7;
+  const paymentProvider = billingRegion.currency === 'USD' ? 'Dodo Payments' : 'Razorpay';
+  const todayAmount = !billingRegion.ready
+    ? 'Checking…'
+    : !billingAvailable
+      ? 'Unavailable'
+      : plan === 'monthly' && actualTrialDays === null
+        ? `${billingRegion.currency === 'USD' ? '$0' : '₹0'} if eligible · ${details.amount} otherwise`
+        : plan === 'monthly' && hasMonthlyTrial
+          ? billingRegion.currency === 'USD' ? '$0' : '₹0'
+          : details.amount;
 
   useEffect(() => {
     consumeBillingPlanIntent();
@@ -227,90 +237,152 @@ export function CheckoutPage() {
   }
 
   return (
-    <main className="min-h-screen w-full overflow-x-hidden bg-bg-0 px-4 py-10 text-fg sm:px-6 lg:py-5">
-      <div className="mx-auto w-full min-w-0 max-w-5xl">
-        <Link to="/" className="mb-10 inline-flex items-center gap-2 text-sm text-fg-muted transition hover:text-fg lg:mb-5">
-          <ArrowLeft className="h-4 w-4" /> Back to ThePrecisionLab
-        </Link>
+    <main className="min-h-dvh w-full overflow-x-hidden bg-bg-0 px-4 py-5 text-fg sm:px-6 sm:py-7">
+      <header className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 pb-5">
+        <div className="flex min-w-0 items-center gap-4">
+          <Link to="/" aria-label="Back to ThePrecisionLab" className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-line bg-bg-2 text-fg-muted transition hover:border-line-strong hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus">
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          </Link>
+          <div className="flex min-w-0 items-center gap-2.5">
+            <BrandLogo size="sm" />
+            <span className="truncate text-sm font-semibold tracking-tight">ThePrecisionLab</span>
+          </div>
+        </div>
+        {billingRegion.ready && billingRegion.paymentMode === 'test_mode' && (
+          <span role="status" className="inline-flex shrink-0 items-center gap-2 rounded-full border border-line bg-bg-2 px-3 py-1.5 text-xs font-medium text-fg-muted">
+            <span className="h-1.5 w-1.5 rounded-full bg-fg-muted" aria-hidden="true" />Test mode
+          </span>
+        )}
+      </header>
 
-        <div className="grid min-w-0 items-start gap-6 md:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)] lg:gap-4">
-          <section className="min-w-0 rounded-3xl border border-line bg-bg-2 p-6 shadow-pop sm:p-8 lg:p-6">
-            <BrandLogo size="md" />
-            <p className="mt-8 text-xs font-semibold uppercase tracking-[0.18em] text-fg-dim lg:mt-5">Secure checkout</p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight">Choose your plan</h1>
-            <p className="mt-2 max-w-lg text-sm leading-6 text-fg-muted">Get the complete trading journal, discipline tracking, and performance analytics.</p>
+      <div className="mx-auto flex min-h-[calc(100dvh-5rem)] w-full max-w-6xl items-center justify-center py-5 sm:min-h-[calc(100dvh-6rem)]">
+        <div className="grid w-full min-w-0 items-start gap-5 lg:grid-cols-12 lg:gap-8">
+          <section aria-labelledby="checkout-title" className="min-w-0 lg:col-span-7">
+            <div className="mb-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-fg-dim">Secure checkout</p>
+              <h1 id="checkout-title" className="mt-2 text-3xl font-semibold tracking-tight sm:text-[2.1rem]">Choose your plan</h1>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-fg-muted">Journal, discipline tracking and analytics — all included.</p>
+            </div>
+
             {!billingRegion.regionToken && (
-              <label className="mt-3 flex max-w-xs flex-col gap-1.5 text-xs text-fg-muted" htmlFor="billing-region">
+              <label className="mb-3 flex max-w-sm flex-col gap-1.5 text-xs text-fg-muted" htmlFor="billing-region">
                 Billing region
-                <select id="billing-region" value={manualRegion} onChange={(event) => setManualRegion(event.target.value as 'IN' | 'INTERNATIONAL')} className="rounded-lg border border-line bg-bg-1 px-3 py-2 text-sm text-fg">
+                <select id="billing-region" value={manualRegion} onChange={(event) => setManualRegion(event.target.value as 'IN' | 'INTERNATIONAL')} className="rounded-xl border border-line bg-bg-2 px-3 py-2.5 text-sm text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus">
                   <option value="IN">India · INR</option>
                   <option value="INTERNATIONAL">Outside India · international billing</option>
                 </select>
               </label>
             )}
-            <p className="mt-2 text-xs text-fg-dim">{!billingRegion.ready ? 'Detecting billing region…' : manualInternationalUnavailable ? 'International location could not be verified. Only India billing is available for this session.' : `Billing region: ${billingRegion.country} · ${billingRegion.currency}${billingRegion.currency === 'USD' && !billingRegion.usdEnabled ? ' · International checkout is not available yet' : ''}`}</p>
-            {billingRegion.ready && billingRegion.paymentMode === 'test_mode' && <p role="status" className="mt-3 rounded-lg border border-line bg-bg-3 px-3 py-2 text-sm text-fg-muted">Test payment mode is active. No real payment will be taken.</p>}
+            <p className="mb-3 text-xs text-fg-dim">{!billingRegion.ready ? 'Detecting billing region…' : manualInternationalUnavailable ? 'International location could not be verified. Only India billing is available for this session.' : `Billing region: ${billingRegion.country} · ${billingRegion.currency}${billingRegion.currency === 'USD' && !billingRegion.usdEnabled ? ' · International checkout is not available yet' : ''}`}</p>
 
-            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:mt-5">
-              {billingAvailable ? (Object.keys(getPlanDetails(billingRegion.currency)) as BillingPlan[]).map((option) => {
-                const selected = option === plan;
-                const optionDetails = getPlanDetails(billingRegion.currency)[option];
-                return (
-                  <Link
-                    key={option}
-                    to={`/checkout?plan=${option}`}
-                    aria-current={selected ? 'true' : undefined}
-                    className={`rounded-2xl border p-4 transition ${selected ? 'border-accent bg-accent/5 ring-1 ring-focus/40' : 'border-line bg-bg-1 hover:border-line-strong'}`}
-                  >
-                    <span className="flex items-center justify-between text-sm font-semibold">{optionDetails.name}{selected && <Check className="h-4 w-4 text-accent" />}</span>
-                    <span className="mt-3 block text-2xl font-bold">{optionDetails.amount}<span className="ml-1 text-xs font-medium text-fg-muted">{optionDetails.cycle}</span></span>
-                    <span className="mt-2 block text-xs leading-5 text-fg-muted">{option === 'monthly' && actualTrialDays === 0 ? `${optionDetails.amount} billed monthly; trial already used.` : optionDetails.summary}</span>
-                  </Link>
-                );
-              }) : <p className="rounded-xl border border-line bg-bg-1 p-4 text-sm leading-6 text-fg-muted">{!billingRegion.ready ? 'Checking regional pricing…' : manualInternationalUnavailable || billingRegion.currency === 'USD' ? 'International recurring billing is not available yet.' : 'No billing plan is currently available for this region.'}</p>}
-            </div>
+            {billingAvailable ? (
+              <div aria-label="Subscription plans" role="radiogroup" className="grid gap-3 sm:grid-cols-2">
+                {(Object.keys(getPlanDetails(billingRegion.currency)) as BillingPlan[]).map((option) => {
+                  const selected = option === plan;
+                  const optionDetails = getPlanDetails(billingRegion.currency)[option];
+                  return (
+                    <Link
+                      key={option}
+                      to={`/checkout?plan=${option}`}
+                      aria-current={selected ? 'true' : undefined}
+                      aria-label={`${optionDetails.name}, ${optionDetails.amount} ${optionDetails.cycle}${selected ? ', selected' : ''}`}
+                      className={`group relative flex min-h-28 items-center justify-between gap-3 rounded-2xl border p-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus motion-reduce:transition-none ${selected ? 'border-focus bg-bg-3 ring-1 ring-focus/40' : 'border-line bg-bg-2 hover:border-line-strong hover:bg-bg-3'}`}
+                    >
+                      <span className="flex min-w-0 items-center gap-3.5">
+                        <span aria-hidden="true" className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 ${selected ? 'border-focus bg-bg-0' : 'border-line-strong group-hover:border-focus'}`}>
+                          {selected && <span className="h-2.5 w-2.5 rounded-full bg-fg" />}
+                        </span>
+                        <span className="min-w-0">
+                          <span className="flex flex-wrap items-center gap-2 text-base font-semibold tracking-tight">
+                            {optionDetails.name}
+                            {option === 'monthly' && actualTrialDays !== 0 && <span className="rounded-full border border-line bg-bg-3 px-2 py-0.5 text-[11px] font-medium text-fg-muted">7-day trial if eligible</span>}
+                            {option === 'quarterly' && <span className="rounded-full border border-line bg-bg-3 px-2 py-0.5 text-[11px] font-medium text-fg-muted">Every 3 months</span>}
+                          </span>
+                          <span className="mt-1 block text-xs leading-5 text-fg-muted">{option === 'monthly' && actualTrialDays === 0 ? `${optionDetails.amount} billed monthly; trial already used.` : option === 'monthly' ? 'Cancel anytime' : optionDetails.summary}</span>
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-right">
+                        <span className="block text-xl font-semibold tracking-tight">{optionDetails.amount}</span>
+                        <span className="mt-1 block text-xs text-fg-muted">{optionDetails.cycle}</span>
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="rounded-2xl border border-line bg-bg-2 p-4 text-sm leading-6 text-fg-muted">{!billingRegion.ready ? 'Checking regional pricing…' : manualInternationalUnavailable || billingRegion.currency === 'USD' ? 'International recurring billing is not available yet.' : 'No billing plan is currently available for this region.'}</p>
+            )}
 
-            <ul className="mt-7 space-y-3 text-sm text-fg-muted lg:mt-5 lg:space-y-2">
-              {['Unlimited journal entries', 'Discipline score and performance analytics', 'Weekly review prompts'].map((item) => (
-                <li key={item} className="flex items-center gap-2"><Check className="h-4 w-4 shrink-0 text-fg-muted" />{item}</li>
+            <ul className="mt-6 flex flex-wrap gap-2.5 text-xs text-fg-muted">
+              {[
+                { label: 'Unlimited journal', Icon: BookOpen },
+                { label: 'Discipline score', Icon: TrendingUp },
+                { label: 'Weekly reviews', Icon: CalendarDays },
+              ].map(({ label, Icon }) => (
+                <li key={label} className="inline-flex items-center gap-2 rounded-xl border border-line bg-bg-2 px-3.5 py-2">
+                  <Icon className="h-4 w-4 shrink-0 text-fg-muted" aria-hidden="true" />{label}
+                </li>
               ))}
             </ul>
           </section>
 
-          <aside className="min-w-0 rounded-3xl border border-line bg-bg-2 p-6 shadow-pop sm:p-8 lg:p-6">
-            <h2 className="text-lg font-semibold">Order summary</h2>
-            <div className="mt-6 flex items-start justify-between gap-4 border-b border-line pb-5 lg:mt-4 lg:pb-4">
-              <div><p className="font-medium">ThePrecisionLab {details.name}</p><p className="mt-1 text-sm text-fg-muted">{!billingAvailable ? 'Billing unavailable for this region' : plan === 'monthly' ? (actualTrialDays === 0 ? 'Monthly recurring billing · trial already used' : '7-day free trial if eligible, then monthly billing') : 'Quarterly recurring billing'}</p></div>
-              <strong className="text-lg">{!billingRegion.ready ? 'Checking…' : billingAvailable ? details.amount : 'Unavailable'}</strong>
+          <aside aria-labelledby="order-summary-title" className="min-w-0 rounded-2xl border border-line bg-bg-2 p-5 sm:p-6 lg:col-span-5">
+            <h2 id="order-summary-title" className="text-sm font-semibold tracking-tight">Order summary</h2>
+            <div className="mt-5 flex items-start justify-between gap-4 border-b border-line pb-4">
+              <div className="min-w-0"><p className="font-semibold">ThePrecisionLab {details.name}</p><p className="mt-1 text-xs text-fg-muted">{!billingAvailable ? 'Billing unavailable for this region' : plan === 'monthly' ? actualTrialDays === 0 ? 'Monthly recurring billing · trial already used' : '7-day free trial if eligible, then monthly billing' : 'Quarterly recurring billing'}</p></div>
+              <strong className="shrink-0 text-sm font-semibold">{!billingRegion.ready ? 'Checking…' : billingAvailable ? details.amount : 'Unavailable'}</strong>
             </div>
-            <div className="flex justify-between py-5 text-sm lg:py-3"><span className="text-fg-muted">Due today</span><strong>{!billingRegion.ready ? 'Checking…' : !billingAvailable ? 'Unavailable' : plan === 'monthly' && actualTrialDays === null ? `${billingRegion.currency === 'USD' ? '$0' : '₹0'} if eligible · ${details.amount} otherwise` : plan === 'monthly' && hasMonthlyTrial ? billingRegion.currency === 'USD' ? '$0' : '₹0' : details.amount}</strong></div>
+
+            <div className="relative py-4 pl-6">
+              <span aria-hidden="true" className="absolute bottom-5 left-[7px] top-5 w-px bg-line-strong" />
+              <div className="relative flex items-start justify-between gap-3 pb-5">
+                <span aria-hidden="true" className="absolute -left-6 top-1 grid h-3.5 w-3.5 place-items-center rounded-full border-2 border-fg bg-bg-2"><span className="h-1 w-1 rounded-full bg-fg" /></span>
+                <div><p className="text-sm font-medium text-fg">Today</p><p className="mt-1 text-xs leading-5 text-fg-muted">{plan === 'monthly' && actualTrialDays !== 0 ? 'Trial starts if eligible' : 'Subscription begins'}</p></div>
+                <span className="text-right text-xs font-medium text-fg-muted">{plan === 'monthly' && actualTrialDays !== 0 ? '7 days free if eligible' : todayAmount}</span>
+              </div>
+              <div className="relative flex items-start justify-between gap-3">
+                <span aria-hidden="true" className="absolute -left-6 top-1 h-3.5 w-3.5 rounded-full border-2 border-line-strong bg-bg-2" />
+                <div><p className={`text-sm font-medium ${plan === 'monthly' && actualTrialDays !== 0 ? 'text-fg-muted' : 'text-fg'}`}>{plan === 'monthly' ? actualTrialDays === 0 ? 'Next month' : 'After 7 days' : 'Next billing date'}</p><p className="mt-1 text-xs leading-5 text-fg-muted">{plan === 'monthly' && actualTrialDays !== 0 ? 'First monthly charge, if eligible' : plan === 'monthly' ? 'Monthly renewal' : 'Billed again in 3 months'}</p></div>
+                <span className="text-right text-xs font-medium text-fg-muted">{details.amount}</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 border-t border-line py-4">
+              <span className="text-sm text-fg-muted">Due today</span>
+              <strong className="max-w-[68%] break-words text-right text-xl font-semibold tracking-tight">{todayAmount}</strong>
+            </div>
+
             {billingAvailable && plan === 'monthly' && (
-              <div className="-mt-2 mb-5 rounded-xl border border-accent/20 bg-accent/5 p-3 text-xs leading-5 text-fg-muted">
+              <div className="mb-4 rounded-xl border border-line bg-bg-1 p-3.5 text-xs leading-5 text-fg-muted">
                 {actualTrialDays === 0 ? (
                   <><p className="font-semibold text-fg">Trial already used</p><p className="mt-1">{details.amount} is due today, then billed every month.</p></>
                 ) : (
-                  <><p className="font-semibold text-fg">7-day free trial · then {details.amount}/month</p><p className="mt-1">If eligible, you pay {billingRegion.currency === 'USD' ? '$0' : '₹0'} today. Your first {details.amount} payment is taken automatically after the 7-day trial. The trial is available once per account; if you already used it, {details.amount} is due today.</p></>
+                  <><p className="font-semibold text-fg">7-day free trial if eligible</p><p className="mt-1">You pay {billingRegion.currency === 'USD' ? '$0' : '₹0'} today if eligible. Your first {details.amount} payment is taken automatically after the trial. If you’ve already used it, {details.amount} is due today.</p></>
                 )}
               </div>
             )}
 
-            {notice && <div role="status" className="mb-4 rounded-xl border border-accent/30 bg-accent/5 px-3 py-2.5 text-sm text-fg-muted">{notice}</div>}
-            {error && <div role="alert" className="mb-4 rounded-xl border border-line bg-bg-3 px-3 py-2.5 text-sm text-fg">{error}</div>}
+            {notice && <div role="status" className="mb-4 rounded-xl border border-line bg-bg-1 px-3 py-2.5 text-sm text-fg-muted">{notice}</div>}
+            {error && <div role="alert" className="mb-4 rounded-xl border border-loss/30 bg-loss/10 px-3 py-2.5 text-sm text-loss-text">{error}</div>}
             <Button onClick={() => void startCheckout()} disabled={loading || !billingRegion.ready || !billingAvailable} variant="primary" size="lg" className="w-full">
-              {loading ? <><LoaderCircle className="h-4 w-4 animate-spin" />Connecting…</> : <><CreditCard className="h-4 w-4" />{plan === 'monthly' && actualTrialDays === 0 ? 'Continue without free trial' : plan === 'monthly' ? 'Review trial & continue' : `Continue with ${billingRegion.currency === 'USD' ? 'Dodo Payments' : 'Razorpay'}`}</>}
+              {loading ? <><LoaderCircle className="h-4 w-4 animate-spin motion-reduce:animate-none" />Connecting…</> : <><CreditCard className="h-4 w-4" />{plan === 'monthly' && actualTrialDays === 0 ? 'Continue without free trial' : plan === 'monthly' ? 'Start 7-day free trial' : `Continue with ${paymentProvider}`}</>}
             </Button>
-            <p className="mt-4 flex items-start gap-2 text-xs leading-5 text-fg-dim"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />Payments are securely processed by {billingRegion.currency === 'USD' ? 'Dodo Payments' : 'Razorpay'}. Your card details are not stored by ThePrecisionLab.</p>
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-x-2 gap-y-2 text-center text-xs text-fg-dim">
-              <span className="break-all">Signed in as {user?.email || 'your account'}</span>
-              <button
-                type="button"
-                onClick={() => void changeAccount()}
-                disabled={switchingAccount || loading}
-                className="inline-flex items-center gap-1 rounded-md px-2 py-1 font-medium text-accent underline-offset-4 transition hover:underline disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {switchingAccount ? <LoaderCircle className="h-3 w-3 animate-spin" /> : <LogOut className="h-3 w-3" />}
-                {switchingAccount ? 'Signing out…' : 'Change account'}
-              </button>
+            <p className="mt-3 text-center text-xs leading-5 text-fg-dim">{plan === 'monthly' && actualTrialDays !== 0 ? 'One trial per account. Cancel before the first charge to pay nothing.' : 'Review the billing terms before confirming with your payment provider.'}</p>
+
+            <div className="mt-5 flex flex-col gap-3 border-t border-line pt-4">
+              <p className="flex items-start gap-2 text-xs leading-5 text-fg-dim"><ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-fg-muted" aria-hidden="true" />Secure checkout with {paymentProvider}. Your card details are not stored by ThePrecisionLab.</p>
+              <div className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-line bg-bg-1 px-3 py-2.5">
+                <span className="min-w-0 truncate font-mono text-xs text-fg-muted">{user?.email || 'your account'}</span>
+                <button
+                  type="button"
+                  onClick={() => void changeAccount()}
+                  disabled={switchingAccount || loading}
+                  className="inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-lg px-2.5 text-xs font-medium text-fg-muted transition hover:bg-bg-3 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none"
+                >
+                  {switchingAccount ? <LoaderCircle className="h-3.5 w-3.5 animate-spin motion-reduce:animate-none" /> : <LogOut className="h-3.5 w-3.5" />}
+                  {switchingAccount ? 'Switching…' : 'Change account'}
+                </button>
+              </div>
             </div>
           </aside>
         </div>
