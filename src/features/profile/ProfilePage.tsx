@@ -12,6 +12,7 @@ import {
   X,
   Check,
   Loader2,
+  Eye,
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -392,19 +393,18 @@ export function ProfilePage() {
           }}
         >
           <div
-            className="w-full max-w-md rounded-2xl border border-line bg-bg-1 shadow-2xl animate-fade-in"
+            className="w-full max-w-4xl max-h-[min(90vh,760px)] overflow-y-auto rounded-2xl border border-line bg-bg-1 shadow-2xl animate-fade-in"
             role="dialog"
             aria-modal="true"
-
             aria-labelledby="edit-profile-title"
           >
-            <div className="flex items-center justify-between border-b border-line px-5 py-4">
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-bg-1/95 px-5 py-4 backdrop-blur sm:px-7">
               <div>
                 <h3 id="edit-profile-title" className="text-base font-bold text-fg">
                   Edit Profile
                 </h3>
-                <p className="mt-0.5 text-xs text-fg-muted">
-                  Update your name and profile picture.
+                <p className="mt-0.5 text-sm text-fg-muted">
+                  A couple of details to make your workspace yours.
                 </p>
               </div>
 
@@ -419,95 +419,137 @@ export function ProfilePage() {
               </button>
             </div>
 
-            <div className="space-y-5 p-5">
-              <div className="flex flex-col items-center">
-                <div className="relative">
-                  {preview ? (
-                    <img
-                      src={preview}
-                      alt="Profile preview"
-                      className="h-24 w-24 rounded-2xl border border-line object-cover shadow-sm"
-                    />
-                  ) : (
-                    <div className="h-24 w-24 rounded-2xl border border-accent/20 bg-accent/15 text-accent flex items-center justify-center text-2xl font-bold">
-                      {getInitials(name)}
-                    </div>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="absolute -right-2 -bottom-2 flex h-9 w-9 items-center justify-center rounded-full border border-line bg-bg-1 text-fg shadow-md hover:bg-bg-3 transition-colors"
-                    title="Change avatar"
-                  >
-                    <Camera className="h-4 w-4" />
-                  </button>
+            <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-12 lg:gap-8">
+              <section aria-labelledby="profile-form-heading" className="lg:col-span-7">
+                <div className="mb-5">
+                  <h4 id="profile-form-heading" className="text-2xl font-bold tracking-tight text-fg sm:text-3xl">
+                    Set up your profile
+                  </h4>
+                  <p className="mt-1 text-sm text-fg-muted">Two quick details. You can change them anytime.</p>
                 </div>
 
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  className="hidden"
-                  onChange={(event) => handleAvatarChange(event.target.files?.[0])}
-                />
+                <div className="space-y-6">
+                  <div>
+                    <label htmlFor="profile-name" className="mb-2 block text-sm font-semibold text-fg">
+                      Your name
+                    </label>
+                    <input
+                      id="profile-name"
+                      value={name}
+                      onChange={(event) => setName(event.target.value)}
+                      maxLength={50}
+                      autoComplete="name"
+                      className="h-11 w-full rounded-xl border border-line bg-bg-2 px-4 text-sm text-fg outline-none transition-colors placeholder:text-fg-dim focus-visible:border-focus focus-visible:ring-2 focus-visible:ring-focus/20"
+                      placeholder="What should we call you?"
+                    />
+                  </div>
 
-                <p className="mt-3 text-xs text-fg-dim">
-                  JPG, PNG or WebP. The image will be compressed automatically.
-                </p>
-              </div>
+                  <fieldset>
+                    <legend className="text-sm font-semibold text-fg">Trading experience</legend>
+                    <p className="mb-3 mt-1 text-sm text-fg-muted">Pick what feels closest. You can update this later.</p>
+                    <div className="space-y-2.5">
+                      {([
+                        ['beginner', 'Beginner', "I'm learning the basics and building good habits."],
+                        ['intermediate', 'Intermediate', "I have a routine and I'm working on consistency."],
+                        ['advanced', 'Advanced', "I'm refining a well-established approach."],
+                      ] as const).map(([value, label, description]) => (
+                        <label
+                          key={value}
+                          className={cn(
+                            'group flex cursor-pointer items-center gap-3.5 rounded-xl border px-4 py-3 transition-colors focus-within:ring-2 focus-within:ring-focus/40',
+                            traderLevel === value
+                              ? 'border-line-strong bg-bg-3'
+                              : 'border-line bg-bg-2 hover:border-line-strong hover:bg-bg-3/70',
+                          )}
+                        >
+                          <input
+                            className="h-4 w-4 shrink-0 accent-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                            type="radio"
+                            name="trader-level"
+                            value={value}
+                            checked={traderLevel === value}
+                            onChange={() => setTraderLevel(value)}
+                          />
+                          <span className="min-w-0">
+                            <span className="block text-sm font-semibold text-fg">{label}</span>
+                            <span className="mt-0.5 block text-sm text-fg-muted">{description}</span>
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                </div>
+              </section>
 
-              <div>
-                <label
-                  htmlFor="profile-name"
-                  className="mb-1.5 block text-xs font-semibold text-fg"
-                >
-                  Display name
-                </label>
-                <input
-                  id="profile-name"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  maxLength={50}
-                  autoComplete="name"
-                  className="w-full rounded-lg border border-line bg-bg-2 px-3 py-2.5 text-sm text-fg outline-none transition-colors placeholder:text-fg-dim focus:border-accent focus:ring-2 focus:ring-focus/10"
-                  placeholder="Enter your name"
-                />
-              </div>
+              <aside aria-label="Live profile preview" className="flex flex-col justify-center lg:col-span-5">
+                <div className="rounded-2xl border border-line bg-bg-2 p-5 sm:p-6">
+                  <div className="mb-5 flex items-center justify-between border-b border-line pb-4">
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 rounded-full bg-fg-muted" aria-hidden="true" />
+                      <span className="text-xs font-semibold uppercase tracking-wider text-fg-muted">Your profile preview</span>
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-bg-3 px-2.5 py-1 text-xs text-fg-muted">
+                      <Eye className="h-3.5 w-3.5" /> Live
+                    </span>
+                  </div>
 
-              <div>
-                <label
-                  htmlFor="trader-level"
-                  className="mb-1.5 block text-xs font-semibold text-fg"
-                >
-                  Trading experience
-                </label>
-                <select
-                  id="trader-level"
-                  value={traderLevel}
-                  onChange={(event) =>
-                    setTraderLevel(
-                      event.target.value as
-                        | 'beginner'
-                        | 'intermediate'
-                        | 'advanced'
-                    )
-                  }
-                  className="w-full rounded-lg border border-line bg-bg-2 px-3 py-2.5 text-sm text-fg outline-none focus:border-accent focus:ring-2 focus:ring-focus/10"
-                >
-                  <option value="beginner">Beginner Trader</option>
-                  <option value="intermediate">Intermediate Trader</option>
-                  <option value="advanced">Advanced Trader</option>
-                </select>
-              </div>
+                  <div className="rounded-xl border border-line bg-bg-1 p-4">
+                    <div className="flex items-center gap-3.5">
+                      <div className="relative shrink-0">
+                        {preview ? (
+                          <img src={preview} alt="Profile preview" className="h-14 w-14 rounded-full border border-line object-cover" />
+                        ) : (
+                          <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border border-line-strong bg-bg-3 text-lg font-bold text-fg">
+                            {getInitials(name)}
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border border-line bg-primary text-primary-fg shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-bg-1"
+                          aria-label="Upload profile picture"
+                        >
+                          <Camera className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <span className={cn('truncate text-base font-semibold', name.trim() ? 'text-fg' : 'text-fg-dim')}>
+                            {name.trim() || 'Your name'}
+                          </span>
+                          <ShieldCheck className="h-4 w-4 shrink-0 text-fg-muted" aria-label="Verified account" />
+                        </div>
+                        <p className="mt-0.5 truncate text-sm text-fg-muted">{currentUser.email}</p>
+                        <p className="mt-1 text-xs text-fg-dim">ThePrecisionLab trader</p>
+                      </div>
+                    </div>
+                    <div className="mt-4 flex items-center gap-2 border-t border-line pt-4">
+                      <span className="inline-flex items-center gap-1.5 rounded-md border border-line bg-bg-3 px-2.5 py-1 text-xs font-medium text-fg-muted">
+                        <span className="h-1.5 w-1.5 rounded-full bg-fg-muted" aria-hidden="true" />
+                        {traderLevel.charAt(0).toUpperCase() + traderLevel.slice(1)}
+                      </span>
+                      <span className="text-xs text-fg-dim">Experience level</span>
+                    </div>
+                  </div>
+
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="sr-only"
+                    onChange={(event) => handleAvatarChange(event.target.files?.[0])}
+                  />
+                  <p className="mt-3 text-center text-xs text-fg-dim">Profile photo is optional. JPG, PNG or WebP.</p>
+                </div>
+              </aside>
 
               {error && (
-                <div className="rounded-lg border border-line bg-bg-3 px-3 py-2.5 text-xs text-fg">
+                <div className="lg:col-span-12 rounded-xl border border-loss/30 bg-loss/10 px-4 py-3 text-sm text-loss" role="alert">
                   {error}
                 </div>
               )}
 
-              <div className="flex justify-end gap-2 pt-1">
+              <div className="flex flex-col-reverse gap-2 border-t border-line pt-4 sm:flex-row sm:justify-end lg:col-span-12">
                 <Button
                   variant="ghost"
                   size="sm"
