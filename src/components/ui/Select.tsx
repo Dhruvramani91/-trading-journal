@@ -234,6 +234,8 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
       };
     }, [open, options.length, portalContainer]);
 
+    const effectiveZIndex = portalZIndex ?? (portalContainer !== (typeof document !== 'undefined' ? document.body : null) ? 60 : 150);
+
     useEffect(() => {
       if (!open) return;
       const selectedIndex = options.findIndex((option) => option.value === currentValue);
@@ -502,7 +504,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             style={{
               ...menuStyle,
               visibility: menuStyle ? 'visible' : 'hidden',
-              zIndex: portalZIndex ?? 60,
+              zIndex: effectiveZIndex,
             }}
             className={cn(
               'overflow-y-auto',

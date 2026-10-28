@@ -6,7 +6,6 @@ import {
   ArrowLeft,
   ArrowRight,
   Camera,
-  Check,
   Compass,
   Eye,
   LoaderCircle,
@@ -463,117 +462,186 @@ export function FirstRunOnboardingPage() {
             ) : (
               <>
                 <div className="flex items-center justify-between gap-3">
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    size="sm"
                     onClick={() => {
                       setStep('profile');
                       setError('');
                     }}
                     disabled={busy}
-                    leftIcon={<ArrowLeft className="h-4 w-4" aria-hidden="true" />}
-                    className="-ml-2 motion-reduce:transition-none"
+                    aria-label="Back to profile"
+                    className="inline-flex items-center gap-2 text-xs font-medium text-neutral-400 hover:text-white transition-colors duration-150 disabled:opacity-50"
                   >
-                    Back to profile
-                  </Button>
-                  <Button type="button" variant="secondary" size="sm" onClick={() => void handleSkipStrategy()} disabled={busy} className="motion-reduce:transition-none">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#262a30] bg-[#121417] text-neutral-400 transition hover:border-neutral-500 hover:text-white shadow-sm">
+                      <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                    <span>Back to profile</span>
+                  </button>
+                  <Button type="button" variant="ghost" size="sm" onClick={() => void handleSkipStrategy()} disabled={busy} className="text-neutral-400 hover:text-white motion-reduce:transition-none">
                     Skip for now
                   </Button>
                 </div>
 
-                <div className="mt-5 max-w-2xl">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">Strategy setup <span className="px-1 text-line-strong">/</span> 02 of 02</p>
-                  <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-tight text-fg sm:text-[2.15rem]">
+                <div className="mt-7 max-w-2xl">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-neutral-400">Strategy setup <span className="px-1 text-[#262a30]">/</span> 02 of 02</p>
+                  <h1 className="mt-3 text-[32px] sm:text-[34px] font-bold leading-tight tracking-tight text-white">
                     Choose your starting template.
                   </h1>
-                  <p className="mt-2 max-w-xl text-sm leading-6 text-fg-muted">
+                  <p className="mt-2 max-w-xl text-[14px] sm:text-[15px] leading-relaxed text-neutral-400">
                     Templates shape the details you record with each trade. Pick one to start, make your own, or skip this and decide later in Settings.
                   </p>
                 </div>
 
-                <fieldset className="mt-7 grid gap-4 sm:grid-cols-2" aria-label="Available strategy templates">
+                <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4" role="radiogroup" aria-label="Available strategy templates">
                   {templates.length > 0 ? templates.map((template) => {
                     const selected = selectedId === template.id;
                     const statsCount = template.fields.filter((field) => field.inStats).length;
                     return (
                       <div
                         key={template.id}
-                        className={`flex min-h-44 flex-col rounded-xl border p-4 transition-colors motion-reduce:transition-none focus-within:ring-2 focus-within:ring-focus focus-within:ring-offset-2 focus-within:ring-offset-bg-0 sm:p-5 ${
+                        role="radio"
+                        aria-checked={selected}
+                        tabIndex={0}
+                        onClick={() => setSelectedId(template.id)}
+                        onKeyDown={(event) => {
+                          if (event.key === ' ' || event.key === 'Enter') {
+                            event.preventDefault();
+                            setSelectedId(template.id);
+                          }
+                        }}
+                        className={`relative flex min-h-[170px] cursor-pointer flex-col justify-between rounded-2xl border p-5 transition-all duration-200 outline-none focus-visible:ring-2 focus-visible:ring-sky-400/60 ${
                           selected
-                            ? 'border-line-strong bg-bg-1 ring-1 ring-line-strong'
-                            : 'border-line bg-bg-1 hover:border-line-strong'
+                            ? 'border-sky-400/85 bg-[#181b20] shadow-[0_0_32px_-4px_rgba(56,189,248,0.20),inset_0_1px_0_0_rgba(255,255,255,0.05)]'
+                            : 'border-[#262a30] bg-[#121417] hover:border-[#383d46] hover:bg-[#181b20]'
                         }`}
                       >
                         <div className="flex flex-1 flex-col">
-                          <input type="radio" id={`strategy-template-${template.id}`} name="journal-strategy-template" value={template.id} checked={selected} onChange={() => setSelectedId(template.id)} className="sr-only" />
+                          <input
+                            type="radio"
+                            id={`strategy-template-${template.id}`}
+                            name="journal-strategy-template"
+                            value={template.id}
+                            checked={selected}
+                            onChange={() => setSelectedId(template.id)}
+                            className="sr-only"
+                          />
                           <div className="flex items-start justify-between gap-3">
-                            <label htmlFor={`strategy-template-${template.id}`} className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-lg focus-within:outline-none">
-                              <span aria-hidden="true" className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border ${selected ? 'border-fg bg-fg text-bg-0' : 'border-line-strong bg-bg-2 text-transparent'}`}>
-                                {selected && <Check className="h-3 w-3 stroke-[2.5]" />}
+                            <label
+                              htmlFor={`strategy-template-${template.id}`}
+                              onClick={(event) => event.stopPropagation()}
+                              className="flex min-w-0 flex-1 cursor-pointer items-center gap-3"
+                            >
+                              <span
+                                aria-hidden="true"
+                                className={`flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full transition-colors ${
+                                  selected
+                                    ? 'border-2 border-sky-400 bg-[#090a0c]'
+                                    : 'border border-neutral-600 bg-[#090a0c]'
+                                }`}
+                              >
+                                {selected && (
+                                  <span className="h-2 w-2 rounded-full bg-sky-400 shadow-[0_0_8px_#38bdf8]" />
+                                )}
                               </span>
-                              <span className="min-w-0 text-base font-semibold tracking-tight text-fg">{template.name}</span>
+                              <span className="min-w-0 text-[16px] font-semibold tracking-tight text-white">
+                                {template.name}
+                              </span>
                             </label>
-                            <div className="flex shrink-0 items-center gap-1.5">
-                              <Button type="button" variant="secondary" size="icon" aria-label={`Edit ${template.name}`} title={`Edit ${template.name}`} onClick={() => startTemplateEdit(template)} className="h-9 w-9"><Pencil className="h-4 w-4" aria-hidden="true" /></Button>
-                              <Button type="button" variant="secondary" size="icon" aria-label={`Preview ${template.name}`} title={`Preview ${template.name}`} onClick={() => startTemplatePreview(template)} className="h-9 w-9"><Eye className="h-4 w-4" aria-hidden="true" /></Button>
+                            <div className="flex shrink-0 items-center gap-1.5" onClick={(event) => event.stopPropagation()}>
+                              <button
+                                type="button"
+                                aria-label={`Edit ${template.name}`}
+                                title={`Edit ${template.name}`}
+                                onClick={() => startTemplateEdit(template)}
+                                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#262a30] bg-[#181b20]/60 text-neutral-400 shadow-sm transition hover:border-neutral-500 hover:text-white"
+                              >
+                                <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+                              </button>
+                              <button
+                                type="button"
+                                aria-label={`Preview ${template.name}`}
+                                title={`Preview ${template.name}`}
+                                onClick={() => startTemplatePreview(template)}
+                                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#262a30] bg-[#181b20]/60 text-neutral-400 shadow-sm transition hover:border-neutral-500 hover:text-white"
+                              >
+                                <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                              </button>
                             </div>
                           </div>
-                          <p className="mt-3 text-sm leading-relaxed text-fg-muted">{template.description}</p>
-                          <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-4">
-                            {template.fields.slice(0, 3).map((field) => <span key={field.key} className="rounded-lg border border-line bg-bg-2 px-2.5 py-1 text-xs text-fg-muted">{field.label}</span>)}
-                            {template.fields.length > 3 && <span className="px-1 py-1 text-xs text-fg-dim">+{template.fields.length - 3} more</span>}
-                            <span className="ml-auto text-2xs text-fg-dim">{template.fields.length} prompts · {statsCount} statistics</span>
+
+                          <p className="mb-4 mt-2.5 pl-[30px] text-[13px] leading-relaxed text-neutral-400">
+                            {template.description}
+                          </p>
+
+                          <div className="mt-auto flex flex-wrap items-center gap-2 pl-[30px] pt-1">
+                            {template.fields.slice(0, 2).map((field) => (
+                              <span
+                                key={field.key}
+                                className="rounded-lg border border-[#262a30] bg-[#15171a] px-2.5 py-1 font-mono text-xs text-neutral-300"
+                              >
+                                {field.label}
+                              </span>
+                            ))}
+                            {template.fields.length > 2 && (
+                              <span className="rounded-lg border border-[#262a30] bg-[#15171a] px-2 py-1 font-mono text-xs text-neutral-400">
+                                +{template.fields.length - 2}
+                              </span>
+                            )}
+                            <span className="ml-auto font-mono text-2xs text-neutral-500">
+                              {template.fields.length} prompts · {statsCount} statistics
+                            </span>
                           </div>
                         </div>
                       </div>
                     );
                   }) : (
-                    <div className="rounded-xl border border-dashed border-line-strong bg-bg-1 px-5 py-6 text-center">
-                      <p className="text-sm font-medium text-fg">No templates are available yet</p>
-                      <p className="mt-1 text-xs leading-5 text-fg-muted">You can create one now or continue with the standard journal and decide later.</p>
+                    <div className="col-span-full rounded-2xl border border-dashed border-[#262a30] bg-[#121417] px-5 py-8 text-center">
+                      <p className="text-sm font-medium text-white">No templates are available yet</p>
+                      <p className="mt-1 text-xs leading-5 text-neutral-400">You can create one now or continue with the standard journal and decide later.</p>
                     </div>
                   )}
-                </fieldset>
+                </div>
 
-                <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-bg-1 p-4 sm:p-5">
-                  <div className="flex items-start gap-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold text-fg">Build your own template</p>
-                      <p className="mt-1 text-xs leading-5 text-fg-muted">Start with a blank strategy and customize the fields in Settings.</p>
-                    </div>
-                    <Button
+                <div className="mt-10 flex flex-wrap items-center justify-between gap-4">
+                  <button
+                    type="button"
+                    onClick={() => void handleCreateCustomTemplate()}
+                    disabled={busy}
+                    className="inline-flex items-center gap-2 rounded-xl border border-[#262a30] bg-[#121417] px-4 py-2.5 text-xs font-medium text-neutral-300 shadow-sm transition-all duration-150 hover:border-neutral-500 hover:bg-[#181b20] hover:text-white disabled:opacity-50"
+                  >
+                    <Sparkles className="h-3.5 w-3.5 text-neutral-400" aria-hidden="true" />
+                    <span>Create from scratch</span>
+                  </button>
+
+                  <div className="flex items-center gap-4 sm:gap-6">
+                    <button
                       type="button"
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => void handleCreateCustomTemplate()}
+                      onClick={() => void handleSkipStrategy()}
                       disabled={busy}
-                      className="shrink-0 motion-reduce:transition-none"
+                      className="px-2 py-2.5 text-sm font-medium text-neutral-400 transition-colors duration-150 hover:text-white disabled:opacity-50"
                     >
-                      Create from scratch
-                    </Button>
+                      Skip for now
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busy || !selectedTemplate}
+                      onClick={() => void handleUseTemplate(selectedId)}
+                      className="inline-flex items-center justify-center rounded-xl bg-white px-6 py-2.5 text-[14px] font-semibold text-black shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all duration-150 hover:bg-neutral-200 active:scale-[0.98] disabled:opacity-50"
+                    >
+                      {busy ? (
+                        <LoaderCircle className="mr-2 h-4 w-4 animate-spin text-black" aria-hidden="true" />
+                      ) : null}
+                      <span>{busy ? 'Saving setup…' : `Use ${selectedTemplate?.name ?? 'selected template'}`}</span>
+                      {!busy && (
+                        <ArrowRight className="ml-2 h-3.5 w-3.5 transform transition-transform" aria-hidden="true" />
+                      )}
+                    </button>
                   </div>
                 </div>
 
-                <div className="mt-5 flex flex-col gap-3 border-t border-line pt-5 sm:flex-row sm:items-center">
-                  <Button
-                    type="button"
-                    variant="primary"
-                    size="lg"
-                    disabled={busy || !selectedTemplate}
-                    onClick={() => void handleUseTemplate(selectedId)}
-                    leftIcon={busy ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Check className="h-4 w-4" aria-hidden="true" />}
-                    className="w-full motion-reduce:transition-none sm:w-auto"
-                  >
-                    {busy ? 'Saving setup…' : `Use ${selectedTemplate?.name ?? 'selected template'}`}
-                  </Button>
-                  <Button type="button" variant="ghost" size="lg" onClick={() => void handleSkipStrategy()} disabled={busy} className="w-full motion-reduce:transition-none sm:w-auto">
-                    Skip for now
-                  </Button>
-                  <p className="text-xs leading-5 text-fg-muted sm:ml-auto sm:max-w-[190px] sm:text-right">
-                    You can choose or change a template later in Settings.
-                  </p>
-                </div>
+                <p className="mt-4 text-right text-xs leading-5 text-neutral-500">
+                  You can choose or change a template later in Settings.
+                </p>
               </>
             )}
           </section>
@@ -582,7 +650,7 @@ export function FirstRunOnboardingPage() {
       {previewTemplate && <Dialog.Root open onOpenChange={(open) => { if (!open) setPreviewTemplate(null); }} modal>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm motion-reduce:animate-none" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-[101] flex max-h-[92dvh] w-[min(960px,calc(100vw-24px))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border border-line bg-bg-1 shadow-pop focus:outline-none">
+          <Dialog.Content data-select-portal className="fixed left-1/2 top-1/2 z-[101] flex max-h-[92dvh] w-[min(960px,calc(100vw-24px))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border border-line bg-bg-1 shadow-pop focus:outline-none">
             <header className="flex shrink-0 items-start justify-between gap-4 border-b border-line px-5 py-4">
               <div><Dialog.Title className="text-lg font-semibold text-fg">{previewTemplate.name} · Form preview</Dialog.Title><Dialog.Description className="mt-1 text-sm text-fg-muted">Explore the form fields. Preview values are temporary and will not be saved.</Dialog.Description></div>
               <Dialog.Close asChild><Button type="button" variant="ghost" size="icon" aria-label="Close preview"><X className="h-5 w-5" /></Button></Dialog.Close>
@@ -595,7 +663,7 @@ export function FirstRunOnboardingPage() {
       {editDraft && <Dialog.Root open onOpenChange={(open) => { if (!open && !busy) setEditDraft(null); }} modal>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm motion-reduce:animate-none" />
-          <Dialog.Content className="fixed left-1/2 top-1/2 z-[101] flex max-h-[92dvh] w-[min(1040px,calc(100vw-24px))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border border-line bg-bg-1 shadow-pop focus:outline-none">
+          <Dialog.Content data-select-portal className="fixed left-1/2 top-1/2 z-[101] flex max-h-[92dvh] w-[min(1040px,calc(100vw-24px))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-2xl border border-line bg-bg-1 shadow-pop focus:outline-none">
             <header className="flex shrink-0 items-start justify-between gap-4 border-b border-line px-5 py-4">
               <div><Dialog.Title className="text-lg font-semibold text-fg">Customize your strategy</Dialog.Title><Dialog.Description className="mt-1 text-sm text-fg-muted">This creates your own editable copy and makes it the default for new trades.</Dialog.Description></div>
               <Dialog.Close asChild><Button type="button" variant="ghost" size="icon" aria-label="Close editor" disabled={busy}><X className="h-5 w-5" /></Button></Dialog.Close>
