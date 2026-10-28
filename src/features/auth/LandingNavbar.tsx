@@ -71,8 +71,9 @@ export function LandingNavbar({ isAuthenticated }: { isAuthenticated: boolean })
     closeMenu();
   }
 
-  const glassBackground = 'rgb(var(--bg-1) / 0.96)';
-  const borderColor = 'rgb(var(--line) / 0.85)';
+  const glassBackground = 'rgba(15, 17, 21, 0.65)';
+  const borderColor = 'rgba(255, 255, 255, 0.08)';
+  const shadow = '0 20px 40px -15px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.08)';
 
   return (
     <>
@@ -87,12 +88,12 @@ export function LandingNavbar({ isAuthenticated }: { isAuthenticated: boolean })
             height: collapsed ? 62 : 72,
             marginTop: collapsed ? (isDesktop ? 16 : 10) : 0,
             borderRadius: collapsed ? 9999 : 0,
-            paddingLeft: collapsed && isDesktop ? 20 : viewportWidth <= 380 ? 6 : viewportWidth <= 640 ? 16 : 24,
-            paddingRight: collapsed && isDesktop ? 8 : viewportWidth <= 380 ? 6 : viewportWidth <= 640 ? 16 : 24,
+            paddingLeft: collapsed && isDesktop ? 22 : viewportWidth <= 380 ? 8 : viewportWidth <= 640 ? 16 : 24,
+            paddingRight: collapsed && isDesktop ? 10 : viewportWidth <= 380 ? 8 : viewportWidth <= 640 ? 16 : 24,
             backgroundColor: collapsed ? glassBackground : 'rgba(0, 0, 0, 0)',
             borderColor: collapsed ? borderColor : 'rgba(0, 0, 0, 0)',
-            boxShadow: 'none',
-            backdropFilter: collapsed ? 'blur(12px)' : 'blur(0px)',
+            boxShadow: collapsed ? shadow : 'none',
+            backdropFilter: collapsed ? 'blur(20px) saturate(180%)' : 'blur(0px)',
           }}
           transition={transition}
         >
