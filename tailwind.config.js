@@ -48,10 +48,10 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Manrope', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
-        mono: ['Geist Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
-        data: ['Geist Mono', 'ui-monospace', 'monospace'],
-        display: ['DM Serif Display', 'Georgia', 'serif'],
+        sans: ['Inter', 'Manrope', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+        mono: ['JetBrains Mono', 'Geist Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+        data: ['JetBrains Mono', 'Geist Mono', 'ui-monospace', 'monospace'],
+        display: ['Inter', 'DM Serif Display', 'Georgia', 'serif'],
       },
       fontSize: {
         '2xs': ['0.6875rem', { lineHeight: '1rem' }],

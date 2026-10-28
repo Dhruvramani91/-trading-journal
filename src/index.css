@@ -51,45 +51,45 @@
 
   .dark {
     color-scheme: dark;
-    --bg: 10 10 11;
-    --bg-0: 10 10 11;
-    --bg-1: 17 17 18;
-    --bg-2: 22 22 23;
-    --bg-3: 30 30 32;
-    --bg-4: 30 30 32;
+    --bg: 9 10 12;
+    --bg-0: 9 10 12;
+    --bg-1: 18 20 23;
+    --bg-2: 24 27 32;
+    --bg-3: 31 35 41;
+    --bg-4: 38 42 48;
 
-    --line: 42 42 45;
-    --line-strong: 58 58 62;
-    --line-subtle: 35 35 38;
+    --line: 38 42 48;
+    --line-strong: 56 61 70;
+    --line-subtle: 28 31 36;
 
-    --fg: 236 236 236;
-    --fg-muted: 142 142 147;
-    --fg-dim: 142 142 147;
-    --fg-inverse: 10 10 11;
+    --fg: 243 244 246;
+    --fg-muted: 156 163 175;
+    --fg-dim: 126 134 149;
+    --fg-inverse: 9 10 12;
 
-    --accent: 232 232 234;
-    --accent-hover: 244 244 246;
-    --accent-muted: 142 142 147;
-    --accent-fg: 10 10 11;
-    --primary-soft: 255 255 255 / 0.07;
-    --focus: 212 212 216;
+    --accent: 255 255 255;
+    --accent-hover: 229 231 235;
+    --accent-muted: 156 163 175;
+    --accent-fg: 9 10 12;
+    --primary-soft: 56 189 248 / 0.12;
+    --focus: 56 189 248;
 
-    --grade-a-plus: 95 191 138;
-    --grade-a: 116 169 229;
-    --grade-b: 223 176 92;
-    --grade-c: 229 120 122;
+    --grade-a-plus: 52 211 153;
+    --grade-a: 56 189 248;
+    --grade-b: 234 179 8;
+    --grade-c: 248 113 113;
 
-    --win: 95 191 138;
-    --win-text: 95 191 138;
-    --win-muted: 95 191 138;
-    --loss: 229 120 122;
-    --loss-text: 229 120 122;
-    --loss-muted: 229 120 122;
-    --be: 142 142 147;
-    --be-muted: 142 142 147;
+    --win: 52 211 153;
+    --win-text: 52 211 153;
+    --win-muted: 52 211 153;
+    --loss: 248 113 113;
+    --loss-text: 248 113 113;
+    --loss-muted: 248 113 113;
+    --be: 156 163 175;
+    --be-muted: 156 163 175;
 
-    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.28);
-    --shadow-pop: 0 14px 36px rgba(0, 0, 0, 0.42);
+    --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.02);
+    --shadow-pop: 0 16px 40px -8px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04);
     --shadow-shell: none;
     --shadow-input: none;
   }
