@@ -116,8 +116,10 @@ export function MistakesPage() {
           <CardBody>
             <EmptyState
               icon={<AlertTriangle className="h-6 w-6" />}
-              title="No mistakes recorded"
-              description="All your trades are marked 'No mistake'. Keep up the discipline!"
+              title={noMistakeBucket?.count ? 'No mistakes reported' : 'No mistake data yet'}
+              description={noMistakeBucket?.count
+                ? `All ${noMistakeBucket.count} ${noMistakeBucket.count === 1 ? 'trade is' : 'trades are'} marked “No mistake”.`
+                : 'Choose a mistake or mark “No mistake” in a trade to start tracking execution patterns.'}
             />
           </CardBody>
         </Card>

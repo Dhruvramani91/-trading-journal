@@ -1143,6 +1143,7 @@ export function TradeFormPage() {
                 <FormField
                   key={field.key}
                   label={field.label}
+                  hint={field.key === 'universalModel' ? 'Describes the liquidity path: internal to external, external to internal, or external to external.' : undefined}
                   required={isSetup}
                   fieldKey={isSetup ? 'setup' : undefined}
                   invalid={isSetup && Boolean(fieldErrors.setup)}

@@ -3,6 +3,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { useNavigate, useParams } from 'react-router-dom';
 import { BarChart3, CalendarDays, Camera, Check, ChevronLeft, ChevronRight, FlaskConical, ImagePlus, Pencil, Plus, ScrollText, Trash2, X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { FormField, Segmented, Select } from '@/components/ui/Select';
 import { Input } from '@/components/ui/Input';
@@ -68,6 +69,7 @@ export function BacktestStoragePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [deletingSessionId, setDeletingSessionId] = useState('');
+  const [sessionToDelete, setSessionToDelete] = useState<BacktestSession | null>(null);
 
   async function reload() {
     setLoading(true);
@@ -97,7 +99,6 @@ export function BacktestStoragePage() {
   }
 
   async function removeSession(session: BacktestSession) {
-    if (!window.confirm(`Delete “${session.name}” and all of its backtest trades? This cannot be undone.`)) return;
     setDeletingSessionId(session.id); setError('');
     try {
       await deleteBacktestSession(session.id);
@@ -143,7 +144,7 @@ export function BacktestStoragePage() {
         </button>
         <footer className="flex justify-end gap-1 border-t border-line px-3 py-2">
           <Button type="button" variant="ghost" size="icon-sm" aria-label={`Edit ${session.name}`} title="Edit backtest" onClick={() => setEditingSession(session)} className="text-fg-dim hover:bg-bg-4 hover:text-fg"><Pencil className="h-4 w-4" /></Button>
-          <Button type="button" variant="ghost" size="icon-sm" aria-label={`Delete ${session.name}`} title="Delete backtest" disabled={deletingSessionId === session.id} onClick={() => void removeSession(session)} className="text-fg-dim hover:bg-bg-4 hover:text-loss"><Trash2 className="h-4 w-4" /></Button>
+          <Button type="button" variant="ghost" size="icon-sm" aria-label={`Delete ${session.name}`} title="Delete backtest" disabled={deletingSessionId === session.id} onClick={() => setSessionToDelete(session)} className="text-fg-dim hover:bg-bg-4 hover:text-loss"><Trash2 className="h-4 w-4" /></Button>
         </footer>
       </Card>)}</div>}
     <CreateSessionDialog
@@ -154,6 +155,7 @@ export function BacktestStoragePage() {
       defaultTemplateId={defaultTemplateId}
       onSave={saveSession}
     />
+    <ConfirmDialog open={sessionToDelete !== null} onOpenChange={(open) => { if (!open) setSessionToDelete(null); }} title={`Delete “${sessionToDelete?.name ?? 'backtest'}”?`} description="This permanently deletes the backtest session and all trades saved inside it." confirmLabel={deletingSessionId ? 'Deleting…' : 'Delete backtest'} onConfirm={async () => { if (sessionToDelete) await removeSession(sessionToDelete); setSessionToDelete(null); }} />
   </>;
 }
 
@@ -230,6 +232,7 @@ function BacktestWorkspace({ session, section, tradeId, onBack, onSection, onTra
   const [editorOpen, setEditorOpen] = useState(false);
   const [editingTrade, setEditingTrade] = useState<BacktestTrade | null>(null);
   const [saving, setSaving] = useState(false);
+  const [tradeToDelete, setTradeToDelete] = useState<BacktestTrade | null>(null);
   async function reloadTrades() {
     setTradeLoading(true);
     try { setTrades(await listBacktestTrades(session.id)); setTradeError(''); }
@@ -247,7 +250,6 @@ function BacktestWorkspace({ session, section, tradeId, onBack, onSection, onTra
     finally { setSaving(false); }
   }
   async function removeTrade(trade: BacktestTrade) {
-    if (!window.confirm('Delete this backtest trade?')) return;
     try { await deleteBacktestTrade(session.id, trade.id); setTrades((current) => current.filter((item) => item.id !== trade.id)); }
     catch (reason) { setTradeError(reason instanceof Error ? reason.message : 'Could not delete trade.'); }
   }
@@ -255,8 +257,9 @@ function BacktestWorkspace({ session, section, tradeId, onBack, onSection, onTra
   const selectedTrade = trades.find((trade) => trade.id === tradeId);
   if (tradeId) {
     return <>
-      <BacktestTradeDetails session={session} trade={selectedTrade} loading={tradeLoading} onBack={() => onSection('journal')} onEdit={() => { if (selectedTrade) { setEditingTrade(selectedTrade); setEditorOpen(true); } }} onDelete={() => { if (selectedTrade) void removeTrade(selectedTrade).then(() => onSection('journal')); }} />
+      <BacktestTradeDetails session={session} trade={selectedTrade} loading={tradeLoading} onBack={() => onSection('journal')} onEdit={() => { if (selectedTrade) { setEditingTrade(selectedTrade); setEditorOpen(true); } }} onDelete={() => { if (selectedTrade) setTradeToDelete(selectedTrade); }} />
       <BacktestTradeDialog open={editorOpen} onOpenChange={setEditorOpen} session={session} trade={editingTrade} saving={saving} onSave={(input) => void saveTrade(input)} />
+      <ConfirmDialog open={tradeToDelete !== null} onOpenChange={(open) => { if (!open) setTradeToDelete(null); }} title="Delete backtest trade?" description="This permanently removes this trade from the current backtest session." confirmLabel="Delete trade" onConfirm={async () => { if (tradeToDelete) { await removeTrade(tradeToDelete); onSection('journal'); } setTradeToDelete(null); }} />
     </>;
   }
   return <>
@@ -268,7 +271,7 @@ function BacktestWorkspace({ session, section, tradeId, onBack, onSection, onTra
     {tradeError && <div role="alert" className="mb-4 rounded-lg border border-line bg-bg-3 px-4 py-3 text-sm text-fg">{tradeError}</div>}
     {section === 'journal' ? <Card><CardHeader><CardTitle>Backtest journal</CardTitle></CardHeader><CardBody className="p-0">
       {tradeLoading ? <p className="px-5 py-8 text-center text-sm text-fg-muted">Loading trades…</p> : trades.length === 0 ? <div className="py-10 text-center"><h2 className="text-sm font-semibold text-fg">No backtest trades yet</h2><p className="mt-1 text-sm text-fg-muted">Add a trade to this session. It stays separate from your regular journal.</p><Button className="mt-4" leftIcon={<Plus className="h-4 w-4" />} onClick={() => { setEditingTrade(null); setEditorOpen(true); }}>Add backtest trade</Button></div>
-        : <div className="overflow-x-auto"><table className="w-full min-w-[680px] text-left text-sm"><thead className="border-b border-line bg-bg-3 text-xs uppercase tracking-wide text-fg-dim"><tr><th className="px-4 py-3">Date</th><th className="px-4 py-3">Instrument</th><th className="px-4 py-3">Direction</th><th className="px-4 py-3">Result</th><th className="px-4 py-3">Grade</th><th className="px-4 py-3">R</th><th className="px-4 py-3 text-right">Actions</th></tr></thead><tbody className="divide-y divide-line">{trades.map((trade) => <tr key={trade.id} tabIndex={0} role="link" onClick={() => onTrade(trade.id)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onTrade(trade.id); } }} className="cursor-pointer hover:bg-bg-3/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus/50"><td className="px-4 py-3 text-fg-muted">{formatDate(trade.openedAt)}</td><td className="px-4 py-3 font-medium text-fg">{trade.instrument}</td><td className="px-4 py-3 capitalize text-fg-muted">{trade.direction}</td><td className="px-4 py-3 capitalize text-fg-muted">{trade.result}</td><td className="px-4 py-3 text-fg-muted">{trade.grade ?? '—'}</td><td className="px-4 py-3 text-fg-muted">{trade.realizedR ?? '—'}</td><td className="px-4 py-3"><div className="flex justify-end gap-1"><Button variant="ghost" size="icon-sm" aria-label={`Edit ${trade.instrument} trade`} title="Edit trade" onClick={(event) => { event.stopPropagation(); setEditingTrade(trade); setEditorOpen(true); }}><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon-sm" aria-label={`Delete ${trade.instrument} trade`} title="Delete trade" onClick={(event) => { event.stopPropagation(); void removeTrade(trade); }}><Trash2 className="h-4 w-4 text-loss" /></Button></div></td></tr>)}</tbody></table></div>}
+        : <div className="overflow-x-auto"><table className="w-full min-w-[680px] text-left text-sm"><thead className="border-b border-line bg-bg-3 text-xs uppercase tracking-wide text-fg-dim"><tr><th className="px-4 py-3">Date</th><th className="px-4 py-3">Instrument</th><th className="px-4 py-3">Direction</th><th className="px-4 py-3">Result</th><th className="px-4 py-3">Grade</th><th className="px-4 py-3">R</th><th className="px-4 py-3 text-right">Actions</th></tr></thead><tbody className="divide-y divide-line">{trades.map((trade) => <tr key={trade.id} tabIndex={0} role="link" onClick={() => onTrade(trade.id)} onKeyDown={(event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onTrade(trade.id); } }} className="cursor-pointer hover:bg-bg-3/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus/50"><td className="px-4 py-3 text-fg-muted">{formatDate(trade.openedAt)}</td><td className="px-4 py-3 font-medium text-fg">{trade.instrument}</td><td className="px-4 py-3 capitalize text-fg-muted">{trade.direction}</td><td className="px-4 py-3 capitalize text-fg-muted">{trade.result}</td><td className="px-4 py-3 text-fg-muted">{trade.grade ?? '—'}</td><td className="px-4 py-3 text-fg-muted">{trade.realizedR ?? '—'}</td><td className="px-4 py-3"><div className="flex justify-end gap-1"><Button variant="ghost" size="icon-sm" aria-label={`Edit ${trade.instrument} trade`} title="Edit trade" onClick={(event) => { event.stopPropagation(); setEditingTrade(trade); setEditorOpen(true); }}><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon-sm" aria-label={`Delete ${trade.instrument} trade`} title="Delete trade" onClick={(event) => { event.stopPropagation(); setTradeToDelete(trade); }}><Trash2 className="h-4 w-4 text-loss" /></Button></div></td></tr>)}</tbody></table></div>}
     </CardBody></Card> : section === 'statistics' ? <BacktestStatistics session={session} trades={trades} /> : section === 'calendar' ? <BacktestCalendar session={session} trades={trades} /> : <Card><CardHeader><CardTitle>{activeTab.label}</CardTitle></CardHeader><CardBody>
       <div className="py-7 text-center"><span className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-xl border border-line bg-bg-3 text-fg-muted"><activeTab.icon className="h-4 w-4" /></span><h2 className="text-sm font-semibold text-fg">{trades.length ? 'Nothing to summarize yet' : 'No backtest trades yet'}</h2><p className="mx-auto mt-1 max-w-lg text-sm text-fg-muted">{trades.length ? `The ${section} breakdown will be available as the backtest analytics are added.` : 'Add trades to this session to build its independent performance history.'}</p></div>
     </CardBody></Card>}

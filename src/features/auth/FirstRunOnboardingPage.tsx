@@ -10,7 +10,6 @@ import {
   CircleHelp,
   Compass,
   Eye,
-  Layers3,
   LoaderCircle,
   NotebookPen,
   Pencil,
@@ -366,8 +365,8 @@ export function FirstRunOnboardingPage() {
           </div>
         )}
 
-        <div className="grid flex-1 items-start gap-7 py-7 sm:py-9 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_350px]">
-          <section className="min-w-0">
+        <div className={`grid flex-1 items-start gap-7 py-7 sm:py-9 ${step === 'profile' ? 'lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_350px]' : 'grid-cols-1'}`}>
+          <section className={`min-w-0 ${step === 'strategy' ? 'w-full' : ''}`}>
             {step === 'profile' ? (
               <>
                 <div className="max-w-2xl">
@@ -381,7 +380,7 @@ export function FirstRunOnboardingPage() {
                 </div>
 
                 <Card className="mt-6 overflow-hidden rounded-2xl bg-bg-1 shadow-card">
-                  <form onSubmit={handleProfileSubmit} className="space-y-7 p-5 sm:p-7">
+                  <form onSubmit={handleProfileSubmit} className="space-y-5 p-4 sm:p-5">
                     <div>
                       <label htmlFor="onboarding-name" className="block text-sm font-semibold text-fg">
                         Your name <span className="text-fg-muted" aria-hidden="true">*</span>
@@ -417,7 +416,7 @@ export function FirstRunOnboardingPage() {
                           return (
                             <label
                               key={level.id}
-                              className={`relative flex min-h-[142px] cursor-pointer flex-col rounded-xl border p-4 transition-colors motion-reduce:transition-none focus-within:ring-2 focus-within:ring-focus focus-within:ring-offset-2 focus-within:ring-offset-bg-1 ${
+                              className={`relative flex min-h-28 cursor-pointer flex-col rounded-xl border p-3 transition-colors motion-reduce:transition-none focus-within:ring-2 focus-within:ring-focus focus-within:ring-offset-2 focus-within:ring-offset-bg-1 sm:p-3.5 ${
                                 selected
                                   ? 'border-line-strong bg-bg-2 ring-1 ring-line-strong'
                                   : 'border-line bg-bg-2 hover:border-line-strong hover:bg-bg-3'
@@ -432,8 +431,8 @@ export function FirstRunOnboardingPage() {
                                 className="sr-only"
                               />
                               <span className="flex items-center justify-between">
-                                <span className={`grid h-8 w-8 place-items-center rounded-lg ${selected ? 'bg-accent text-accent-fg' : 'bg-bg-3 text-fg-muted'}`}>
-                                  <Icon className="h-4 w-4" aria-hidden="true" />
+                                <span className={`grid h-7 w-7 place-items-center rounded-lg ${selected ? 'bg-accent text-accent-fg' : 'bg-bg-3 text-fg-muted'}`}>
+                                  <Icon className="h-3.5 w-3.5" aria-hidden="true" />
                                 </span>
                                 <span className={`grid h-5 w-5 place-items-center rounded-full border ${selected ? 'border-fg bg-fg text-bg-0' : 'border-line-strong text-transparent'}`}>
                                   {selected && <Check className="h-3 w-3 stroke-[2.5]" aria-hidden="true" />}
@@ -529,41 +528,38 @@ export function FirstRunOnboardingPage() {
                   </p>
                 </div>
 
-                <fieldset className="mt-6 space-y-3" aria-label="Available strategy templates">
+                <fieldset className="mt-7 grid gap-4 sm:grid-cols-2" aria-label="Available strategy templates">
                   {templates.length > 0 ? templates.map((template) => {
                     const selected = selectedId === template.id;
                     const statsCount = template.fields.filter((field) => field.inStats).length;
                     return (
                       <div
                         key={template.id}
-                        className={`rounded-xl border p-4 transition-colors motion-reduce:transition-none focus-within:ring-2 focus-within:ring-focus focus-within:ring-offset-2 focus-within:ring-offset-bg-0 sm:p-5 ${
+                        className={`flex min-h-48 flex-col rounded-2xl border p-4 transition-colors motion-reduce:transition-none focus-within:ring-2 focus-within:ring-focus focus-within:ring-offset-2 focus-within:ring-offset-bg-0 sm:p-5 ${
                           selected
                             ? 'border-line-strong bg-bg-1 ring-1 ring-line-strong'
                             : 'border-line bg-bg-1 hover:border-line-strong'
                         }`}
                       >
-                        <div className="flex items-start gap-3.5">
+                        <div className="flex flex-1 flex-col">
                           <input type="radio" id={`strategy-template-${template.id}`} name="journal-strategy-template" value={template.id} checked={selected} onChange={() => setSelectedId(template.id)} className="sr-only" />
-                          <label htmlFor={`strategy-template-${template.id}`} className="flex min-w-0 flex-1 cursor-pointer items-start gap-3.5 rounded-lg focus-within:outline-none">
-                            <span aria-hidden="true" className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border ${selected ? 'border-fg bg-fg text-bg-0' : 'border-line-strong bg-bg-2 text-transparent'}`}>
-                              {selected && <Check className="h-3 w-3 stroke-[2.5]" />}
-                            </span>
-                            <span className="min-w-0 flex-1">
-                              <span className="flex flex-wrap items-start justify-between gap-2">
-                                <span className="text-sm font-semibold text-fg">{template.name}</span>
-                                <span className="rounded-md border border-line bg-bg-2 px-2 py-1 text-2xs font-medium text-fg-muted">{template.fields.length} {template.fields.length === 1 ? 'prompt' : 'prompts'}</span>
+                          <div className="flex items-start justify-between gap-3">
+                            <label htmlFor={`strategy-template-${template.id}`} className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-lg focus-within:outline-none">
+                              <span aria-hidden="true" className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border ${selected ? 'border-fg bg-fg text-bg-0' : 'border-line-strong bg-bg-2 text-transparent'}`}>
+                                {selected && <Check className="h-3 w-3 stroke-[2.5]" />}
                               </span>
-                              <span className="mt-1 block text-sm leading-relaxed text-fg-muted">{template.description}</span>
-                              {template.fields.length > 0 && <span className="mt-3 flex flex-wrap gap-1.5">
-                                {template.fields.slice(0, 3).map((field) => <span key={field.key} className="rounded-md border border-line bg-bg-2 px-2 py-1 text-2xs text-fg-muted">{field.label}</span>)}
-                                {template.fields.length > 3 && <span className="px-1 py-1 text-2xs text-fg-dim">+{template.fields.length - 3} more</span>}
-                                {statsCount > 0 && <span className="ml-auto self-center text-2xs text-fg-dim">{statsCount} in performance reviews</span>}
-                              </span>}
-                            </span>
-                          </label>
-                          <div className="flex shrink-0 gap-2">
-                            <Button type="button" variant="secondary" size="sm" aria-label={`Preview ${template.name}`} onClick={() => startTemplatePreview(template)} leftIcon={<Eye className="h-4 w-4" aria-hidden="true" />} className="min-h-10">Preview</Button>
-                            <Button type="button" variant="secondary" size="sm" aria-label={`Edit ${template.name}`} onClick={() => startTemplateEdit(template)} leftIcon={<Pencil className="h-4 w-4" aria-hidden="true" />} className="min-h-10">Edit</Button>
+                              <span className="min-w-0 text-base font-semibold tracking-tight text-fg">{template.name}</span>
+                            </label>
+                            <div className="flex shrink-0 items-center gap-1.5">
+                              <Button type="button" variant="secondary" size="icon" aria-label={`Edit ${template.name}`} title={`Edit ${template.name}`} onClick={() => startTemplateEdit(template)} className="h-9 w-9"><Pencil className="h-4 w-4" aria-hidden="true" /></Button>
+                              <Button type="button" variant="secondary" size="icon" aria-label={`Preview ${template.name}`} title={`Preview ${template.name}`} onClick={() => startTemplatePreview(template)} className="h-9 w-9"><Eye className="h-4 w-4" aria-hidden="true" /></Button>
+                            </div>
+                          </div>
+                          <p className="mt-3 text-sm leading-relaxed text-fg-muted">{template.description}</p>
+                          <div className="mt-auto flex flex-wrap items-center gap-1.5 pt-4">
+                            {template.fields.slice(0, 3).map((field) => <span key={field.key} className="rounded-lg border border-line bg-bg-2 px-2.5 py-1 text-xs text-fg-muted">{field.label}</span>)}
+                            {template.fields.length > 3 && <span className="px-1 py-1 text-xs text-fg-dim">+{template.fields.length - 3} more</span>}
+                            <span className="ml-auto text-2xs text-fg-dim">{template.fields.length} prompts · {statsCount} statistics</span>
                           </div>
                         </div>
                       </div>
@@ -576,12 +572,11 @@ export function FirstRunOnboardingPage() {
                   )}
                 </fieldset>
 
-                <div className="mt-5 rounded-xl border border-line bg-bg-1 p-4 sm:p-5">
+                <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-bg-1 p-4 sm:p-5">
                   <div className="flex items-start gap-3">
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-bg-3 text-fg-muted"><Layers3 className="h-4 w-4" aria-hidden="true" /></span>
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-fg">Prefer to shape your own?</p>
-                      <p className="mt-1 text-xs leading-5 text-fg-muted">Start with a blank template and customize its fields in Settings.</p>
+                      <p className="text-sm font-semibold text-fg">Build your own template</p>
+                      <p className="mt-1 text-xs leading-5 text-fg-muted">Start with a blank strategy and customize the fields in Settings.</p>
                     </div>
                     <Button
                       type="button"
@@ -591,7 +586,7 @@ export function FirstRunOnboardingPage() {
                       disabled={busy}
                       className="shrink-0 motion-reduce:transition-none"
                     >
-                      Create my own template
+                      Create from scratch
                     </Button>
                   </div>
                 </div>
@@ -619,7 +614,7 @@ export function FirstRunOnboardingPage() {
             )}
           </section>
 
-          <aside aria-label="Onboarding details" className="lg:sticky lg:top-8">
+          <aside aria-label="Onboarding details" className={step === 'strategy' ? 'hidden' : 'lg:sticky lg:top-8'}>
             <Card className="overflow-hidden rounded-2xl bg-bg-1 shadow-card">
               <div className="flex items-center gap-3 border-b border-line px-5 py-4">
                 <span className="grid h-10 w-10 place-items-center rounded-xl bg-bg-3 text-fg"><NotebookPen className="h-5 w-5" aria-hidden="true" /></span>

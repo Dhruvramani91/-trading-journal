@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
-import { BarChart3 } from 'lucide-react';
+import { BarChart3, ChevronDown } from 'lucide-react';
 
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Loader } from '@/components/ui/Loader';
@@ -456,9 +456,15 @@ export function StatisticsPage() {
               />
       </section>
 
-            {/* =======================================================
-                SECONDARY METRICS
-               ======================================================= */}
+            <details className="group border-t border-line">
+              <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-3 text-sm font-semibold text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/60 [&::-webkit-details-marker]:hidden">
+                <span className="min-w-0">
+                  <span className="block">More statistics</span>
+                  <span className="mt-0.5 block text-xs font-normal text-fg-muted">Best and worst trades, drawdowns, and streaks</span>
+                </span>
+                <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 text-fg-muted transition-transform group-open:rotate-180 motion-reduce:transition-none" />
+              </summary>
+              <div>
 
             <section aria-label="Additional R and P&L statistics" className="grid grid-cols-2 gap-x-4 gap-y-5 border-t border-line px-4 py-5 sm:grid-cols-3 sm:px-5 xl:grid-cols-5 xl:gap-x-0 xl:divide-x xl:divide-line xl:px-6 [&>*]:px-3 xl:[&>*:first-child]:pl-0 xl:[&>*:last-child]:pr-0">
 
@@ -552,6 +558,8 @@ export function StatisticsPage() {
                 )}`}
               />
             </section>
+              </div>
+            </details>
           </Card>
 
           {/* =========================================================

@@ -255,7 +255,7 @@ export function CheckoutPage() {
         )}
       </header>
 
-      <div className="mx-auto flex min-h-[calc(100dvh-5rem)] w-full max-w-6xl items-center justify-center py-5 sm:min-h-[calc(100dvh-6rem)]">
+      <div className="mx-auto flex min-h-[calc(100dvh-5rem)] w-full max-w-5xl items-center justify-center py-5 sm:min-h-[calc(100dvh-6rem)]">
         <div className="grid w-full min-w-0 items-start gap-5 lg:grid-cols-12 lg:gap-8">
           <section aria-labelledby="checkout-title" className="min-w-0 lg:col-span-7">
             <div className="mb-6">
@@ -276,7 +276,7 @@ export function CheckoutPage() {
             <p className="mb-3 text-xs text-fg-dim">{!billingRegion.ready ? 'Detecting billing region…' : manualInternationalUnavailable ? 'International location could not be verified. Only India billing is available for this session.' : `Billing region: ${billingRegion.country} · ${billingRegion.currency}${billingRegion.currency === 'USD' && !billingRegion.usdEnabled ? ' · International checkout is not available yet' : ''}`}</p>
 
             {billingAvailable ? (
-              <div aria-label="Subscription plans" role="radiogroup" className="grid gap-3 sm:grid-cols-2">
+              <div aria-label="Subscription plans" role="radiogroup" className="grid gap-3">
                 {(Object.keys(getPlanDetails(billingRegion.currency)) as BillingPlan[]).map((option) => {
                   const selected = option === plan;
                   const optionDetails = getPlanDetails(billingRegion.currency)[option];
@@ -286,10 +286,10 @@ export function CheckoutPage() {
                       to={`/checkout?plan=${option}`}
                       aria-current={selected ? 'true' : undefined}
                       aria-label={`${optionDetails.name}, ${optionDetails.amount} ${optionDetails.cycle}${selected ? ', selected' : ''}`}
-                      className={`group relative flex min-h-28 items-center justify-between gap-3 rounded-2xl border p-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus motion-reduce:transition-none ${selected ? 'border-focus bg-bg-3 ring-1 ring-focus/40' : 'border-line bg-bg-2 hover:border-line-strong hover:bg-bg-3'}`}
+                      className={`group relative flex min-h-28 items-center justify-between gap-3 rounded-2xl border p-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus motion-reduce:transition-none ${selected ? 'border-line-strong bg-bg-3 ring-1 ring-line-strong' : 'border-line bg-bg-2 hover:border-line-strong hover:bg-bg-3'}`}
                     >
                       <span className="flex min-w-0 items-center gap-3.5">
-                        <span aria-hidden="true" className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 ${selected ? 'border-focus bg-bg-0' : 'border-line-strong group-hover:border-focus'}`}>
+                        <span aria-hidden="true" className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 ${selected ? 'border-fg bg-bg-0' : 'border-line-strong group-hover:border-line-strong'}`}>
                           {selected && <span className="h-2.5 w-2.5 rounded-full bg-fg" />}
                         </span>
                         <span className="min-w-0">

@@ -164,7 +164,7 @@ function TemplateFormPreview({ template, values, onChange, portalZIndex }: { tem
 }
 
 function PreviewField({ field, value, onChange, portalZIndex }: { field: PreviewControl; value: string; onChange: (value: string) => void; portalZIndex?: number }) {
-  return <FormField label={field.label}>
+  return <FormField label={field.label} hint={field.key === 'universalModel' ? 'Describes the liquidity path: internal to external, external to internal, or external to external.' : undefined}>
     {field.type === 'datetime' ? <DateTimePicker value={value} onChange={onChange} placeholder="Select date and time" />
       : field.type === 'boolean' ? <AnimatedCheckBox aria-label={field.label} checked={value === 'YES' || value === 'true'} onChange={(event) => onChange(event.target.checked ? 'YES' : '')} />
       : field.type === 'segment' ? <Segmented<string> value={value} onChange={onChange} options={(field.options ?? []).map((option) => ({ value: option, label: option }))} fullWidth />

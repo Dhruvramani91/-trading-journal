@@ -539,7 +539,7 @@ export function JournalPage() {
 
       />
 
-      <p className="-mt-3 text-sm text-fg-muted" aria-live="polite">{filtered.length} of {trades.length} trades · {formatR(filteredSummary.totalR)} · {filteredSummary.winRate == null ? '—' : formatPct(filteredSummary.winRate)} win rate</p>
+      <p className="sr-only" aria-live="polite">{filtered.length} of {trades.length} trades · {formatR(filteredSummary.totalR)} · {filteredSummary.winRate == null ? '—' : formatPct(filteredSummary.winRate)} win rate</p>
 
       {activeFilterCount > 0 ? <ActiveFilterChips filters={filters} fields={filterFields} onRemove={removeFilterChip} onClear={clearFilters} /> : null}
 

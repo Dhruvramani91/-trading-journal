@@ -33,8 +33,8 @@ export function BreakdownCard({ breakdown }: BreakdownCardProps) {
           </h2>
         </div>
 
-        <p className="border-t border-line px-5 py-6 text-sm text-fg-dim">
-          No data for this category yet.
+        <p className="border-t border-line px-5 py-6 text-sm text-fg-muted">
+          Log trades with a value for {breakdown.fieldLabel} to see this breakdown.
         </p>
       </Card>
     );

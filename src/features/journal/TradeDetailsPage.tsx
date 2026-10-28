@@ -11,6 +11,7 @@ import { ResultPill } from '@/components/ui/ResultPill';
 import { DirectionPill } from '@/components/ui/DirectionPill';
 import { Stat } from '@/components/ui/Stat';
 import { Loader } from '@/components/ui/Loader';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 import { useTradesStore } from '@/store/tradesStore';
 import { useAuthStore } from '@/store/authStore';
@@ -32,6 +33,7 @@ export function TradeDetailsPage() {
   const [trade, setTrade] = useState<Trade | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [resolvedPhotoUrls, setResolvedPhotoUrls] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -128,8 +130,6 @@ export function TradeDetailsPage() {
   async function handleDelete() {
     if (!id) return;
 
-    if (!window.confirm('Delete this trade?')) return;
-
     setDeleting(true);
 
     await remove(id, trade ?? undefined);
@@ -212,7 +212,7 @@ export function TradeDetailsPage() {
 
             <Button
               variant="danger"
-              onClick={handleDelete}
+              onClick={() => setDeleteConfirmOpen(true)}
               disabled={deleting}
               leftIcon={<Trash2 className="h-4 w-4" />}
             >
@@ -378,6 +378,14 @@ export function TradeDetailsPage() {
             </CardBody>
           </Card>
         )}
+      <ConfirmDialog
+        open={deleteConfirmOpen}
+        onOpenChange={setDeleteConfirmOpen}
+        title="Delete this trade?"
+        description="This permanently removes the trade and its saved details from your journal."
+        confirmLabel={deleting ? 'Deleting…' : 'Delete trade'}
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }

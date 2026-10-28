@@ -41,9 +41,9 @@ export function SettingsPage() {
 }
 
 function SettingsLink({ to, icon, title, description }: { to: string; icon: React.ReactNode; title: string; description: string }) {
-  return <Link to={to} className="group block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50">
-    <Card className="h-full transition-colors group-hover:border-line-strong group-hover:bg-bg-3"><CardBody className="flex min-h-[112px] items-center gap-4 p-5">
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">{icon}</span>
+  return <Link to={to} className="group block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/70 focus-visible:ring-offset-2 focus-visible:ring-offset-bg-0 motion-reduce:transform-none">
+    <Card className="h-full transition duration-150 group-hover:-translate-y-0.5 group-hover:border-line-strong group-hover:bg-bg-3 group-active:translate-y-0 motion-reduce:transform-none motion-reduce:transition-none"><CardBody className="flex min-h-[112px] items-center gap-4 p-5">
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-line bg-bg-3 text-fg-muted transition-colors group-hover:text-fg motion-reduce:transition-none">{icon}</span>
       <span className="min-w-0 flex-1"><CardTitle>{title}</CardTitle><span className="mt-1 block text-sm text-fg-muted">{description}</span></span>
       <ArrowRight className="h-4 w-4 shrink-0 text-fg-dim transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" />
     </CardBody></Card>

@@ -92,9 +92,9 @@ export function MobileNav() {
             <div className="mx-auto mb-4 h-1 w-9 rounded-full bg-fg-dim/50" />
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-base font-semibold text-fg">More</h2>
-              <button type="button" onClick={() => setOpen(false)} aria-label="Close navigation menu" className="flex h-9 w-9 items-center justify-center rounded-lg text-fg-muted hover:bg-bg-3 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/60"><X className="h-4 w-4" /></button>
+              <button type="button" onClick={() => setOpen(false)} aria-label="Close navigation menu" className="flex h-11 w-11 items-center justify-center rounded-lg text-fg-muted hover:bg-bg-3 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/60"><X className="h-4 w-4" /></button>
             </div>
-            <Link to="/journal/new" className="mb-3 flex h-11 items-center justify-center gap-2 rounded-xl bg-accent text-sm font-semibold text-accent-fg transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/60">
+            <Link to="/journal/new" className="mb-3 flex h-12 items-center justify-center gap-2 rounded-xl bg-accent text-sm font-semibold text-accent-fg transition-colors hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/60">
               <Plus className="h-4 w-4" />New trade
             </Link>
             <div className="space-y-1">
@@ -105,7 +105,7 @@ export function MobileNav() {
                     key={item.to}
                     to={item.to}
                     end={false}
-                    className={({ isActive }) => cn('flex h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/60', isActive ? 'bg-primary-soft text-fg' : 'text-fg-muted hover:bg-bg-3 hover:text-fg')}
+                    className={({ isActive }) => cn('flex h-12 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/60', isActive ? 'bg-primary-soft text-fg' : 'text-fg-muted hover:bg-bg-3 hover:text-fg')}
                   >
                     <Icon className="h-4 w-4" strokeWidth={1.8} />
                     {item.label}
@@ -118,7 +118,7 @@ export function MobileNav() {
                 <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full border border-line bg-bg-3 text-fg-muted">{user?.avatar ? <img src={user.avatar} alt="" className="h-full w-full object-cover" /> : <UserRound className="h-4 w-4" />}</span>
                 <span className="min-w-0"><span className="block truncate text-sm font-semibold text-fg">{user?.name || user?.email || 'Profile'}</span><span className="block text-xs text-fg-muted">View profile</span></span>
               </Link>
-              <ThemeToggle className="h-10 w-10 shrink-0" />
+              <ThemeToggle className="h-12 w-12 shrink-0" />
             </div>
           </nav>
         </>

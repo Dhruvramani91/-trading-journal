@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowUp, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowUp, ChevronDown, TrendingUp, TrendingDown } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Loader } from '@/components/ui/Loader';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -199,6 +199,15 @@ export function DashboardPage() {
             </CardBody>
           </Card>
 
+          <details className="group border-y border-line">
+            <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-3 text-sm font-semibold text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/60 [&::-webkit-details-marker]:hidden">
+              <span className="min-w-0">
+                <span className="block">More performance breakdowns</span>
+                <span className="mt-0.5 block text-xs font-normal text-fg-muted">P&amp;L, setup comparisons, and weekday results</span>
+              </span>
+              <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 text-fg-muted transition-transform group-open:rotate-180 motion-reduce:transition-none" />
+            </summary>
+            <div className="space-y-6 pb-5">
           <section aria-label="Journal P&L statistics" className="space-y-2">
             <h2 className="text-sm font-semibold text-fg">Performance in P&amp;L</h2>
             <div className="grid grid-cols-2 gap-x-5 gap-y-5 border-y border-line py-4 sm:grid-cols-4 sm:gap-x-0 sm:py-5 [&>div]:min-w-0 [&>div]:px-1 sm:[&>div]:px-5 sm:[&>div:not(:first-child)]:border-l sm:[&>div:not(:first-child)]:border-line">
@@ -263,6 +272,8 @@ export function DashboardPage() {
               </CardBody>
             </Card>
           </div>
+            </div>
+          </details>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <Card>

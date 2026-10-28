@@ -450,7 +450,7 @@ html{scroll-padding-top:calc(88px + env(safe-area-inset-top,0px))}
 *,*::before,*::after{box-sizing:border-box}
 body{
   margin:0; background:var(--page); color:var(--ink);
-  font-family:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  font-family:"Manrope",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   font-size:16px; line-height:1.55; -webkit-font-smoothing:antialiased;
 }
 a{color:inherit;text-decoration:none}
@@ -1077,7 +1077,7 @@ footer a:hover{color:var(--ink)}
 .site-footer-marquee-track span{padding-right:2.5rem}
 .site-footer-marquee-track i{padding:0 1.2rem;color:var(--primary);font-style:normal}
 @keyframes pjFooterMarquee{to{transform:translateX(-25%)}}
-.site-footer-giant{position:absolute;z-index:0;right:-.12em;bottom:48px;left:52%;width:max-content;transform:none;color:transparent;background:linear-gradient(180deg,color-mix(in srgb,var(--ink) 8%,transparent),color-mix(in srgb,var(--ink) 2%,transparent));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;-webkit-text-stroke:1px color-mix(in srgb,var(--ink) 10%,transparent);-webkit-mask-image:linear-gradient(to bottom,#000 0%,rgba(0,0,0,.64) 68%,transparent 100%);mask-image:linear-gradient(to bottom,#000 0%,rgba(0,0,0,.64) 68%,transparent 100%);font-size:clamp(9rem,23vw,21rem);font-weight:900;letter-spacing:-.09em;line-height:.78;white-space:nowrap;pointer-events:none;user-select:none}
+.site-footer-giant{position:absolute;z-index:0;right:-.12em;bottom:48px;left:52%;width:max-content;transform:none;color:color-mix(in srgb,var(--ink) 7%,transparent);font-size:clamp(9rem,23vw,21rem);font-weight:900;letter-spacing:-.04em;line-height:.78;white-space:nowrap;pointer-events:none;user-select:none}
 .site-footer-main{position:relative;z-index:1;display:flex;flex:1;width:100%;box-sizing:border-box;flex-direction:column;align-items:center;justify-content:center;padding:104px 18px 70px;text-align:center}
 .site-footer-scroll-links{display:flex;width:100%;flex-direction:column;align-items:center}
 .site-footer-brand{display:flex;align-items:center;gap:9px;color:var(--ink);font-size:14px;font-weight:600;letter-spacing:-.02em}
@@ -1666,7 +1666,7 @@ footer a:hover{transform:translateY(-1px)}
 .steps-progress { background: var(--primary); box-shadow: none; }
 .cell::before, .plan::before, .contact-inner::before, .ap-card::before, .tile::before, .window::before, .shot::before, .pj-spotlight::before { background: none !important; }
 .btn::after, .ap-btn::after { display: none !important; }
-.site-footer-giant { background: none; color: var(--soft); opacity: .08; -webkit-text-fill-color: currentColor; -webkit-text-stroke: 0; -webkit-mask-image: none; mask-image: none; }
+.site-footer-giant { color: color-mix(in srgb,var(--ink) 7%,transparent); }
 .site-footer-cta, .site-footer-legal a { background: var(--panel); box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
 .site-footer-cta::before, .site-footer-legal a::before { display: none; }
 .faq-answer-card, .contact-inner { background: var(--panel) !important; box-shadow: none !important; }
