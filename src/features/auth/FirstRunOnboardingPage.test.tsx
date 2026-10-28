@@ -111,7 +111,7 @@ describe('FirstRunOnboardingPage', () => {
   it('renders Step 1 (Profile) with prefilled name and experience levels', async () => {
     renderPage();
 
-    expect(await screen.findByText('Set up your trader profile.')).toBeInTheDocument();
+    expect(await screen.findByText('Set up your profile')).toBeInTheDocument();
     expect(screen.getByLabelText(/Your name/i)).toHaveValue('Jordan Belfort');
     expect(screen.getByText('Beginner')).toBeInTheDocument();
     expect(screen.getByText('Intermediate')).toBeInTheDocument();
@@ -124,7 +124,7 @@ describe('FirstRunOnboardingPage', () => {
     const nameInput = await screen.findByLabelText(/Your name/i);
     fireEvent.change(nameInput, { target: { value: '   ' } });
 
-    fireEvent.click(screen.getByRole('button', { name: /Continue to strategy/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Continue$/i }));
 
     expect(await screen.findByText('Please enter your name to continue.')).toBeInTheDocument();
     expect(updateProfileMock).not.toHaveBeenCalled();
@@ -139,7 +139,7 @@ describe('FirstRunOnboardingPage', () => {
     // Select Intermediate level
     fireEvent.click(screen.getByLabelText(/Intermediate/i));
 
-    fireEvent.click(screen.getByRole('button', { name: /Continue to strategy/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Continue$/i }));
 
     await waitFor(() => {
       expect(updateProfileMock).toHaveBeenCalledWith('Alex Morgan', null, 'intermediate');
@@ -151,26 +151,26 @@ describe('FirstRunOnboardingPage', () => {
   it('allows navigating back from Step 2 (Strategy) to Step 1 (Profile)', async () => {
     renderPage();
 
-    await screen.findByText('Set up your trader profile.');
-    fireEvent.click(screen.getByRole('button', { name: /Continue to strategy/i }));
+    await screen.findByText('Set up your profile');
+    fireEvent.click(screen.getByRole('button', { name: /^Continue$/i }));
 
     await screen.findByText('Choose your starting template.');
 
     fireEvent.click(screen.getByRole('button', { name: /Back to profile/i }));
 
-    expect(await screen.findByText('Set up your trader profile.')).toBeInTheDocument();
+    expect(await screen.findByText('Set up your profile')).toBeInTheDocument();
   });
 
   it('allows selecting a template and completing onboarding', async () => {
     renderPage();
 
-    await screen.findByText('Set up your trader profile.');
-    fireEvent.click(screen.getByRole('button', { name: /Continue to strategy/i }));
+    await screen.findByText('Set up your profile');
+    fireEvent.click(screen.getByRole('button', { name: /^Continue$/i }));
 
     await screen.findByText('Choose your starting template.');
 
     // Select the second template
-    fireEvent.click(screen.getByLabelText(/Scalping & Momentum/i));
+    fireEvent.click(screen.getByRole('radio', { name: /^Scalping & Momentum$/i }));
 
     fireEvent.click(screen.getByRole('button', { name: /Use Scalping & Momentum/i }));
 
@@ -184,12 +184,12 @@ describe('FirstRunOnboardingPage', () => {
   it('allows creating a custom template which becomes default and completes onboarding', async () => {
     renderPage();
 
-    await screen.findByText('Set up your trader profile.');
-    fireEvent.click(screen.getByRole('button', { name: /Continue to strategy/i }));
+    await screen.findByText('Set up your profile');
+    fireEvent.click(screen.getByRole('button', { name: /^Continue$/i }));
 
     await screen.findByText('Choose your starting template.');
 
-    fireEvent.click(screen.getByRole('button', { name: /Create my own template/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Create from scratch/i }));
 
     await waitFor(() => {
       expect(templateRepo.saveCustomTemplate).toHaveBeenCalledWith(
@@ -206,8 +206,8 @@ describe('FirstRunOnboardingPage', () => {
   it('allows skipping strategy setup safely and opening the app', async () => {
     renderPage();
 
-    await screen.findByText('Set up your trader profile.');
-    fireEvent.click(screen.getByRole('button', { name: /Continue to strategy/i }));
+    await screen.findByText('Set up your profile');
+    fireEvent.click(screen.getByRole('button', { name: /^Continue$/i }));
 
     await screen.findByText('Choose your starting template.');
 

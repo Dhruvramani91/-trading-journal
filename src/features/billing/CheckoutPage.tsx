@@ -68,7 +68,7 @@ function formatUnits(currency: 'INR' | 'USD', value: number) {
   }).format(value);
 }
 
-function getPlanDetails(currency: 'INR' | 'USD'): Record<BillingPlan, { name: string; amount: string; cycle: string; note: string; badge: string; renewal: string }> {
+function getPlanDetails(currency: 'INR' | 'USD'): Record<BillingPlan, { name: string; amount: string; cycle: string; note: string; badge: string; saveBadge?: string; renewal: string }> {
   const monthly = formatBillingPrice(currency, 'monthly');
   const quarterly = formatBillingPrice(currency, 'quarterly');
   const units = PLAN_UNITS[currency];
@@ -87,7 +87,8 @@ function getPlanDetails(currency: 'INR' | 'USD'): Record<BillingPlan, { name: st
       amount: quarterly,
       cycle: '/ 3 months',
       note: `${formatUnits(currency, units.quarterly / 3)} / month, billed every 3 months`,
-      badge: savePct > 0 ? `Save ${savePct}%` : '',
+      badge: `${TRIAL_DAYS} days free`,
+      saveBadge: savePct > 0 ? `Save ${savePct}%` : undefined,
       renewal: `${quarterly}, then every 3 months`,
     },
   };
@@ -356,13 +357,11 @@ export function CheckoutPage() {
                         <span className="min-w-0">
                           <span className="flex flex-wrap items-center gap-2 text-sm font-semibold">
                             {optionDetails.name}
-                            {option === 'monthly' && (
-                              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-400">
-                                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />{optionDetails.badge}
-                              </span>
-                            )}
-                            {option === 'quarterly' && optionDetails.badge && (
-                              <span className="rounded-full border border-line bg-bg-3 px-2 py-0.5 text-[11px] font-medium text-fg-muted">{optionDetails.badge}</span>
+                            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-400">
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden="true" />{optionDetails.badge}
+                            </span>
+                            {optionDetails.saveBadge && (
+                              <span className="rounded-full border border-line bg-bg-3 px-2 py-0.5 text-[11px] font-medium text-fg-muted">{optionDetails.saveBadge}</span>
                             )}
                           </span>
                           <span className="mt-1 block text-xs text-fg-muted">{optionDetails.note}</span>

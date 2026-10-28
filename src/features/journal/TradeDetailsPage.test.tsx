@@ -158,7 +158,6 @@ describe('TradeDetailsPage data loading', () => {
       ownerId: 'user-1',
       loaded: true,
     };
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
 
     renderTradeDetails();
 
@@ -166,15 +165,20 @@ describe('TradeDetailsPage data loading', () => {
       'href',
       '/journal/trade-1/edit',
     );
+
+    // Click Delete — component opens a ConfirmDialog (no window.confirm)
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+
+    // Dialog should appear with the title
+    expect(await screen.findByText('Delete this trade?')).toBeInTheDocument();
+
+    // Confirm deletion via the dialog's confirm button
+    fireEvent.click(screen.getByRole('button', { name: /Delete trade/i }));
 
     await waitFor(() => {
       expect(mocks.removeFromStore).toHaveBeenCalledWith('trade-1', trade);
       expect(screen.getByText('Journal page')).toBeInTheDocument();
     });
-
-    expect(confirm).toHaveBeenCalledWith('Delete this trade?');
-    confirm.mockRestore();
   });
 
   it('does not trust cached trades when unauthenticated', async () => {

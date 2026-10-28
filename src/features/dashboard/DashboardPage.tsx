@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowUp, ChevronDown, TrendingUp, TrendingDown } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -31,7 +31,9 @@ import { cn } from '@/lib/cn';
 import { FilterBar } from '@/components/filters/FilterBar';
 import { useChartTheme } from '@/lib/chartTheme';
 
-const DashboardEquityChart = lazy(() => import('./DashboardEquityChart'));
+import { lazyWithRetry } from '@/lib/lazyWithRetry';
+
+const DashboardEquityChart = lazyWithRetry(() => import('./DashboardEquityChart'));
 
 interface WeekdayRow {
   label: string;

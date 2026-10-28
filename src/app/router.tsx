@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
+import { RootErrorBoundary } from './RootErrorBoundary';
 import {
   LandingPage,
   LoginPage,
@@ -30,58 +31,67 @@ import {
 import { RequireAuth, RequireOnboarding, RequireSubscription } from './RequireAuth';
 
 export const router = createBrowserRouter([
-  // Public Routes
-  { path: '/', element: <LandingPage /> },
-  { path: '/login', element: <LoginPage /> },
-  { path: '/auth/confirmed', element: <EmailConfirmedPage /> },
-  { path: '/auth/reset-password', element: <PasswordResetPage /> },
-  { path: '/auth/callback', element: <AuthCallbackPage /> },
-  { path: '/ui-components-demo', element: <UIComponentsDemoPage /> },
-
-  // App Workspace Routes (auth required)
   {
-    element: <RequireAuth />,
+    errorElement: <RootErrorBoundary />,
     children: [
+      // Public Routes
+      { path: '/', element: <LandingPage /> },
+      { path: '/login', element: <LoginPage /> },
+      { path: '/auth/confirmed', element: <EmailConfirmedPage /> },
+      { path: '/auth/reset-password', element: <PasswordResetPage /> },
+      { path: '/auth/callback', element: <AuthCallbackPage /> },
+      { path: '/ui-components-demo', element: <UIComponentsDemoPage /> },
+
+      // App Workspace Routes (auth required)
       {
-        element: <RequireSubscription />,
+        element: <RequireAuth />,
+        errorElement: <RootErrorBoundary />,
         children: [
-          { path: 'onboarding', element: <FirstRunOnboardingPage /> },
           {
-            element: <RequireOnboarding />,
+            element: <RequireSubscription />,
+            errorElement: <RootErrorBoundary />,
             children: [
+              { path: 'onboarding', element: <FirstRunOnboardingPage /> },
               {
-                element: <AppShell />,
+                element: <RequireOnboarding />,
+                errorElement: <RootErrorBoundary />,
                 children: [
-                  { path: 'dashboard', element: <DashboardPage /> },
-                  { path: 'journal', element: <JournalPage /> },
-                  { path: 'journal/template-preview/am', element: <AMTemplatePreviewPage /> },
-                  { path: 'settings', element: <SettingsPage /> },
-                  { path: 'tutorials', element: <TutorialsPage /> },
-                  { path: 'settings/templates', element: <JournalTemplatesEditorPage /> },
-                  { path: 'figma-templates', element: <FigmaTemplatesPage /> },
-                  { path: 'journal/new', element: <TradeFormPage /> },
-                  { path: 'journal/:id', element: <TradeDetailsPage /> },
-                  { path: 'journal/:id/edit', element: <TradeFormPage /> },
-                  { path: 'statistics', element: <StatisticsPage /> },
-                  { path: 'calendar', element: <CalendarPage /> },
-                  { path: 'mistakes', element: <MistakesPage /> },
-                  { path: 'backtests', element: <BacktestStoragePage /> },
-                  { path: 'backtests/:sessionId/trade/:tradeId', element: <BacktestStoragePage /> },
-                  { path: 'backtests/:sessionId/:section?', element: <BacktestStoragePage /> },
-                  { path: 'profile', element: <ProfilePage /> },
-                  { path: 'manage-subscription', element: <ManageSubscriptionPage /> },
-                  { path: 'accounts', element: <AccountsPage /> },
-                  { path: 'accounts/:id', element: <AccountSummaryPage /> },
+                  {
+                    element: <AppShell />,
+                    errorElement: <RootErrorBoundary />,
+                    children: [
+                      { path: 'dashboard', element: <DashboardPage /> },
+                      { path: 'journal', element: <JournalPage /> },
+                      { path: 'journal/template-preview/am', element: <AMTemplatePreviewPage /> },
+                      { path: 'settings', element: <SettingsPage /> },
+                      { path: 'tutorials', element: <TutorialsPage /> },
+                      { path: 'settings/templates', element: <JournalTemplatesEditorPage /> },
+                      { path: 'figma-templates', element: <FigmaTemplatesPage /> },
+                      { path: 'journal/new', element: <TradeFormPage /> },
+                      { path: 'journal/:id', element: <TradeDetailsPage /> },
+                      { path: 'journal/:id/edit', element: <TradeFormPage /> },
+                      { path: 'statistics', element: <StatisticsPage /> },
+                      { path: 'calendar', element: <CalendarPage /> },
+                      { path: 'mistakes', element: <MistakesPage /> },
+                      { path: 'backtests', element: <BacktestStoragePage /> },
+                      { path: 'backtests/:sessionId/trade/:tradeId', element: <BacktestStoragePage /> },
+                      { path: 'backtests/:sessionId/:section?', element: <BacktestStoragePage /> },
+                      { path: 'profile', element: <ProfilePage /> },
+                      { path: 'manage-subscription', element: <ManageSubscriptionPage /> },
+                      { path: 'accounts', element: <AccountsPage /> },
+                      { path: 'accounts/:id', element: <AccountSummaryPage /> },
+                    ],
+                  },
                 ],
               },
             ],
           },
+          { path: 'checkout', element: <CheckoutPage /> },
         ],
       },
-      { path: 'checkout', element: <CheckoutPage /> },
+
+      // Fallback
+      { path: '*', element: <Navigate to="/" replace /> },
     ],
   },
-
-  // Fallback
-  { path: '*', element: <Navigate to="/" replace /> },
 ]);
