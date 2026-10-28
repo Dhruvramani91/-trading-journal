@@ -96,9 +96,7 @@ export function CheckoutPage() {
   const requestedPlan = searchParams.get('plan');
   const plan: BillingPlan = isBillingPlan(requestedPlan) ? requestedPlan : 'monthly';
   const details = useMemo(() => getPlanDetails(billingRegion.currency)[plan], [plan, billingRegion.currency]);
-  const [manualRegion, setManualRegion] = useState<'IN' | 'INTERNATIONAL'>('IN');
-  const manualInternationalUnavailable = !billingRegion.regionToken && manualRegion === 'INTERNATIONAL';
-  const billingAvailable = billingRegion.ready && !manualInternationalUnavailable && (billingRegion.currency === 'INR' || billingRegion.usdEnabled);
+  const billingAvailable = billingRegion.ready && (billingRegion.currency === 'INR' || billingRegion.usdEnabled);
   const [loading, setLoading] = useState(false);
   const [switchingAccount, setSwitchingAccount] = useState(false);
   const [error, setError] = useState('');
@@ -238,7 +236,7 @@ export function CheckoutPage() {
 
   return (
     <main className="min-h-dvh w-full overflow-x-hidden bg-bg-0 px-4 py-5 text-fg sm:px-6 sm:py-7">
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 pb-5">
+      <header className="mx-auto flex w-full max-w-[1250px] items-center justify-between gap-4 pb-5">
         <div className="flex min-w-0 items-center gap-4">
           <Link to="/" aria-label="Back to ThePrecisionLab" className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-line bg-bg-2 text-fg-muted transition hover:border-line-strong hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus">
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -255,25 +253,16 @@ export function CheckoutPage() {
         )}
       </header>
 
-      <div className="mx-auto flex min-h-[calc(100dvh-5rem)] w-full max-w-5xl items-center justify-center py-5 sm:min-h-[calc(100dvh-6rem)]">
-        <div className="grid w-full min-w-0 items-start gap-5 lg:grid-cols-12 lg:gap-8">
+      <div className="mx-auto flex min-h-[calc(100dvh-5rem)] w-full max-w-[1250px] items-center justify-center py-5 sm:min-h-[calc(100dvh-6rem)]">
+        <div className="grid w-full min-w-0 items-center gap-5 lg:grid-cols-12 lg:gap-[60px]">
           <section aria-labelledby="checkout-title" className="min-w-0 lg:col-span-7">
             <div className="mb-6">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-fg-dim">Secure checkout</p>
-              <h1 id="checkout-title" className="mt-2 text-3xl font-semibold tracking-tight sm:text-[2.1rem]">Choose your plan</h1>
+              <h1 id="checkout-title" className="mt-2 text-3xl font-semibold tracking-tight sm:text-[2.5rem]">Choose your plan</h1>
               <p className="mt-2 max-w-xl text-sm leading-6 text-fg-muted">Journal, discipline tracking and analytics — all included.</p>
             </div>
 
-            {!billingRegion.regionToken && (
-              <label className="mb-3 flex max-w-sm flex-col gap-1.5 text-xs text-fg-muted" htmlFor="billing-region">
-                Billing region
-                <select id="billing-region" value={manualRegion} onChange={(event) => setManualRegion(event.target.value as 'IN' | 'INTERNATIONAL')} className="rounded-xl border border-line bg-bg-2 px-3 py-2.5 text-sm text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus">
-                  <option value="IN">India · INR</option>
-                  <option value="INTERNATIONAL">Outside India · international billing</option>
-                </select>
-              </label>
-            )}
-            <p className="mb-3 text-xs text-fg-dim">{!billingRegion.ready ? 'Detecting billing region…' : manualInternationalUnavailable ? 'International location could not be verified. Only India billing is available for this session.' : `Billing region: ${billingRegion.country} · ${billingRegion.currency}${billingRegion.currency === 'USD' && !billingRegion.usdEnabled ? ' · International checkout is not available yet' : ''}`}</p>
+            <p className="mb-3 text-xs text-fg-dim">{!billingRegion.ready ? 'Detecting billing region…' : `Billing region: ${billingRegion.country} · ${billingRegion.currency}${billingRegion.currency === 'USD' && !billingRegion.usdEnabled ? ' · International checkout is not available yet' : ''}`}</p>
 
             {billingAvailable ? (
               <div aria-label="Subscription plans" role="radiogroup" className="grid gap-3">
@@ -286,14 +275,14 @@ export function CheckoutPage() {
                       to={`/checkout?plan=${option}`}
                       aria-current={selected ? 'true' : undefined}
                       aria-label={`${optionDetails.name}, ${optionDetails.amount} ${optionDetails.cycle}${selected ? ', selected' : ''}`}
-                      className={`group relative flex min-h-28 items-center justify-between gap-3 rounded-2xl border p-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus motion-reduce:transition-none ${selected ? 'border-line-strong bg-bg-3 ring-1 ring-line-strong' : 'border-line bg-bg-2 hover:border-line-strong hover:bg-bg-3'}`}
+                      className={`group relative flex min-h-[140px] items-center justify-between gap-3 rounded-2xl border p-5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus motion-reduce:transition-none sm:p-6 ${selected ? 'border-line-strong bg-bg-3 ring-1 ring-line-strong' : 'border-line bg-bg-2 hover:border-line-strong hover:bg-bg-3'}`}
                     >
                       <span className="flex min-w-0 items-center gap-3.5">
-                        <span aria-hidden="true" className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 ${selected ? 'border-fg bg-bg-0' : 'border-line-strong group-hover:border-line-strong'}`}>
-                          {selected && <span className="h-2.5 w-2.5 rounded-full bg-fg" />}
+                        <span aria-hidden="true" className={`grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 ${selected ? 'border-fg bg-bg-0' : 'border-line-strong group-hover:border-line-strong'}`}>
+                          {selected && <span className="h-3 w-3 rounded-full bg-fg" />}
                         </span>
                         <span className="min-w-0">
-                          <span className="flex flex-wrap items-center gap-2 text-base font-semibold tracking-tight">
+                          <span className="flex flex-wrap items-center gap-2 text-lg font-semibold tracking-tight">
                             {optionDetails.name}
                             {option === 'monthly' && actualTrialDays !== 0 && <span className="rounded-full border border-line bg-bg-3 px-2 py-0.5 text-[11px] font-medium text-fg-muted">7-day trial if eligible</span>}
                             {option === 'quarterly' && <span className="rounded-full border border-line bg-bg-3 px-2 py-0.5 text-[11px] font-medium text-fg-muted">Every 3 months</span>}
@@ -302,7 +291,7 @@ export function CheckoutPage() {
                         </span>
                       </span>
                       <span className="shrink-0 text-right">
-                        <span className="block text-xl font-semibold tracking-tight">{optionDetails.amount}</span>
+                        <span className="block text-2xl font-semibold tracking-tight">{optionDetails.amount}</span>
                         <span className="mt-1 block text-xs text-fg-muted">{optionDetails.cycle}</span>
                       </span>
                     </Link>
@@ -310,7 +299,7 @@ export function CheckoutPage() {
                 })}
               </div>
             ) : (
-              <p className="rounded-2xl border border-line bg-bg-2 p-4 text-sm leading-6 text-fg-muted">{!billingRegion.ready ? 'Checking regional pricing…' : manualInternationalUnavailable || billingRegion.currency === 'USD' ? 'International recurring billing is not available yet.' : 'No billing plan is currently available for this region.'}</p>
+              <p className="rounded-2xl border border-line bg-bg-2 p-4 text-sm leading-6 text-fg-muted">{!billingRegion.ready ? 'Checking regional pricing…' : billingRegion.currency === 'USD' ? 'International recurring billing is not available yet.' : 'No billing plan is currently available for this region.'}</p>
             )}
 
             <ul className="mt-6 flex flex-wrap gap-2.5 text-xs text-fg-muted">
@@ -319,14 +308,14 @@ export function CheckoutPage() {
                 { label: 'Discipline score', Icon: TrendingUp },
                 { label: 'Weekly reviews', Icon: CalendarDays },
               ].map(({ label, Icon }) => (
-                <li key={label} className="inline-flex items-center gap-2 rounded-xl border border-line bg-bg-2 px-3.5 py-2">
+                <li key={label} className="inline-flex items-center gap-2 rounded-xl border border-line bg-bg-2 px-4 py-2.5">
                   <Icon className="h-4 w-4 shrink-0 text-fg-muted" aria-hidden="true" />{label}
                 </li>
               ))}
             </ul>
           </section>
 
-          <aside aria-labelledby="order-summary-title" className="min-w-0 rounded-2xl border border-line bg-bg-2 p-5 sm:p-6 lg:col-span-5">
+          <aside aria-labelledby="order-summary-title" className="min-w-0 rounded-2xl border border-line bg-bg-2 p-6 sm:p-7 lg:col-span-5">
             <h2 id="order-summary-title" className="text-sm font-semibold tracking-tight">Order summary</h2>
             <div className="mt-5 flex items-start justify-between gap-4 border-b border-line pb-4">
               <div className="min-w-0"><p className="font-semibold">ThePrecisionLab {details.name}</p><p className="mt-1 text-xs text-fg-muted">{!billingAvailable ? 'Billing unavailable for this region' : plan === 'monthly' ? actualTrialDays === 0 ? 'Monthly recurring billing · trial already used' : '7-day free trial if eligible, then monthly billing' : 'Quarterly recurring billing'}</p></div>

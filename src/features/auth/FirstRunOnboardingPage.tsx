@@ -7,14 +7,11 @@ import {
   ArrowRight,
   Camera,
   Check,
-  CircleHelp,
   Compass,
   Eye,
   LoaderCircle,
-  NotebookPen,
   Pencil,
   Save,
-  ShieldCheck,
   Sparkles,
   TrendingUp,
   X,
@@ -312,48 +309,23 @@ export function FirstRunOnboardingPage() {
   const activeLevel = TRADER_LEVELS.find((level) => level.id === traderLevel);
 
   return (
-    <main className="min-h-dvh bg-bg-0 px-4 py-5 text-fg sm:px-8 sm:py-7">
-      <div className="mx-auto flex min-h-[calc(100dvh-2.5rem)] w-full max-w-6xl flex-col sm:min-h-[calc(100dvh-3.5rem)]">
-        <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4 border-b border-line pb-5">
+    <main className="flex min-h-dvh flex-col bg-bg-0 px-4 text-fg sm:px-8">
+      <header className="-mx-4 flex min-h-16 items-center justify-between gap-4 border-b border-line px-4 sm:-mx-8 sm:px-8">
           <div className="flex min-w-0 items-center gap-2.5">
-            <BrandLogo size="md" />
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold tracking-tight text-fg">ThePrecisionLab</p>
-              <p className="text-xs text-fg-muted">A journal for deliberate trading</p>
-            </div>
+            <BrandLogo size="sm" />
+            <p className="truncate text-sm font-semibold tracking-tight text-fg">ThePrecisionLab</p>
           </div>
 
           <div className="flex items-center gap-3 sm:gap-5">
             <nav aria-label="Onboarding progress" className="flex items-center gap-2 sm:gap-3">
-              <div
-                aria-current={step === 'profile' ? 'step' : undefined}
-                aria-label={`Step 1 of 2: Profile${step === 'strategy' ? ', complete' : ', current'}`}
-                className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium sm:px-3 ${
-                  step === 'profile' ? 'bg-bg-3 text-fg' : 'text-fg-muted'
-                }`}
-              >
-                <span className={`grid h-5 w-5 place-items-center rounded-full text-2xs ${step === 'profile' ? 'bg-accent text-accent-fg' : 'bg-bg-3 text-fg-muted'}`}>
-                  {step === 'strategy' ? <Check className="h-3 w-3" /> : '1'}
-                </span>
-                <span className="hidden sm:inline">Profile</span>
-              </div>
-              <span aria-hidden="true" className="h-px w-4 bg-line-strong sm:w-8" />
-              <div
-                aria-current={step === 'strategy' ? 'step' : undefined}
-                aria-label={`Step 2 of 2: Strategy${step === 'strategy' ? ', current' : ''}`}
-                className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium sm:px-3 ${
-                  step === 'strategy' ? 'bg-bg-3 text-fg' : 'text-fg-muted'
-                }`}
-              >
-                <span className={`grid h-5 w-5 place-items-center rounded-full text-2xs ${step === 'strategy' ? 'bg-accent text-accent-fg' : 'bg-bg-3 text-fg-muted'}`}>
-                  2
-                </span>
-                <span className="hidden sm:inline">Strategy</span>
-              </div>
+              <span aria-label={`Step ${step === 'profile' ? '1' : '2'} of 2`} className="inline-flex items-center gap-2 rounded-full border border-line bg-bg-2 px-3 py-1.5 text-xs font-medium text-fg-muted">
+                <span aria-hidden="true" className={`h-2 w-2 rounded-full ${step === 'profile' ? 'bg-fg-muted' : 'bg-fg'}`} />
+                <span className="font-mono">Step {step === 'profile' ? '1' : '2'} of 2</span>
+              </span>
             </nav>
             <ThemeToggle />
           </div>
-        </header>
+      </header>
 
         {error && (
           <div role="alert" className="mt-5 flex items-start gap-3 rounded-xl border border-loss/30 bg-loss/10 p-4 text-sm text-loss-text">
@@ -365,31 +337,28 @@ export function FirstRunOnboardingPage() {
           </div>
         )}
 
-        <div className={`grid flex-1 items-start gap-7 py-7 sm:py-9 ${step === 'profile' ? 'lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-10 xl:grid-cols-[minmax(0,1fr)_350px]' : 'grid-cols-1'}`}>
-          <section className={`min-w-0 ${step === 'strategy' ? 'w-full' : ''}`}>
+        <div className={`mx-auto flex w-full max-w-[1100px] flex-1 py-8 sm:py-10 ${step === 'profile' ? 'items-center' : 'items-start'}`}>
+          <section className={`min-w-0 w-full ${step === 'profile' ? '' : ''}`}>
             {step === 'profile' ? (
               <>
-                <div className="max-w-2xl">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-fg-muted">Your profile <span className="px-1 text-line-strong">/</span> 01 of 02</p>
-                  <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-tight text-fg sm:text-[2.15rem]">
-                    Set up your trader profile.
-                  </h1>
-                  <p className="mt-2 max-w-xl text-sm leading-6 text-fg-muted">
-                    A couple of details make your journal feel like yours. You can update them anytime.
-                  </p>
-                </div>
+                <form onSubmit={handleProfileSubmit} className="grid w-full items-center gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] lg:gap-12">
+                  <section aria-labelledby="profile-setup-title" className="min-w-0">
+                    <h1 id="profile-setup-title" className="text-3xl font-semibold leading-tight tracking-tight text-fg sm:text-4xl xl:text-[2.75rem]">
+                      Set up your profile
+                    </h1>
+                    <p className="mt-2 max-w-xl text-base leading-7 text-fg-muted">
+                      Two quick details. You can change them anytime.
+                    </p>
 
-                <Card className="mt-6 overflow-hidden rounded-2xl bg-bg-1 shadow-card">
-                  <form onSubmit={handleProfileSubmit} className="space-y-5 p-4 sm:p-5">
+                    <div className="mt-8 space-y-7">
                     <div>
                       <label htmlFor="onboarding-name" className="block text-sm font-semibold text-fg">
                         Your name <span className="text-fg-muted" aria-hidden="true">*</span>
                       </label>
-                      <p id="onboarding-name-hint" className="mt-1 text-xs text-fg-muted">This is how your journal will greet you.</p>
                       <Input
                         id="onboarding-name"
                         type="text"
-                        placeholder="e.g. Alex Rivera"
+                        placeholder="What should we call you?"
                         value={name}
                         onChange={(event) => {
                           setName(event.target.value);
@@ -397,10 +366,11 @@ export function FirstRunOnboardingPage() {
                         }}
                         invalid={Boolean(nameError)}
                         aria-describedby={nameError ? 'onboarding-name-hint onboarding-name-error' : 'onboarding-name-hint'}
-                        className="mt-3 h-11 max-w-xl rounded-xl"
+                        className="mt-3 h-14 w-full rounded-xl px-4 text-base"
                         autoFocus
                         required
                       />
+                      <span id="onboarding-name-hint" className="sr-only">Enter the name you want shown on your profile.</span>
                       {nameError && (
                         <p id="onboarding-name-error" role="alert" className="mt-1.5 text-xs text-loss-text">{nameError}</p>
                       )}
@@ -409,17 +379,16 @@ export function FirstRunOnboardingPage() {
                     <fieldset>
                       <legend className="text-sm font-semibold text-fg">Trading experience</legend>
                       <p className="mt-1 text-xs text-fg-muted">Choose what feels closest. There’s no wrong answer.</p>
-                      <div className="mt-3 grid gap-2.5 sm:grid-cols-3" role="radiogroup" aria-label="Trading experience level">
+                      <div className="mt-4 grid gap-2.5" role="radiogroup" aria-label="Trading experience level">
                         {TRADER_LEVELS.map((level) => {
                           const selected = traderLevel === level.id;
-                          const Icon = level.icon;
                           return (
                             <label
                               key={level.id}
-                              className={`relative flex min-h-28 cursor-pointer flex-col rounded-xl border p-3 transition-colors motion-reduce:transition-none focus-within:ring-2 focus-within:ring-focus focus-within:ring-offset-2 focus-within:ring-offset-bg-1 sm:p-3.5 ${
+                              className={`relative flex min-h-[82px] cursor-pointer items-center gap-4 rounded-xl border px-4 py-3.5 transition-colors motion-reduce:transition-none focus-within:ring-2 focus-within:ring-focus focus-within:ring-offset-2 focus-within:ring-offset-bg-0 sm:px-5 ${
                                 selected
                                   ? 'border-line-strong bg-bg-2 ring-1 ring-line-strong'
-                                  : 'border-line bg-bg-2 hover:border-line-strong hover:bg-bg-3'
+                                  : 'border-line bg-bg-1 hover:border-line-strong hover:bg-bg-2'
                               }`}
                             >
                               <input
@@ -430,71 +399,66 @@ export function FirstRunOnboardingPage() {
                                 onChange={() => setTraderLevel(level.id)}
                                 className="sr-only"
                               />
-                              <span className="flex items-center justify-between">
-                                <span className={`grid h-7 w-7 place-items-center rounded-lg ${selected ? 'bg-accent text-accent-fg' : 'bg-bg-3 text-fg-muted'}`}>
-                                  <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                                </span>
-                                <span className={`grid h-5 w-5 place-items-center rounded-full border ${selected ? 'border-fg bg-fg text-bg-0' : 'border-line-strong text-transparent'}`}>
-                                  {selected && <Check className="h-3 w-3 stroke-[2.5]" aria-hidden="true" />}
-                                </span>
+                              <span aria-hidden="true" className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 ${selected ? 'border-fg' : 'border-line-strong'}`}>
+                                {selected && <span className="h-2.5 w-2.5 rounded-full bg-fg" />}
                               </span>
-                              <span className="mt-3 text-sm font-semibold text-fg">{level.title}</span>
-                              <span className="mt-1 text-xs leading-relaxed text-fg-muted">{level.description}</span>
+                              <span className="min-w-0 flex-1">
+                                <span className="block text-sm font-semibold text-fg">{level.title}</span>
+                                <span className="mt-1 block text-sm leading-relaxed text-fg-muted">{level.description}</span>
+                              </span>
                             </label>
                           );
                         })}
                       </div>
                     </fieldset>
-
-                    <div className="flex flex-col gap-4 rounded-xl border border-line bg-bg-2 p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5">
-                      <div className="flex min-w-0 items-center gap-3.5">
-                        <div className="grid h-14 w-14 shrink-0 place-items-center overflow-hidden rounded-full border border-line bg-bg-3 text-sm font-semibold text-fg-muted">
-                          {avatarPreview ? (
-                            <img src={avatarPreview} alt="Avatar preview" className="h-full w-full object-cover" />
-                          ) : (
-                            <span aria-label="Initials preview">{getInitials(name)}</span>
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-fg">Profile photo <span className="font-normal text-fg-muted">(optional)</span></p>
-                          <p className="mt-1 text-xs leading-5 text-fg-muted">Add a photo, or leave it for later.</p>
-                        </div>
-                      </div>
-                      <div className="flex shrink-0 items-center gap-2">
-                        <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" aria-label="Upload profile avatar" />
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => fileInputRef.current?.click()}
-                          leftIcon={<Camera className="h-3.5 w-3.5" aria-hidden="true" />}
-                          className="motion-reduce:transition-none"
-                        >
-                          {avatarPreview ? 'Change photo' : 'Upload photo'}
-                        </Button>
-                        {avatarPreview && (
-                          <Button type="button" variant="ghost" size="sm" onClick={handleRemoveAvatar} leftIcon={<X className="h-3.5 w-3.5" aria-hidden="true" />}>
-                            Remove
-                          </Button>
-                        )}
-                      </div>
                     </div>
+                  </section>
 
-                    <div className="flex flex-col gap-3 border-t border-line pt-5 sm:flex-row sm:items-center sm:justify-between">
-                      <p className="text-xs leading-5 text-fg-muted">Your profile details stay private to your account.</p>
+                  <aside aria-label="Live profile preview" className="min-w-0">
+                    <Card className="rounded-2xl border border-line bg-bg-1 p-5 shadow-card sm:p-7">
+                      <div className="flex items-center justify-between gap-3 border-b border-line pb-4">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-fg">Your profile preview</p>
+                          <p className="mt-1 text-sm text-fg-muted">A few details, all editable anytime</p>
+                        </div>
+                        <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line bg-bg-2 px-2.5 py-1 text-xs text-fg-muted"><Eye className="h-3.5 w-3.5" aria-hidden="true" />Live</span>
+                      </div>
+
+                      <div className="mt-5 rounded-xl border border-line bg-bg-0 p-4 sm:p-5">
+                        <div className="flex items-center gap-4">
+                          <div className="relative grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-full border border-line bg-bg-3 text-lg font-semibold text-fg-muted">
+                            {avatarPreview ? <img src={avatarPreview} alt="Profile photo preview" className="h-full w-full object-cover" /> : getInitials(name)}
+                            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" aria-label="Upload profile photo" />
+                            <button type="button" onClick={() => fileInputRef.current?.click()} aria-label={avatarPreview ? 'Change profile photo' : 'Add profile photo'} className="absolute -bottom-0.5 -right-0.5 grid h-7 w-7 place-items-center rounded-full border-2 border-bg-0 bg-fg text-bg-0 transition hover:bg-fg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus motion-reduce:transition-none"><Camera className="h-3.5 w-3.5" aria-hidden="true" /></button>
+                          </div>
+                          <div className="min-w-0">
+                            <p className="truncate text-base font-semibold text-fg">{name.trim() || 'Your name'}</p>
+                            <p className="mt-1 text-sm text-fg-muted">{activeLevel?.badge ?? 'Trader'} · Trader</p>
+                            <span className="mt-2 inline-flex rounded-full border border-line bg-bg-2 px-2.5 py-1 text-xs font-medium capitalize text-fg-muted">{traderLevel}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 flex items-center gap-2" aria-hidden="true">
+                        <span className="h-2.5 w-2.5 rounded-full bg-fg" />
+                        <span className={`h-1 flex-1 rounded-full ${step === 'profile' ? 'bg-bg-3' : 'bg-fg'}`} />
+                        <span className="h-2.5 w-2.5 rounded-full bg-bg-3" />
+                      </div>
                       <Button
                         type="submit"
                         variant="primary"
                         size="lg"
                         disabled={busy}
                         rightIcon={busy ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <ArrowRight className="h-4 w-4" aria-hidden="true" />}
-                        className="w-full motion-reduce:transition-none sm:w-auto"
+                        className="mt-5 w-full motion-reduce:transition-none"
                       >
-                        {busy ? 'Saving profile…' : 'Continue to strategy'}
+                        {busy ? 'Saving profile…' : 'Continue'}
                       </Button>
-                    </div>
-                  </form>
-                </Card>
+                      <p className="mt-3 text-center text-xs leading-5 text-fg-muted">Strategy setup is optional. You can do it later in Settings.</p>
+                      {avatarPreview && <Button type="button" variant="ghost" size="sm" onClick={handleRemoveAvatar} className="mt-2 w-full text-fg-muted">Remove profile photo</Button>}
+                    </Card>
+                  </aside>
+                </form>
               </>
             ) : (
               <>
@@ -535,7 +499,7 @@ export function FirstRunOnboardingPage() {
                     return (
                       <div
                         key={template.id}
-                        className={`flex min-h-48 flex-col rounded-2xl border p-4 transition-colors motion-reduce:transition-none focus-within:ring-2 focus-within:ring-focus focus-within:ring-offset-2 focus-within:ring-offset-bg-0 sm:p-5 ${
+                        className={`flex min-h-44 flex-col rounded-xl border p-4 transition-colors motion-reduce:transition-none focus-within:ring-2 focus-within:ring-focus focus-within:ring-offset-2 focus-within:ring-offset-bg-0 sm:p-5 ${
                           selected
                             ? 'border-line-strong bg-bg-1 ring-1 ring-line-strong'
                             : 'border-line bg-bg-1 hover:border-line-strong'
@@ -614,70 +578,7 @@ export function FirstRunOnboardingPage() {
             )}
           </section>
 
-          <aside aria-label="Onboarding details" className={step === 'strategy' ? 'hidden' : 'lg:sticky lg:top-8'}>
-            <Card className="overflow-hidden rounded-2xl bg-bg-1 shadow-card">
-              <div className="flex items-center gap-3 border-b border-line px-5 py-4">
-                <span className="grid h-10 w-10 place-items-center rounded-xl bg-bg-3 text-fg"><NotebookPen className="h-5 w-5" aria-hidden="true" /></span>
-                <div>
-                  <h2 className="text-sm font-semibold text-fg">{step === 'profile' ? 'Your profile preview' : 'Your journal, your way'}</h2>
-                  <p className="mt-0.5 text-xs text-fg-muted">{step === 'profile' ? 'A few details, all editable later' : 'Start simple; refine when you’re ready'}</p>
-                </div>
-              </div>
-
-              {step === 'profile' ? (
-                <div className="p-5">
-                  <div className="rounded-xl border border-line bg-bg-2 p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-full border border-line bg-bg-3 text-sm font-semibold text-fg-muted">
-                        {avatarPreview ? <img src={avatarPreview} alt="Profile preview" className="h-full w-full object-cover" /> : getInitials(name)}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-fg">{name.trim() || 'Your name'}</p>
-                        <p className="mt-0.5 text-xs text-fg-muted">{activeLevel?.badge ?? 'Trader profile'}</p>
-                      </div>
-                    </div>
-                    <div className="mt-4 flex items-center justify-between border-t border-line pt-3 text-xs">
-                      <span className="text-fg-muted">Experience</span>
-                      <span className="font-medium capitalize text-fg">{traderLevel}</span>
-                    </div>
-                  </div>
-                  <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-bg-2 p-3.5 text-xs leading-5 text-fg-muted">
-                    <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-fg" aria-hidden="true" />
-                    <span>Your profile and journal are private to your account.</span>
-                  </div>
-                  <p className="mt-4 text-xs leading-5 text-fg-dim">Your photo is optional, and you can update your profile whenever you like.</p>
-                </div>
-              ) : (
-                <div className="p-5">
-                  <div className="rounded-xl border border-line bg-bg-2 p-4">
-                    <p className="text-xs font-medium text-fg-muted">Selected template</p>
-                    <p className="mt-1.5 text-base font-semibold text-fg">{selectedTemplate?.name ?? 'Choose a template'}</p>
-                    <p className="mt-1.5 text-xs leading-5 text-fg-muted">{selectedTemplate?.description ?? 'Pick a starting point or create your own.'}</p>
-                    {selectedTemplate && selectedTemplate.fields.length > 0 && (
-                      <div className="mt-4 border-t border-line pt-3">
-                        <p className="text-2xs font-medium uppercase tracking-wider text-fg-dim">A few prompts inside</p>
-                        <ul className="mt-2 space-y-2 text-xs text-fg-muted">
-                          {selectedTemplate.fields.slice(0, 4).map((field) => (
-                            <li key={field.key} className="flex items-center justify-between gap-3">
-                              <span className="truncate">{field.label}</span>
-                              <Check className="h-3.5 w-3.5 shrink-0 text-fg-dim" aria-hidden="true" />
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
-                  <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-bg-2 p-3.5 text-xs leading-5 text-fg-muted">
-                    <CircleHelp className="mt-0.5 h-4 w-4 shrink-0 text-fg" aria-hidden="true" />
-                    <span>Nothing is permanent here. You can adjust your template later in Settings.</span>
-                  </div>
-                  <p className="mt-4 text-xs leading-5 text-fg-dim">A good journal grows with your process. Start with what you know today.</p>
-                </div>
-              )}
-            </Card>
-          </aside>
         </div>
-      </div>
       {previewTemplate && <Dialog.Root open onOpenChange={(open) => { if (!open) setPreviewTemplate(null); }} modal>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm motion-reduce:animate-none" />
