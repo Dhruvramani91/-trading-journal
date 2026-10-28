@@ -27,6 +27,8 @@ import {
   ManageSubscriptionPage,
   BacktestStoragePage,
   FigmaTemplatesPage,
+  PrivacyPolicyPage,
+  TermsOfServicePage,
 } from './routeComponents';
 import { RequireAuth, RequireOnboarding, RequireSubscription } from './RequireAuth';
 
@@ -36,6 +38,8 @@ export const router = createBrowserRouter([
     children: [
       // Public Routes
       { path: '/', element: <LandingPage /> },
+      { path: '/privacy', element: <PrivacyPolicyPage /> },
+      { path: '/terms', element: <TermsOfServicePage /> },
       { path: '/login', element: <LoginPage /> },
       { path: '/auth/confirmed', element: <EmailConfirmedPage /> },
       { path: '/auth/reset-password', element: <PasswordResetPage /> },

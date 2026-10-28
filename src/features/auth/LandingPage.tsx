@@ -194,10 +194,12 @@ function PricingBorderTrail({ reducedMotion }: { reducedMotion: boolean }) {
 
 function MagneticFooterLink({
   to,
+  className,
   reducedMotion,
   children,
 }: {
   to: string;
+  className?: string;
   reducedMotion: boolean;
   children: ReactNode;
 }) {
@@ -212,7 +214,7 @@ function MagneticFooterLink({
   return (
     <MotionRouterLink
       to={to}
-      className="site-footer-cta"
+      className={className || "site-footer-cta"}
       onPointerMove={(event) => {
         if (reducedMotion || event.pointerType !== 'mouse') return;
         const rect = event.currentTarget.getBoundingClientRect();
@@ -2033,9 +2035,9 @@ footer a:hover{transform:translateY(-1px)}
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" /></svg>
               </MagneticFooterLink>
               <div className="site-footer-legal" aria-label="Helpful links">
-                <MagneticFooterAnchor href="#contact" className="site-footer-legal-link" reducedMotion={!!prefersReducedMotion}>Privacy Policy</MagneticFooterAnchor>
-                <MagneticFooterAnchor href="#contact" className="site-footer-legal-link" reducedMotion={!!prefersReducedMotion}>Terms of Service</MagneticFooterAnchor>
-                <MagneticFooterAnchor href="#contact" className="site-footer-legal-link" reducedMotion={!!prefersReducedMotion}>Support</MagneticFooterAnchor>
+                <MagneticFooterLink to="/privacy" className="site-footer-legal-link" reducedMotion={!!prefersReducedMotion}>Privacy Policy</MagneticFooterLink>
+                <MagneticFooterLink to="/terms" className="site-footer-legal-link" reducedMotion={!!prefersReducedMotion}>Terms of Service</MagneticFooterLink>
+                <MagneticFooterAnchor href="mailto:Dhruvcrypto87@gmail.com" className="site-footer-legal-link" reducedMotion={!!prefersReducedMotion}>Support</MagneticFooterAnchor>
               </div>
             </motion.div>
           </div>

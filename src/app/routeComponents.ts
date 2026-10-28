@@ -25,6 +25,8 @@ const CheckoutPage = lazyWithRetry(() => import('@/features/billing/CheckoutPage
 const ManageSubscriptionPage = lazyWithRetry(() => import('@/features/billing/ManageSubscriptionPage').then((m) => ({ default: m.ManageSubscriptionPage })));
 const BacktestStoragePage = lazyWithRetry(() => import('@/features/backtests/BacktestStoragePage').then((m) => ({ default: m.BacktestStoragePage })));
 const FigmaTemplatesPage = lazyWithRetry(() => import('@/features/journal/FigmaTemplatesPage').then((m) => ({ default: m.FigmaTemplatesPage })));
+const PrivacyPolicyPage = lazyWithRetry(() => import('@/features/legal/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage })));
+const TermsOfServicePage = lazyWithRetry(() => import('@/features/legal/TermsOfServicePage').then((m) => ({ default: m.TermsOfServicePage })));
 
 export {
   LandingPage,
@@ -52,4 +54,6 @@ export {
   ManageSubscriptionPage,
   BacktestStoragePage,
   FigmaTemplatesPage,
+  PrivacyPolicyPage,
+  TermsOfServicePage,
 };
