@@ -1,3 +1,6 @@
+import type { ReactNode } from 'react';
+import { motion } from 'framer-motion';
+
 interface BreakdownBarCardProps {
   title: string;
   items: Array<{
@@ -9,6 +12,7 @@ interface BreakdownBarCardProps {
   }>;
   variant?: 'winRate' | 'metric' | 'duration';
   metricMode?: 'r' | 'pnl';
+  headerRight?: ReactNode;
   className?: string;
 }
 
@@ -16,6 +20,7 @@ export function BreakdownBarCard({
   title,
   items,
   variant = 'winRate',
+  headerRight,
   className = '',
 }: BreakdownBarCardProps) {
   // Find maximum metric/win rate to scale heights accurately
@@ -31,28 +36,31 @@ export function BreakdownBarCard({
   const activeItems = items.filter((it) => (it.count ?? 0) > 0);
   const topItem = activeItems.length > 0
     ? [...activeItems].sort((a, b) => {
-        if (variant === 'winRate') return (b.winRate ?? 0) - (a.winRate ?? 0);
-        return (b.avgMetric ?? 0) - (a.avgMetric ?? 0);
-      })[0]
+      if (variant === 'winRate') return (b.winRate ?? 0) - (a.winRate ?? 0);
+      return (b.avgMetric ?? 0) - (a.avgMetric ?? 0);
+    })[0]
     : null;
 
   return (
     <div
       className={`bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card hover:border-line-strong transition-all duration-200 ${className}`}
     >
-      {/* Header with Title and Top Performer Pill */}
+      {/* Header with Title, Top Performer Pill, and optional headerRight controls */}
       <div className="flex items-center justify-between gap-2 mb-4">
-        <h3 className="text-xs font-semibold text-fg tracking-tight">{title}</h3>
-        {topItem && (
-          <span className="text-[10px] font-semibold text-fg-dim px-2 py-0.5 rounded-full bg-bg-2 dark:bg-[#181b20] border border-line/60">
-            {topItem.label}:{' '}
-            <span className="text-sky-500 font-mono font-bold">
-              {variant === 'winRate'
-                ? `${Math.round(topItem.winRate ?? 0)}%`
-                : topItem.displayMetric || `${topItem.avgMetric?.toFixed(1)}`}
+        <div className="flex items-center gap-2">
+          <h3 className="text-xs font-semibold text-fg tracking-tight">{title}</h3>
+          {topItem && (
+            <span className="text-[10px] font-semibold text-fg-dim px-2 py-0.5 rounded-full bg-bg-2 dark:bg-[#181b20] border border-line/60">
+              {topItem.label}:{' '}
+              <span className="text-sky-500 font-mono font-bold">
+                {variant === 'winRate'
+                  ? `${Math.round(topItem.winRate ?? 0)}%`
+                  : topItem.displayMetric || `${topItem.avgMetric?.toFixed(1)}`}
+              </span>
             </span>
-          </span>
-        )}
+          )}
+        </div>
+        {headerRight && <div className="flex items-center">{headerRight}</div>}
       </div>
 
       {/* Modern High-End Vertical Bar Columns Matrix */}
@@ -78,18 +86,23 @@ export function BreakdownBarCard({
             labelText = item.displayMetric || (hasTrades ? val.toFixed(1) : '—');
           }
 
-          const isTop = topItem && topItem.label === item.label && hasTrades;
           const isNegative = hasTrades && val < 0;
+          // Every item with activity (> 0 count, or winRate > 0, or avgMetric > 0) gets the full vivid glowing sky blue color
+          const isGlowing = hasTrades && !isNegative && (val > 0 || (item.winRate ?? 0) > 0);
+          const isTop = topItem && topItem.label === item.label && hasTrades;
 
           return (
-            <div key={idx} className="flex flex-col items-center justify-end h-full group">
+            <div
+              key={idx}
+              className="flex flex-col items-center justify-end h-full group cursor-pointer transition-transform duration-150 hover:-translate-y-1"
+            >
               {/* Value Indicator Above Bar */}
               <div
                 className={`text-[10px] sm:text-[11px] font-mono font-semibold mb-2 transition-all duration-200 truncate ${
-                  isTop
-                    ? 'text-sky-500 font-bold'
+                  isGlowing || isTop
+                    ? 'text-sky-500 font-bold group-hover:text-sky-400'
                     : isNegative
-                      ? 'text-rose-500 font-semibold'
+                      ? 'text-rose-500 font-semibold group-hover:text-rose-400'
                       : hasTrades
                         ? 'text-fg-muted group-hover:text-fg'
                         : 'text-fg-dim/40'
@@ -100,41 +113,40 @@ export function BreakdownBarCard({
 
               {/* Column Track & Glowing Rounded Bar */}
               <div className="w-full flex justify-center items-end h-28">
-                <div
-                  className={`w-full max-w-[42px] rounded-t-2xl sm:rounded-t-[20px] transition-all duration-500 relative overflow-hidden flex flex-col justify-start items-center ${
-                    isTop
-                      ? 'bg-gradient-to-t from-sky-600 via-sky-500 to-sky-300 shadow-[0_0_20px_rgba(56,189,248,0.45)] ring-1 ring-sky-300/40'
-                      : isNegative
-                        ? 'bg-gradient-to-t from-rose-800/80 via-rose-700/70 to-rose-500/80 shadow-[0_0_15px_rgba(244,63,94,0.3)] ring-1 ring-rose-500/30'
-                        : hasTrades
-                          ? 'bg-gradient-to-t from-zinc-700/60 via-zinc-600/70 to-zinc-400/80 dark:from-zinc-800/80 dark:via-zinc-700/80 dark:to-zinc-500/90 hover:from-zinc-600 hover:to-zinc-400'
-                          : 'bg-zinc-800/20 dark:bg-zinc-800/30'
-                  }`}
-                  style={{
-                    height: `${heightPct}%`,
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: `${heightPct}%`, opacity: 1 }}
+                  transition={{
+                    duration: 0.65,
+                    delay: idx * 0.05,
+                    ease: [0.16, 1, 0.3, 1], // Smooth snappy cubic-bezier spring feel
                   }}
-                >
-                  {/* Subtle Top Cap Glass Glaze */}
-                  <span
-                    className={`absolute inset-x-0 top-0 h-1.5 rounded-t-2xl sm:rounded-t-[20px] ${
-                      isTop ? 'bg-white/70' : hasTrades ? 'bg-white/20' : 'bg-transparent'
-                    }`}
-                  />
-                </div>
+                  className={`w-full max-w-[42px] rounded-t-2xl sm:rounded-t-[20px] relative overflow-hidden flex flex-col justify-start items-center ${
+                    isGlowing || isTop
+                      ? 'bg-gradient-to-t from-sky-600 via-sky-500 to-sky-400 shadow-[0_0_20px_rgba(56,189,248,0.45)] ring-1 ring-sky-300/40 group-hover:shadow-[0_0_25px_rgba(56,189,248,0.65)] group-hover:from-sky-500 group-hover:to-sky-300'
+                      : isNegative
+                        ? 'bg-gradient-to-t from-rose-800/80 via-rose-700/70 to-rose-500/80 shadow-[0_0_15px_rgba(244,63,94,0.3)] ring-1 ring-rose-500/30 group-hover:shadow-[0_0_20px_rgba(244,63,94,0.5)] group-hover:to-rose-400'
+                        : hasTrades
+                          ? 'bg-gradient-to-t from-zinc-700/60 via-zinc-600/70 to-zinc-400/80 dark:from-zinc-800/80 dark:via-zinc-700/80 dark:to-zinc-500/90 group-hover:from-zinc-600 group-hover:to-zinc-300'
+                          : 'bg-zinc-800/20 dark:bg-zinc-800/30 group-hover:bg-zinc-800/40'
+                  }`}
+                />
               </div>
 
               {/* Bottom Label and Trade Count */}
               <div className="flex flex-col items-center mt-3 text-center">
                 <span
                   className={`text-xs font-semibold tracking-tight truncate max-w-full transition-colors ${
-                    isTop ? 'text-sky-500 font-bold' : 'text-fg-muted group-hover:text-fg'
+                    isGlowing || isTop
+                      ? 'text-sky-500 font-bold group-hover:text-sky-400'
+                      : 'text-fg-muted group-hover:text-fg'
                   }`}
                 >
                   {item.label}
                 </span>
                 {item.count != null && (
-                  <span className="text-[10px] text-fg-dim font-mono mt-0.5">
-                    {item.count} tr
+                  <span className="text-[10px] text-fg-dim font-mono mt-0.5 group-hover:text-fg-muted transition-colors">
+                    {item.count} {item.count === 1 ? 'trade' : 'trades'}
                   </span>
                 )}
               </div>

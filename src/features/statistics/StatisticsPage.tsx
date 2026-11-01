@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
-import { BarChart3, ChevronDown } from 'lucide-react';
+import { BarChart3, ChevronDown, Rows3 } from 'lucide-react';
 
 import { Loader } from '@/components/ui/Loader';
 import { Card } from '@/components/ui/Card';
@@ -22,6 +22,7 @@ import type { TemplateDefinition } from '@/domain/models/trade';
 import { getDefaultTemplateId, listJournalTemplates } from '@/data/journalTemplateRepository';
 import { Select } from '@/components/ui/Select';
 import { cn } from '@/lib/cn';
+import { motion } from 'framer-motion';
 
 type Tone = 'win' | 'loss';
 
@@ -171,6 +172,7 @@ export function StatisticsPage() {
 
   const [tab, setTab] = useState<string>('instrument');
   const [metricMode, setMetricMode] = useState<'r' | 'pnl'>('r');
+  const [viewMode, setViewMode] = useState<'vertical' | 'horizontal'>('vertical');
   const [templateOptions, setTemplateOptions] = useState<TemplateDefinition[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState('default-ict-2026');
 
@@ -348,11 +350,11 @@ export function StatisticsPage() {
 
     const next =
       tabs[
-        (i +
-          (e.key === 'ArrowRight'
-            ? 1
-            : tabs.length - 1)) %
-          tabs.length
+      (i +
+        (e.key === 'ArrowRight'
+          ? 1
+          : tabs.length - 1)) %
+      tabs.length
       ];
 
     if (!next) {
@@ -378,32 +380,64 @@ export function StatisticsPage() {
           </p>
         </div>
 
-        {/* PnL ($) ⇄ Realized R Toggle Segment */}
-        <div className="inline-flex h-10 items-center p-1 rounded-xl bg-bg-1 dark:bg-[#121417] border border-line shadow-sm self-start sm:self-auto">
-          <button
-            type="button"
-            onClick={() => setMetricMode('r')}
-            className={cn(
-              'h-8 px-3.5 rounded-lg text-xs font-semibold tracking-tight transition-all flex items-center justify-center',
-              metricMode === 'r'
-                ? 'bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm'
-                : 'text-fg-muted hover:text-fg',
-            )}
-          >
-            Realized R
-          </button>
-          <button
-            type="button"
-            onClick={() => setMetricMode('pnl')}
-            className={cn(
-              'h-8 px-3.5 rounded-lg text-xs font-semibold tracking-tight transition-all flex items-center justify-center',
-              metricMode === 'pnl'
-                ? 'bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm'
-                : 'text-fg-muted hover:text-fg',
-            )}
-          >
-            P&amp;L ($)
-          </button>
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          {/* Vertical Bars ⇄ Horizontal Rows View Toggle */}
+          <div className="inline-flex h-10 items-center p-1 rounded-xl bg-bg-1 dark:bg-[#121417] border border-line shadow-sm">
+            <button
+              type="button"
+              onClick={() => setViewMode('vertical')}
+              className={cn(
+                'h-8 px-3 rounded-lg text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5',
+                viewMode === 'vertical'
+                  ? 'bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm'
+                  : 'text-fg-muted hover:text-fg',
+              )}
+            >
+              <BarChart3 className="h-3.5 w-3.5" />
+              <span>Bars</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('horizontal')}
+              className={cn(
+                'h-8 px-3 rounded-lg text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5',
+                viewMode === 'horizontal'
+                  ? 'bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm'
+                  : 'text-fg-muted hover:text-fg',
+              )}
+            >
+              <Rows3 className="h-3.5 w-3.5" />
+              <span>Rows</span>
+            </button>
+          </div>
+
+          {/* PnL ($) ⇄ Realized R Toggle Segment */}
+          <div className="inline-flex h-10 items-center p-1 rounded-xl bg-bg-1 dark:bg-[#121417] border border-line shadow-sm">
+            <button
+              type="button"
+              onClick={() => setMetricMode('r')}
+              className={cn(
+                'h-8 px-3.5 rounded-lg text-xs font-semibold tracking-tight transition-all flex items-center justify-center',
+                metricMode === 'r'
+                  ? 'bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm'
+                  : 'text-fg-muted hover:text-fg',
+              )}
+            >
+              Realized R
+            </button>
+            <button
+              type="button"
+              onClick={() => setMetricMode('pnl')}
+              className={cn(
+                'h-8 px-3.5 rounded-lg text-xs font-semibold tracking-tight transition-all flex items-center justify-center',
+                metricMode === 'pnl'
+                  ? 'bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm'
+                  : 'text-fg-muted hover:text-fg',
+              )}
+            >
+              P&amp;L ($)
+            </button>
+          </div>
         </div>
       </div>
 
@@ -432,7 +466,12 @@ export function StatisticsPage() {
               SUMMARY & TOP KPI METRICS
               Dashboard-aligned aesthetic cards with identical fonts and styling
              ========================================================= */}
-          <div className="space-y-4">
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-4"
+          >
             {/* Top 5 Metric Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
               {metricMode === 'pnl' ? (
@@ -643,13 +682,17 @@ export function StatisticsPage() {
                 </div>
               </details>
             </div>
-          </div>
+          </motion.div>
 
           {/* =========================================================
               BREAKDOWN TABS
              ========================================================= */}
 
-          <div>
+          <motion.div
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+          >
             <div
               role="tablist"
               aria-label="Break results down by"
@@ -696,93 +739,139 @@ export function StatisticsPage() {
             >
               {showGrades ? (
                 <div className="space-y-4">
-                  <BreakdownBarCard
-                    title="Grade Performance"
-                    items={grades.map((row) => ({
-                      label: `Grade ${row.grade}`,
-                      count: row.count,
-                      winRate: row.count > 0 && row.winRate != null ? Math.round(row.winRate * 100) : 0,
-                      avgMetric: metricMode === 'pnl'
-                        ? (analysisTrades.filter((t) => t.grade === row.grade).reduce((sum, t) => sum + (typeof t.pnl === 'number' && Number.isFinite(t.pnl) ? t.pnl : 0), 0))
-                        : row.totalR,
-                      displayMetric: row.count > 0
-                        ? (metricMode === 'pnl'
+                  {viewMode === 'vertical' ? (
+                    <BreakdownBarCard
+                      title="Grade Performance"
+                      items={grades.map((row) => ({
+                        label: `Grade ${row.grade}`,
+                        count: row.count,
+                        winRate: row.count > 0 && row.winRate != null ? Math.round(row.winRate * 100) : 0,
+                        avgMetric: metricMode === 'pnl'
+                          ? (analysisTrades.filter((t) => t.grade === row.grade).reduce((sum, t) => sum + (typeof t.pnl === 'number' && Number.isFinite(t.pnl) ? t.pnl : 0), 0))
+                          : row.totalR,
+                        displayMetric: row.count > 0
+                          ? (metricMode === 'pnl'
                             ? formatMoney(analysisTrades.filter((t) => t.grade === row.grade).reduce((sum, t) => sum + (typeof t.pnl === 'number' && Number.isFinite(t.pnl) ? t.pnl : 0), 0))
                             : formatR(row.totalR))
-                        : '—',
-                    }))}
-                    variant="metric"
-                    metricMode={metricMode}
-                  />
+                          : '—',
+                      }))}
+                      variant="metric"
+                      metricMode={metricMode}
+                      headerRight={
+                        <div className="inline-flex h-8 items-center p-0.5 rounded-lg bg-bg-2 dark:bg-[#181b20] border border-line/70 shadow-sm">
+                          <button
+                            type="button"
+                            title="Vertical Bars"
+                            onClick={() => setViewMode('vertical')}
+                            className="h-7 px-2.5 rounded-md text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm"
+                          >
+                            <BarChart3 className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">Bars</span>
+                          </button>
+                          <button
+                            type="button"
+                            title="Horizontal Rows"
+                            onClick={() => setViewMode('horizontal')}
+                            className="h-7 px-2.5 rounded-md text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 text-fg-muted hover:text-fg"
+                          >
+                            <Rows3 className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">Rows</span>
+                          </button>
+                        </div>
+                      }
+                    />
+                  ) : (
+                    <Card className="overflow-hidden">
+                      <div className="flex items-center justify-between border-b border-line bg-bg-1 px-5 py-4">
+                        <div>
+                          <h2 className="text-base font-semibold text-fg">Trade grade analysis</h2>
+                          <p className="mt-0.5 text-xs text-fg-muted">
+                            Compare execution quality by win rate and {metricMode === 'pnl' ? 'P&L' : 'realized R'}.
+                          </p>
+                        </div>
+                        <div className="inline-flex h-8 items-center p-0.5 rounded-lg bg-bg-2 dark:bg-[#181b20] border border-line/70 shadow-sm">
+                          <button
+                            type="button"
+                            title="Vertical Bars"
+                            onClick={() => setViewMode('vertical')}
+                            className="h-7 px-2.5 rounded-md text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 text-fg-muted hover:text-fg"
+                          >
+                            <BarChart3 className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">Bars</span>
+                          </button>
+                          <button
+                            type="button"
+                            title="Horizontal Rows"
+                            onClick={() => setViewMode('horizontal')}
+                            className="h-7 px-2.5 rounded-md text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm"
+                          >
+                            <Rows3 className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">Rows</span>
+                          </button>
+                        </div>
+                      </div>
+                      <div className="overflow-x-auto">
+                        <table className="w-full min-w-[560px] text-sm">
+                          <thead className="bg-bg-3/50 text-left text-xs text-fg-dim">
+                            <tr>
+                              <th className="px-5 py-3 font-medium">Grade</th>
+                              <th className="px-5 py-3 text-right font-medium">Trades</th>
+                              <th className="px-5 py-3 text-right font-medium">Win rate</th>
+                              {metricMode === 'pnl' ? (
+                                <>
+                                  <th className="px-5 py-3 text-right font-medium">Avg P&amp;L</th>
+                                  <th className="px-5 py-3 text-right font-medium">Total P&amp;L</th>
+                                </>
+                              ) : (
+                                <>
+                                  <th className="px-5 py-3 text-right font-medium">Avg R</th>
+                                  <th className="px-5 py-3 text-right font-medium">Total R</th>
+                                </>
+                              )}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {grades.map((row) => {
+                              const gradeTrades = analysisTrades.filter((t) => t.grade === row.grade);
+                              const gradePnl = gradeTrades.reduce((sum, t) => sum + (typeof t.pnl === 'number' && Number.isFinite(t.pnl) ? t.pnl : 0), 0);
+                              const avgGradePnl = row.count > 0 ? gradePnl / row.count : 0;
 
-                  <Card className="overflow-hidden">
-                    <div className="border-b border-line bg-bg-1 px-5 py-4">
-                      <h2 className="text-base font-semibold text-fg">Trade grade analysis</h2>
-                      <p className="mt-0.5 text-xs text-fg-muted">
-                        Compare execution quality by win rate and {metricMode === 'pnl' ? 'P&L' : 'realized R'}.
-                      </p>
-                    </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full min-w-[560px] text-sm">
-                        <thead className="bg-bg-3/50 text-left text-xs text-fg-dim">
-                          <tr>
-                            <th className="px-5 py-3 font-medium">Grade</th>
-                            <th className="px-5 py-3 text-right font-medium">Trades</th>
-                            <th className="px-5 py-3 text-right font-medium">Win rate</th>
-                            {metricMode === 'pnl' ? (
-                              <>
-                                <th className="px-5 py-3 text-right font-medium">Avg P&amp;L</th>
-                                <th className="px-5 py-3 text-right font-medium">Total P&amp;L</th>
-                              </>
-                            ) : (
-                              <>
-                                <th className="px-5 py-3 text-right font-medium">Avg R</th>
-                                <th className="px-5 py-3 text-right font-medium">Total R</th>
-                              </>
-                            )}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {grades.map((row) => {
-                            const gradeTrades = analysisTrades.filter((t) => t.grade === row.grade);
-                            const gradePnl = gradeTrades.reduce((sum, t) => sum + (typeof t.pnl === 'number' && Number.isFinite(t.pnl) ? t.pnl : 0), 0);
-                            const avgGradePnl = row.count > 0 ? gradePnl / row.count : 0;
-
-                            return (
-                              <tr key={row.grade} className="border-t border-line">
-                                <td className="px-5 py-3"><TradeGradeBadge grade={row.grade} /></td>
-                                <td className="px-5 py-3 text-right tabular-nums">{row.count}</td>
-                                <td className="px-5 py-3 text-right tabular-nums">{row.winRate == null ? '—' : formatPct(row.winRate)}</td>
-                                {metricMode === 'pnl' ? (
-                                  <>
-                                    <td className={cn('px-5 py-3 text-right font-mono tabular-nums', toneOf(avgGradePnl) === 'win' ? 'text-win' : toneOf(avgGradePnl) === 'loss' ? 'text-loss' : 'text-fg-muted')}>
-                                      {row.count ? formatMoney(avgGradePnl) : '—'}
-                                    </td>
-                                    <td className={cn('px-5 py-3 text-right font-mono tabular-nums', toneOf(gradePnl) === 'win' ? 'text-win' : toneOf(gradePnl) === 'loss' ? 'text-loss' : 'text-fg-muted')}>
-                                      {row.count ? formatMoney(gradePnl) : '—'}
-                                    </td>
-                                  </>
-                                ) : (
-                                  <>
-                                    <td className={cn('px-5 py-3 text-right font-mono tabular-nums', toneOf(row.averageR) === 'win' ? 'text-win' : toneOf(row.averageR) === 'loss' ? 'text-loss' : 'text-fg-muted')}>
-                                      {row.count ? formatR(row.averageR) : '—'}
-                                    </td>
-                                    <td className={cn('px-5 py-3 text-right font-mono tabular-nums', toneOf(row.totalR) === 'win' ? 'text-win' : toneOf(row.totalR) === 'loss' ? 'text-loss' : 'text-fg-muted')}>
-                                      {row.count ? formatR(row.totalR) : '—'}
-                                    </td>
-                                  </>
-                                )}
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </Card>
+                              return (
+                                <tr key={row.grade} className="border-t border-line">
+                                  <td className="px-5 py-3"><TradeGradeBadge grade={row.grade} /></td>
+                                  <td className="px-5 py-3 text-right tabular-nums">{row.count}</td>
+                                  <td className="px-5 py-3 text-right tabular-nums">{row.winRate == null ? '—' : formatPct(row.winRate)}</td>
+                                  {metricMode === 'pnl' ? (
+                                    <>
+                                      <td className={cn('px-5 py-3 text-right font-mono tabular-nums', toneOf(avgGradePnl) === 'win' ? 'text-win' : toneOf(avgGradePnl) === 'loss' ? 'text-loss' : 'text-fg-muted')}>
+                                        {row.count ? formatMoney(avgGradePnl) : '—'}
+                                      </td>
+                                      <td className={cn('px-5 py-3 text-right font-mono tabular-nums', toneOf(gradePnl) === 'win' ? 'text-win' : toneOf(gradePnl) === 'loss' ? 'text-loss' : 'text-fg-muted')}>
+                                        {row.count ? formatMoney(gradePnl) : '—'}
+                                      </td>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <td className={cn('px-5 py-3 text-right font-mono tabular-nums', toneOf(row.averageR) === 'win' ? 'text-win' : toneOf(row.averageR) === 'loss' ? 'text-loss' : 'text-fg-muted')}>
+                                        {row.count ? formatR(row.averageR) : '—'}
+                                      </td>
+                                      <td className={cn('px-5 py-3 text-right font-mono tabular-nums', toneOf(row.totalR) === 'win' ? 'text-win' : toneOf(row.totalR) === 'loss' ? 'text-loss' : 'text-fg-muted')}>
+                                        {row.count ? formatR(row.totalR) : '—'}
+                                      </td>
+                                    </>
+                                  )}
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </Card>
+                  )}
                 </div>
               ) : showInstruments ? (
                 <div className="space-y-4">
-                  {instruments.length > 0 && (
+                  {viewMode === 'vertical' && instruments.length > 0 && (
                     <BreakdownBarCard
                       title="Instruments Performance"
                       items={instruments.map(([instr, v]) => ({
@@ -794,10 +883,33 @@ export function StatisticsPage() {
                       }))}
                       variant="metric"
                       metricMode={metricMode}
+                      headerRight={
+                        <div className="inline-flex h-8 items-center p-0.5 rounded-lg bg-bg-2 dark:bg-[#181b20] border border-line/70 shadow-sm">
+                          <button
+                            type="button"
+                            title="Vertical Bars"
+                            onClick={() => setViewMode('vertical')}
+                            className="h-7 px-2.5 rounded-md text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm"
+                          >
+                            <BarChart3 className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">Bars</span>
+                          </button>
+                          <button
+                            type="button"
+                            title="Horizontal Rows"
+                            onClick={() => setViewMode('horizontal')}
+                            className="h-7 px-2.5 rounded-md text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 text-fg-muted hover:text-fg"
+                          >
+                            <Rows3 className="h-3.5 w-3.5" />
+                            <span className="hidden sm:inline">Rows</span>
+                          </button>
+                        </div>
+                      }
                     />
                   )}
 
-                  <Card className="overflow-hidden">
+                  {viewMode === 'horizontal' && (
+                    <Card className="overflow-hidden">
                     <div className="flex items-center justify-between border-b border-line bg-bg-1 px-5 py-4">
                       <div>
                         <h2 className="text-base font-semibold text-fg">
@@ -808,12 +920,34 @@ export function StatisticsPage() {
                         </p>
                       </div>
 
-                      <span className="text-xs text-fg-dim">
-                        {instruments.length} traded
-                      </span>
-                    </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs text-fg-dim hidden sm:inline">
+                            {instruments.length} traded
+                          </span>
+                          <div className="inline-flex h-8 items-center p-0.5 rounded-lg bg-bg-2 dark:bg-[#181b20] border border-line/70 shadow-sm">
+                            <button
+                              type="button"
+                              title="Vertical Bars"
+                              onClick={() => setViewMode('vertical')}
+                              className="h-7 px-2.5 rounded-md text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 text-fg-muted hover:text-fg"
+                            >
+                              <BarChart3 className="h-3.5 w-3.5" />
+                              <span className="hidden sm:inline">Bars</span>
+                            </button>
+                            <button
+                              type="button"
+                              title="Horizontal Rows"
+                              onClick={() => setViewMode('horizontal')}
+                              className="h-7 px-2.5 rounded-md text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm"
+                            >
+                              <Rows3 className="h-3.5 w-3.5" />
+                              <span className="hidden sm:inline">Rows</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
 
-                    {instruments.length === 0 ? (
+                      {instruments.length === 0 ? (
                       <p className="border-t border-line px-5 py-6 text-sm text-fg-dim">
                         No instrument data.
                       </p>
@@ -823,10 +957,10 @@ export function StatisticsPage() {
                           const winPct =
                             v.count
                               ? Math.round(
-                                  (v.wins /
-                                    v.count) *
-                                    100,
-                                )
+                                (v.wins /
+                                  v.count) *
+                                100,
+                              )
                               : 0;
 
                           const mainTone =
@@ -835,13 +969,13 @@ export function StatisticsPage() {
                           const averageR =
                             v.count
                               ? v.totalR /
-                                v.count
+                              v.count
                               : 0;
 
                           const averagePnl =
                             v.count
                               ? v.totalPnl /
-                                v.count
+                              v.count
                               : 0;
 
                           return (
@@ -924,6 +1058,7 @@ export function StatisticsPage() {
                       )
                     )}
                   </Card>
+                  )}
                 </div>
               ) : active ? (
                 <BreakdownCard
@@ -931,10 +1066,12 @@ export function StatisticsPage() {
                   breakdown={active}
                   metricMode={metricMode}
                   fieldDefinition={selectedTemplate?.fields.find((f) => f.key === active.fieldKey)}
+                  viewMode={viewMode}
+                  onViewModeChange={setViewMode}
                 />
               ) : null}
             </div>
-          </div>
+          </motion.div>
         </>
       )}
     </div>
