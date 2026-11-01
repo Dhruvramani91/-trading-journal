@@ -1,3 +1,6 @@
+import { motion } from 'framer-motion';
+import { motionTokens } from '@/lib/motion';
+
 interface SplitBarGaugeProps {
   leftValue: number; // e.g. avg win
   rightValue: number; // e.g. avg loss (positive number)
@@ -21,13 +24,17 @@ export function SplitBarGauge({
     <div className={`w-full flex flex-col justify-center gap-1.5 ${className}`}>
       {/* Dual Progress Bar */}
       <div className="w-full h-2 rounded-full bg-bg-3 dark:bg-[#181b20] overflow-hidden flex items-center">
-        <div
-          className="h-full bg-emerald-500 rounded-l-full transition-all duration-500"
-          style={{ width: `${leftPct}%` }}
+        <motion.div
+          className="h-full bg-emerald-500 rounded-l-full"
+          initial={{ width: 0 }}
+          animate={{ width: `${leftPct}%` }}
+          transition={{ duration: motionTokens.duration.slow, ease: motionTokens.ease }}
         />
-        <div
-          className="h-full bg-rose-500 rounded-r-full transition-all duration-500"
-          style={{ width: `${rightPct}%` }}
+        <motion.div
+          className="h-full bg-rose-500 rounded-r-full"
+          initial={{ width: 0 }}
+          animate={{ width: `${rightPct}%` }}
+          transition={{ duration: motionTokens.duration.slow, ease: motionTokens.ease }}
         />
       </div>
 

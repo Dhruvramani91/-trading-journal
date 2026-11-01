@@ -1,3 +1,6 @@
+import { motion } from 'framer-motion';
+import { motionTokens, popIn } from '@/lib/motion';
+
 interface SemiCircleGaugeProps {
   value: number; // 0 to 100
   wins?: number;
@@ -14,10 +17,7 @@ export function SemiCircleGauge({
   className = '',
 }: SemiCircleGaugeProps) {
   const clamped = Math.min(100, Math.max(0, value));
-  const radius = 38;
   const strokeWidth = 8;
-  const circumference = Math.PI * radius; // half circle perimeter
-  const strokeDashoffset = circumference - (clamped / 100) * circumference;
 
   return (
     <div className={`flex flex-col items-center justify-center ${className}`}>
@@ -40,21 +40,30 @@ export function SemiCircleGauge({
             strokeLinecap="round"
           />
           {/* Active Colored Arc */}
-          <path
+          <motion.path
             d="M 12 50 A 38 38 0 0 1 88 50"
             fill="none"
             stroke="url(#gaugeGradient)"
             strokeWidth={strokeWidth}
-            strokeDasharray={circumference}
-            strokeDashoffset={strokeDashoffset}
             strokeLinecap="round"
-            className="transition-all duration-700 ease-out"
+            initial={{ pathLength: 0 }}
+            animate={{ pathLength: clamped / 100 }}
+            transition={{
+              duration: motionTokens.duration.slow,
+              ease: motionTokens.ease,
+            }}
           />
         </svg>
       </div>
 
       {(wins !== undefined || losses !== undefined || bes !== undefined) && (
-        <div className="flex items-center gap-1.5 mt-1 text-[11px] font-medium tracking-tight">
+        <motion.div
+          variants={popIn}
+          initial="hidden"
+          animate="visible"
+          transition={{ delay: 0.6 }}
+          className="flex items-center gap-1.5 mt-1 text-[11px] font-medium tracking-tight"
+        >
           <span className="flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
             {wins ?? 0}
           </span>
@@ -64,7 +73,7 @@ export function SemiCircleGauge({
           <span className="flex items-center gap-0.5 text-rose-600 dark:text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded">
             {losses ?? 0}
           </span>
-        </div>
+        </motion.div>
       )}
     </div>
   );

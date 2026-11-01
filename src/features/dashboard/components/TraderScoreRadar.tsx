@@ -1,5 +1,8 @@
 import { useMemo } from 'react';
+import { motion } from 'framer-motion';
+import NumberFlow from '@number-flow/react';
 import type { TraderRadarScore } from '@/analytics/core/dashboardAnalytics';
+import { motionTokens } from '@/lib/motion';
 
 interface TraderScoreRadarProps {
   scoreData: TraderRadarScore;
@@ -89,72 +92,100 @@ export function TraderScoreRadar({ scoreData, className = '' }: TraderScoreRadar
             </radialGradient>
           </defs>
 
-          {/* Web grid lines */}
-          {gridPolygons.map((pts, idx) => (
-            <polygon
-              key={idx}
-              points={pts}
-              fill="none"
-              stroke="currentColor"
-              className="text-line-strong/40 dark:text-[#22272f]"
-              strokeWidth="1"
-              strokeDasharray={idx === gridPolygons.length - 1 ? 'none' : '2 2'}
-            />
-          ))}
-
-          {/* Radial axis spines */}
-          {axes.map((_, i) => {
-            const angle = i * angleStep - Math.PI / 2;
-            const x2 = center + maxRadius * Math.cos(angle);
-            const y2 = center + maxRadius * Math.sin(angle);
-            return (
-              <line
-                key={i}
-                x1={center}
-                y1={center}
-                x2={x2}
-                y2={y2}
+          {/* Web grid lines & Radial axis spines (fade in first) */}
+          <motion.g
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, ease: motionTokens.ease }}
+          >
+            {gridPolygons.map((pts, idx) => (
+              <polygon
+                key={idx}
+                points={pts}
+                fill="none"
                 stroke="currentColor"
                 className="text-line-strong/40 dark:text-[#22272f]"
                 strokeWidth="1"
+                strokeDasharray={idx === gridPolygons.length - 1 ? 'none' : '2 2'}
               />
-            );
-          })}
+            ))}
 
-          {/* Filled polygon for trader score */}
-          <polygon
+            {axes.map((_, i) => {
+              const angle = i * angleStep - Math.PI / 2;
+              const x2 = center + maxRadius * Math.cos(angle);
+              const y2 = center + maxRadius * Math.sin(angle);
+              return (
+                <line
+                  key={i}
+                  x1={center}
+                  y1={center}
+                  x2={x2}
+                  y2={y2}
+                  stroke="currentColor"
+                  className="text-line-strong/40 dark:text-[#22272f]"
+                  strokeWidth="1"
+                />
+              );
+            })}
+          </motion.g>
+
+          {/* Filled polygon for trader score (scales from center) */}
+          <motion.polygon
             points={activePolygon}
             fill="url(#radarFillGrad)"
             stroke="#0284c7"
-            className="dark:stroke-[#38bdf8] transition-all duration-700 ease-out"
+            className="dark:stroke-[#38bdf8]"
             strokeWidth="2"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{
+              duration: 0.7,
+              delay: 0.25,
+              ease: motionTokens.ease,
+            }}
+            style={{ transformOrigin: `${center}px ${center}px` }}
           />
 
-          {/* Vertices circles */}
+          {/* Vertices circles (pop in sequentially) */}
           {vertexPoints.map((pt, i) => (
-            <circle
+            <motion.circle
               key={i}
               cx={pt.x}
               cy={pt.y}
               r="3.5"
               className="fill-bg-1 dark:fill-[#090a0c] stroke-sky-600 dark:stroke-[#38bdf8]"
               strokeWidth="2"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{
+                delay: 0.45 + i * 0.06,
+                type: 'spring',
+                stiffness: 450,
+                damping: 24,
+              }}
+              style={{ transformOrigin: `${pt.x}px ${pt.y}px` }}
             />
           ))}
 
-          {/* Outer text labels */}
-          {labelPositions.map((lbl, i) => (
-            <g key={i}>
-              <text
-                x={lbl.x}
-                y={lbl.y}
-                textAnchor={lbl.textAnchor}
-                className="fill-fg-muted text-[11px] font-sans font-medium"
-              >
-                {lbl.label}
-              </text>
-            </g>
-          ))}
+          {/* Outer text labels (fade in after polygon) */}
+          <motion.g
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.65, duration: 0.4 }}
+          >
+            {labelPositions.map((lbl, i) => (
+              <g key={i}>
+                <text
+                  x={lbl.x}
+                  y={lbl.y}
+                  textAnchor={lbl.textAnchor}
+                  className="fill-fg-muted text-[11px] font-sans font-medium"
+                >
+                  {lbl.label}
+                </text>
+              </g>
+            ))}
+          </motion.g>
         </svg>
       </div>
 
@@ -163,7 +194,10 @@ export function TraderScoreRadar({ scoreData, className = '' }: TraderScoreRadar
         <div className="flex items-baseline justify-between mb-2">
           <span className="text-xs font-medium text-fg-muted">Precision Score</span>
           <span className="text-2xl font-bold tracking-tight text-fg font-mono">
-            {scoreData.overallScore.toFixed(1)}
+            <NumberFlow
+              value={scoreData.overallScore}
+              format={{ minimumFractionDigits: 1, maximumFractionDigits: 1 }}
+            />
           </span>
         </div>
 
@@ -176,9 +210,11 @@ export function TraderScoreRadar({ scoreData, className = '' }: TraderScoreRadar
             }}
           />
           {/* Slider Thumb Indicator */}
-          <div
-            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border-2 border-line-strong dark:border-[#090a0c] shadow-[0_0_8px_rgba(56,189,248,0.8)] -ml-2 transition-all duration-700 ease-out"
-            style={{ left: `${Math.min(98, Math.max(2, scoreData.overallScore))}%` }}
+          <motion.div
+            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border-2 border-line-strong dark:border-[#090a0c] shadow-[0_0_8px_rgba(56,189,248,0.8)] -ml-2"
+            initial={{ left: '0%' }}
+            animate={{ left: `${Math.min(98, Math.max(2, scoreData.overallScore))}%` }}
+            transition={{ duration: motionTokens.duration.slow, ease: motionTokens.ease }}
           />
         </div>
 

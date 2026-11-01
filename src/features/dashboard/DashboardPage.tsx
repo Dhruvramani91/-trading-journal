@@ -20,10 +20,8 @@ import type { Account } from '@/domain/models/account';
 import { summary, cumulativeCurve, metricSummary } from '@/analytics/core';
 import type { Trade } from '@/domain/models/trade';
 import {
-  formatR,
   formatDuration,
   formatDate,
-  formatSignedMoney,
 } from '@/lib/format';
 import type { DashboardMetric, MetricPoint } from '@/analytics/core';
 import { cn } from '@/lib/cn';
@@ -44,8 +42,26 @@ import { CircularRingGauge } from './components/CircularRingGauge';
 import { SplitBarGauge } from './components/SplitBarGauge';
 import { TraderScoreRadar } from './components/TraderScoreRadar';
 import { BreakdownBarCard } from './components/BreakdownBarCard';
+import { motion, type Variants } from 'framer-motion';
+import NumberFlow from '@number-flow/react';
+import { motionTokens, fadeUp, scaleIn, staggerContainer, popIn } from '@/lib/motion';
 
 const DashboardEquityChart = lazyWithRetry(() => import('./DashboardEquityChart'));
+
+const MotionTR = motion.create(TR);
+
+const rowVariant: Variants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      delay: i * 0.06,
+      duration: 0.35,
+      ease: motionTokens.ease,
+    },
+  }),
+};
 
 export function DashboardPage() {
   const { loaded, load } = useTradesStore();
@@ -219,16 +235,25 @@ export function DashboardPage() {
     <div className="mx-auto w-full max-w-[1440px] space-y-6 pb-16">
       {/* 1. Header with Greeting, Time, PnL/R Toggle, Account, Privacy & Snapshot */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-line pb-5">
-        <div>
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: motionTokens.duration.base, ease: motionTokens.ease }}
+        >
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-fg flex items-center gap-2">
             {greeting}
           </h1>
           <p className="text-sm font-medium text-fg-muted mt-1">{formattedCurrentDate}</p>
-        </div>
+        </motion.div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          animate="visible"
+          className="flex flex-wrap items-center gap-2.5"
+        >
           {/* PnL ⇄ R Segmented Toggle (Height 40px - h-10) */}
-          <div className="inline-flex h-10 items-center p-1 rounded-xl bg-bg-1 dark:bg-[#121417] border border-line shadow-sm">
+          <motion.div variants={fadeUp} className="inline-flex h-10 items-center p-1 rounded-xl bg-bg-1 dark:bg-[#121417] border border-line shadow-sm">
             <button
               type="button"
               onClick={() => setMetric('pnl')}
@@ -253,10 +278,10 @@ export function DashboardPage() {
             >
               Realized R
             </button>
-          </div>
+          </motion.div>
 
           {/* Account Selector Custom Form Select (Height 40px - h-10) */}
-          <div className="min-w-[150px]">
+          <motion.div variants={fadeUp} className="min-w-[150px]">
             <Select
               value={selectedAccountId}
               onChange={(e) => handleAccountChange(e.target.value)}
@@ -269,29 +294,37 @@ export function DashboardPage() {
                 </option>
               ))}
             </Select>
-          </div>
+          </motion.div>
 
           {/* Privacy Toggle (Eye icon) (Height 40px - h-10) */}
-          <button
+          <motion.button
+            variants={fadeUp}
             type="button"
             onClick={() => setIsPrivate(!isPrivate)}
             title={isPrivate ? 'Show sensitive balances' : 'Hide sensitive balances'}
             className="h-10 w-10 flex items-center justify-center rounded-xl bg-bg-1 dark:bg-[#121417] border border-line text-fg-muted hover:text-fg hover:border-line-strong transition-colors shadow-sm"
           >
             {isPrivate ? <EyeOff className="w-4 h-4 text-amber-500 dark:text-amber-400" /> : <Eye className="w-4 h-4" />}
-          </button>
+          </motion.button>
 
           {/* New Trade Primary CTA (Height 40px - h-10) */}
-          <Button asChild variant="primary" className="h-10 px-4 text-xs font-semibold shadow-sm rounded-xl" leftIcon={<TrendingUp className="h-3.5 w-3.5" />}>
-            <Link to="/journal/new">New trade</Link>
-          </Button>
-        </div>
+          <motion.div variants={fadeUp}>
+            <Button asChild variant="primary" className="h-10 px-4 text-xs font-semibold shadow-sm rounded-xl" leftIcon={<TrendingUp className="h-3.5 w-3.5" />}>
+              <Link to="/journal/new">New trade</Link>
+            </Button>
+          </motion.div>
+        </motion.div>
       </header>
 
       {/* 2. Top Metric Gauge Cards (5 Cards Grid) */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+      <motion.section
+        variants={staggerContainer}
+        initial="hidden"
+        animate="visible"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5"
+      >
         {/* Card 1: Net P&L / R */}
-        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card">
+        <motion.div variants={scaleIn} className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold text-fg-muted">
               {metric === 'r' ? 'Net Realized R' : 'Net P&L'}
@@ -307,24 +340,46 @@ export function DashboardPage() {
                 isNetPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400',
               )}
             >
-              {isPrivate
-                ? '***'
-                : metric === 'r'
-                  ? formatR(netValue)
-                  : formatSignedMoney(netValue)}
+              {isPrivate ? (
+                '***'
+              ) : metric === 'r' ? (
+                <NumberFlow
+                  value={netValue}
+                  prefix={netValue > 0 ? '+' : ''}
+                  suffix="R"
+                  format={{
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }}
+                />
+              ) : (
+                <NumberFlow
+                  value={netValue}
+                  format={{
+                    style: 'currency',
+                    currency: 'USD',
+                    signDisplay: netValue > 0 ? 'always' : 'auto',
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }}
+                />
+              )}
             </div>
             <span className="text-[11px] text-fg-dim font-medium mt-1.5 block">
               {metric === 'r' ? 'Total R multiple gained' : 'Realized journal total'}
             </span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Card 2: Trade Win % with Semi-Circle Speedometer */}
-        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex items-center justify-between shadow-card">
+        <motion.div variants={scaleIn} className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex items-center justify-between shadow-card">
           <div className="flex flex-col justify-between h-full">
             <span className="text-xs font-semibold text-fg-muted">Trade win %</span>
             <div className="text-3xl font-extrabold font-mono text-fg tracking-tight mt-2">
-              {s?.winRate != null ? `${(s.winRate * 100).toFixed(0)}%` : '0%'}
+              <NumberFlow
+                value={s?.winRate != null ? Math.round(s.winRate * 100) : 0}
+                suffix="%"
+              />
             </div>
             <span className="text-[11px] text-fg-dim font-medium mt-1">Per execution</span>
           </div>
@@ -334,10 +389,10 @@ export function DashboardPage() {
             bes={s?.bes ?? 0}
             losses={s?.losses ?? 0}
           />
-        </div>
+        </motion.div>
 
         {/* Card 3: Profit Factor with Circular Ring */}
-        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex items-center justify-between shadow-card">
+        <motion.div variants={scaleIn} className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex items-center justify-between shadow-card">
           <div className="flex flex-col justify-between h-full">
             <span className="text-xs font-semibold text-fg-muted">Profit factor</span>
             <div
@@ -346,19 +401,25 @@ export function DashboardPage() {
                 profitFactor >= 1.5 ? 'text-emerald-600 dark:text-emerald-400' : profitFactor >= 1 ? 'text-amber-500 dark:text-amber-300' : 'text-rose-600 dark:text-rose-400',
               )}
             >
-              {profitFactor.toFixed(2)}
+              <NumberFlow
+                value={profitFactor}
+                format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }}
+              />
             </div>
             <span className="text-[11px] text-fg-dim font-medium mt-1">Gross W / Gross L</span>
           </div>
           <CircularRingGauge value={profitFactor} benchmark={3.0} />
-        </div>
+        </motion.div>
 
         {/* Card 4: Day Win % with Semi-Circle Speedometer */}
-        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex items-center justify-between shadow-card">
+        <motion.div variants={scaleIn} className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex items-center justify-between shadow-card">
           <div className="flex flex-col justify-between h-full">
             <span className="text-xs font-semibold text-fg-muted">Day win %</span>
             <div className="text-3xl font-extrabold font-mono text-fg tracking-tight mt-2">
-              {dayWinData.dayWinRate.toFixed(0)}%
+              <NumberFlow
+                value={Math.round(dayWinData.dayWinRate)}
+                suffix="%"
+              />
             </div>
             <span className="text-[11px] text-fg-dim font-medium mt-1">
               {dayWinData.winDays} of {dayWinData.totalDays} days green
@@ -370,14 +431,17 @@ export function DashboardPage() {
             bes={dayWinData.beDays}
             losses={dayWinData.lossDays}
           />
-        </div>
+        </motion.div>
 
         {/* Card 5: Avg Win / Loss with Dual Split Bar */}
-        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card">
+        <motion.div variants={scaleIn} className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-fg-muted">Avg win/loss</span>
             <span className="text-xl font-bold font-mono text-fg tracking-tight">
-              {avgWinLossRatio.toFixed(2)}
+              <NumberFlow
+                value={avgWinLossRatio}
+                format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }}
+              />
             </span>
           </div>
           <SplitBarGauge
@@ -398,13 +462,19 @@ export function DashboardPage() {
                   : `-${Math.round(avgLossVal)}`
             }
           />
-        </div>
-      </section>
+        </motion.div>
+      </motion.section>
 
       {/* 3. Hero Middle Section: Precision Score Radar (Left) + Cumulative Curve (Right) */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <motion.section
+        variants={staggerContainer}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.15 }}
+        className="grid grid-cols-1 lg:grid-cols-12 gap-4"
+      >
         {/* Left: Trader Precision Score Spider Radar */}
-        <div className="lg:col-span-5 bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-6 flex flex-col justify-between shadow-card">
+        <motion.div variants={scaleIn} className="lg:col-span-5 bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-6 flex flex-col justify-between shadow-card">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
               <h2 className="text-sm font-semibold text-fg tracking-tight">Precision Score</h2>
@@ -416,10 +486,10 @@ export function DashboardPage() {
           </div>
 
           <TraderScoreRadar scoreData={scoreData} />
-        </div>
+        </motion.div>
 
         {/* Right: Daily Net Cumulative Curve */}
-        <div className="lg:col-span-7 bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-6 flex flex-col justify-between shadow-card">
+        <motion.div variants={scaleIn} className="lg:col-span-7 bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-6 flex flex-col justify-between shadow-card">
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
               <div>
@@ -427,11 +497,27 @@ export function DashboardPage() {
                   {metric === 'r' ? 'Daily Net Cumulative R' : 'Daily Net Cumulative P&L'}
                 </h2>
                 <div className="text-3xl font-extrabold font-mono text-fg tracking-tight mt-1">
-                  {isPrivate
-                    ? '***'
-                    : metric === 'r'
-                      ? formatR(netValue)
-                      : formatSignedMoney(netValue)}
+                  {isPrivate ? (
+                    '***'
+                  ) : metric === 'r' ? (
+                    <NumberFlow
+                      value={netValue}
+                      prefix={netValue > 0 ? '+' : ''}
+                      suffix="R"
+                      format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }}
+                    />
+                  ) : (
+                    <NumberFlow
+                      value={netValue}
+                      format={{
+                        style: 'currency',
+                        currency: 'USD',
+                        signDisplay: netValue > 0 ? 'always' : 'auto',
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }}
+                    />
+                  )}
                 </div>
               </div>
 
@@ -475,151 +561,243 @@ export function DashboardPage() {
               <span className="font-mono">{periodOverview.tradingDaysCount} trading days</span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-1">
+            <motion.div variants={staggerContainer} className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-1">
               {/* Peak */}
-              <div className="bg-bg-2/60 dark:bg-[#181b20]/60 border border-line rounded-xl p-2.5">
+              <motion.div variants={fadeUp} className="bg-bg-2/60 dark:bg-[#181b20]/60 border border-line rounded-xl p-2.5">
                 <span className="text-[10px] font-medium text-fg-muted uppercase tracking-wider block">Peak</span>
                 <span className="text-sm font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-0.5 block">
-                  {isPrivate
-                    ? '***'
-                    : metric === 'r'
-                      ? `+${periodOverview.peakValue.toFixed(1)}R`
-                      : formatSignedMoney(periodOverview.peakValue)}
+                  {isPrivate ? (
+                    '***'
+                  ) : metric === 'r' ? (
+                    <NumberFlow
+                      value={periodOverview.peakValue}
+                      prefix={periodOverview.peakValue > 0 ? '+' : ''}
+                      suffix="R"
+                      format={{ minimumFractionDigits: 1, maximumFractionDigits: 1 }}
+                    />
+                  ) : (
+                    <NumberFlow
+                      value={periodOverview.peakValue}
+                      format={{
+                        style: 'currency',
+                        currency: 'USD',
+                        signDisplay: periodOverview.peakValue > 0 ? 'always' : 'auto',
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }}
+                    />
+                  )}
                 </span>
                 <span className="text-[10px] text-fg-dim block truncate">
                   {periodOverview.peakDate ? formatDate(periodOverview.peakDate) : '—'}
                 </span>
-              </div>
+              </motion.div>
 
               {/* Max Drawdown */}
-              <div className="bg-bg-2/60 dark:bg-[#181b20]/60 border border-line rounded-xl p-2.5">
+              <motion.div variants={fadeUp} className="bg-bg-2/60 dark:bg-[#181b20]/60 border border-line rounded-xl p-2.5">
                 <span className="text-[10px] font-medium text-fg-muted uppercase tracking-wider block">Max Drawdown</span>
                 <span className="text-sm font-bold font-mono text-rose-600 dark:text-rose-400 mt-0.5 block">
-                  {isPrivate
-                    ? '***'
-                    : metric === 'r'
-                      ? `-${periodOverview.maxDrawdownValue.toFixed(1)}R`
-                      : `-$${Math.round(periodOverview.maxDrawdownValue)}`}
+                  {isPrivate ? (
+                    '***'
+                  ) : metric === 'r' ? (
+                    <NumberFlow
+                      value={periodOverview.maxDrawdownValue}
+                      prefix="-"
+                      suffix="R"
+                      format={{ minimumFractionDigits: 1, maximumFractionDigits: 1 }}
+                    />
+                  ) : (
+                    <NumberFlow
+                      value={-periodOverview.maxDrawdownValue}
+                      format={{
+                        style: 'currency',
+                        currency: 'USD',
+                        signDisplay: 'auto',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0,
+                      }}
+                    />
+                  )}
                 </span>
                 <span className="text-[10px] text-fg-dim block truncate">
                   -{periodOverview.maxDrawdownPct.toFixed(0)}% of peak
                 </span>
-              </div>
+              </motion.div>
 
               {/* Streak */}
-              <div className="bg-bg-2/60 dark:bg-[#181b20]/60 border border-line rounded-xl p-2.5">
+              <motion.div variants={fadeUp} className="bg-bg-2/60 dark:bg-[#181b20]/60 border border-line rounded-xl p-2.5">
                 <span className="text-[10px] font-medium text-fg-muted uppercase tracking-wider block">Streak</span>
                 <span className="text-sm font-bold font-mono text-fg mt-0.5 block">
-                  {periodOverview.winStreakDays}W
+                  <NumberFlow value={periodOverview.winStreakDays} suffix="W" />
                 </span>
                 <span className="text-[10px] text-fg-dim block truncate">consecutive days</span>
-              </div>
+              </motion.div>
 
               {/* Best Day */}
-              <div className="bg-bg-2/60 dark:bg-[#181b20]/60 border border-line rounded-xl p-2.5">
+              <motion.div variants={fadeUp} className="bg-bg-2/60 dark:bg-[#181b20]/60 border border-line rounded-xl p-2.5">
                 <span className="text-[10px] font-medium text-fg-muted uppercase tracking-wider block">Best Day</span>
                 <span className="text-sm font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-0.5 block">
-                  {isPrivate
-                    ? '***'
-                    : metric === 'r'
-                      ? `+${periodOverview.bestDayValue.toFixed(1)}R`
-                      : formatSignedMoney(periodOverview.bestDayValue)}
+                  {isPrivate ? (
+                    '***'
+                  ) : metric === 'r' ? (
+                    <NumberFlow
+                      value={periodOverview.bestDayValue}
+                      prefix={periodOverview.bestDayValue > 0 ? '+' : ''}
+                      suffix="R"
+                      format={{ minimumFractionDigits: 1, maximumFractionDigits: 1 }}
+                    />
+                  ) : (
+                    <NumberFlow
+                      value={periodOverview.bestDayValue}
+                      format={{
+                        style: 'currency',
+                        currency: 'USD',
+                        signDisplay: periodOverview.bestDayValue > 0 ? 'always' : 'auto',
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      }}
+                    />
+                  )}
                 </span>
                 <span className="text-[10px] text-fg-dim block truncate">
                   {periodOverview.bestDayDate ? formatDate(periodOverview.bestDayDate) : '—'}
                 </span>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           </div>
-        </div>
-      </section>
+        </motion.div>
+      </motion.section>
 
       {/* 4. Quick KPI Stat Pills Row (6 Items) */}
-      <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-xl p-4 flex flex-col justify-between shadow-card">
+      <motion.section
+        variants={staggerContainer}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3"
+      >
+        <motion.div variants={fadeUp} className="bg-bg-1 dark:bg-[#121417] border border-line rounded-xl p-4 flex flex-col justify-between shadow-card">
           <span className="text-xs text-fg-muted font-medium">Win rate</span>
           <span className="text-xl font-bold font-mono text-fg mt-2">
-            {s?.winRate != null ? `${(s.winRate * 100).toFixed(0)}%` : '0%'}
+            <NumberFlow
+              value={s?.winRate != null ? Math.round(s.winRate * 100) : 0}
+              suffix="%"
+            />
           </span>
-        </div>
+        </motion.div>
 
-        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-xl p-4 flex flex-col justify-between shadow-card">
+        <motion.div variants={fadeUp} className="bg-bg-1 dark:bg-[#121417] border border-line rounded-xl p-4 flex flex-col justify-between shadow-card">
           <span className="text-xs text-fg-muted font-medium">Avg RR</span>
           <span className="text-xl font-bold font-mono text-fg mt-2">
-            {displayAvgRR}
+            {displayAvgRR !== '—' && !isNaN(Number(displayAvgRR)) ? (
+              <NumberFlow
+                value={Number(displayAvgRR)}
+                format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }}
+              />
+            ) : (
+              displayAvgRR
+            )}
           </span>
-        </div>
+        </motion.div>
 
-        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-xl p-4 flex flex-col justify-between shadow-card">
+        <motion.div variants={fadeUp} className="bg-bg-1 dark:bg-[#121417] border border-line rounded-xl p-4 flex flex-col justify-between shadow-card">
           <span className="text-xs text-fg-muted font-medium">Avg duration</span>
           <span className="text-xl font-bold font-mono text-fg mt-2">
-            {avgDurationMin > 0 ? `${avgDurationMin}m` : '—'}
+            {avgDurationMin > 0 ? (
+              <NumberFlow value={avgDurationMin} suffix="m" />
+            ) : (
+              '—'
+            )}
           </span>
-        </div>
+        </motion.div>
 
-        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-xl p-4 flex flex-col justify-between shadow-card">
+        <motion.div variants={fadeUp} className="bg-bg-1 dark:bg-[#121417] border border-line rounded-xl p-4 flex flex-col justify-between shadow-card">
           <span className="text-xs text-fg-muted font-medium">Best day</span>
           <span className="text-xl font-bold text-fg mt-2 truncate">{breakdowns.bestDay}</span>
-        </div>
+        </motion.div>
 
-        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-xl p-4 flex flex-col justify-between shadow-card">
+        <motion.div variants={fadeUp} className="bg-bg-1 dark:bg-[#121417] border border-line rounded-xl p-4 flex flex-col justify-between shadow-card">
           <span className="text-xs text-fg-muted font-medium">Best month</span>
           <span className="text-xl font-bold text-fg mt-2 truncate">{breakdowns.bestMonth}</span>
-        </div>
+        </motion.div>
 
-        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-xl p-4 flex flex-col justify-between shadow-card">
+        <motion.div variants={fadeUp} className="bg-bg-1 dark:bg-[#121417] border border-line rounded-xl p-4 flex flex-col justify-between shadow-card">
           <span className="text-xs text-fg-muted font-medium">{breakdowns.timeDimensionTitle}</span>
           <span className="text-xl font-bold text-fg mt-2 truncate">{breakdowns.bestSession}</span>
-        </div>
-      </section>
+        </motion.div>
+      </motion.section>
 
       {/* 5. Comparative Breakdown Cards (Bar Charts Grid) */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <motion.section
+        variants={staggerContainer}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.1 }}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+      >
         {/* 1. Win Rate by Direction */}
-        <BreakdownBarCard
-          title="Win rate by direction"
-          items={breakdowns.directionWinRates}
-          variant="winRate"
-        />
+        <motion.div variants={fadeUp}>
+          <BreakdownBarCard
+            title="Win rate by direction"
+            items={breakdowns.directionWinRates}
+            variant="winRate"
+          />
+        </motion.div>
 
         {/* 2. Avg RR by Market */}
-        <BreakdownBarCard
-          title="Avg RR by market"
-          items={breakdowns.marketRR}
-          variant="metric"
-        />
+        <motion.div variants={fadeUp}>
+          <BreakdownBarCard
+            title="Avg RR by market"
+            items={breakdowns.marketRR}
+            variant="metric"
+          />
+        </motion.div>
 
         {/* 3. Avg Duration by Direction */}
-        <BreakdownBarCard
-          title="Avg duration by direction"
-          items={breakdowns.directionDurations}
-          variant="duration"
-        />
+        <motion.div variants={fadeUp}>
+          <BreakdownBarCard
+            title="Avg duration by direction"
+            items={breakdowns.directionDurations}
+            variant="duration"
+          />
+        </motion.div>
 
         {/* 4. Win Rate by Weekday */}
-        <BreakdownBarCard
-          title="Win rate by weekday"
-          items={breakdowns.weekdayWinRates}
-          variant="winRate"
-        />
+        <motion.div variants={fadeUp}>
+          <BreakdownBarCard
+            title="Win rate by weekday"
+            items={breakdowns.weekdayWinRates}
+            variant="winRate"
+          />
+        </motion.div>
 
         {/* 5. Win Rate by Month */}
-        <BreakdownBarCard
-          title="Win rate by month"
-          items={breakdowns.monthWinRates}
-          variant="winRate"
-        />
+        <motion.div variants={fadeUp}>
+          <BreakdownBarCard
+            title="Win rate by month"
+            items={breakdowns.monthWinRates}
+            variant="winRate"
+          />
+        </motion.div>
 
         {/* 6. Win Rate by Time Entry / Session (Dynamic based on selected template) */}
-        <BreakdownBarCard
-          title={breakdowns.timeCardTitle}
-          items={breakdowns.sessionWinRates}
-          variant="winRate"
-        />
-      </section>
+        <motion.div variants={fadeUp}>
+          <BreakdownBarCard
+            title={breakdowns.timeCardTitle}
+            items={breakdowns.sessionWinRates}
+            variant="winRate"
+          />
+        </motion.div>
+      </motion.section>
 
       {/* 6. Recent Trades Table Preview */}
-      <section className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-6 shadow-card">
+      <motion.section
+        variants={fadeUp}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.15 }}
+        className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-6 shadow-card"
+      >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-fg tracking-tight">Recent Trades</h2>
           <Button asChild variant="ghost" className="h-8 px-2.5 text-xs text-fg-muted hover:text-fg">
@@ -643,23 +821,53 @@ export function DashboardPage() {
             </THead>
             <TBody>
               {recent.map((t, i) => (
-                <TR key={t.id} interactive onClick={() => navigate(`/journal/${t.id}`)}>
+                <MotionTR
+                  key={t.id}
+                  interactive
+                  onClick={() => navigate(`/journal/${t.id}`)}
+                  variants={rowVariant}
+                  custom={i}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                >
                   <TD className="text-center text-fg-dim font-mono text-xs">{t.number ?? i + 1}</TD>
                   <TD className="whitespace-nowrap font-mono text-xs text-fg-muted">{formatDate(t.openedAt)}</TD>
                   <TD>
                     <span className="font-semibold text-fg text-xs">{t.instrument}</span>
                   </TD>
                   <TD>
-                    <DirectionPill direction={t.direction} />
+                    <motion.div
+                      variants={popIn}
+                      initial="hidden"
+                      whileInView="visible"
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.15 + i * 0.05 }}
+                    >
+                      <DirectionPill direction={t.direction} />
+                    </motion.div>
                   </TD>
                   <TD>
-                    <ResultPill result={t.result} />
+                    <motion.div
+                      variants={popIn}
+                      initial="hidden"
+                      whileInView="visible"
+                      viewport={{ once: true }}
+                      transition={{ delay: 0.18 + i * 0.05 }}
+                    >
+                      <ResultPill result={t.result} />
+                    </motion.div>
                   </TD>
                   <TD
                     align="right"
                     className={cn('num font-bold text-xs', t.r > 0 ? 'text-emerald-600 dark:text-emerald-400' : t.r < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-fg-muted')}
                   >
-                    {formatR(t.r)}
+                    <NumberFlow
+                      value={t.r}
+                      prefix={t.r > 0 ? '+' : ''}
+                      suffix="R"
+                      format={{ minimumFractionDigits: 2, maximumFractionDigits: 2 }}
+                    />
                   </TD>
                   <TD
                     align="right"
@@ -672,21 +880,32 @@ export function DashboardPage() {
                           : 'text-fg-muted',
                     )}
                   >
-                    {isPrivate
-                      ? '***'
-                      : typeof t.pnl === 'number' && Number.isFinite(t.pnl)
-                        ? formatSignedMoney(t.pnl)
-                        : '—'}
+                    {isPrivate ? (
+                      '***'
+                    ) : typeof t.pnl === 'number' && Number.isFinite(t.pnl) ? (
+                      <NumberFlow
+                        value={t.pnl}
+                        format={{
+                          style: 'currency',
+                          currency: 'USD',
+                          signDisplay: t.pnl > 0 ? 'always' : 'auto',
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        }}
+                      />
+                    ) : (
+                      '—'
+                    )}
                   </TD>
                   <TD align="right" className="text-xs text-fg-muted num">
                     {t.durationMin > 0 ? formatDuration(t.durationMin) : '—'}
                   </TD>
-                </TR>
+                </MotionTR>
               ))}
             </TBody>
           </Table>
         </div>
-      </section>
+      </motion.section>
     </div>
   );
 }

@@ -1,3 +1,6 @@
+import { motion } from 'framer-motion';
+import { motionTokens } from '@/lib/motion';
+
 interface CircularRingGaugeProps {
   value: number; // e.g. 7.18
   benchmark?: number; // target benchmark, default 3.0
@@ -13,8 +16,6 @@ export function CircularRingGauge({
   const pct = Math.min(100, Math.max(0, (value / benchmark) * 100));
   const radius = 22;
   const strokeWidth = 5;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (pct / 100) * circumference;
 
   return (
     <div className={`relative w-14 h-14 flex items-center justify-center ${className}`}>
@@ -28,17 +29,20 @@ export function CircularRingGauge({
           className="text-line-strong/30 dark:text-[#262b34]"
           strokeWidth={strokeWidth}
         />
-        <circle
+        <motion.circle
           cx="28"
           cy="28"
           r={radius}
           fill="none"
           stroke={value >= 1 ? '#22c55e' : '#ef4444'}
           strokeWidth={strokeWidth}
-          strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
           strokeLinecap="round"
-          className="transition-all duration-700 ease-out"
+          initial={{ pathLength: 0 }}
+          animate={{ pathLength: pct / 100 }}
+          transition={{
+            duration: motionTokens.duration.slow,
+            ease: motionTokens.ease,
+          }}
         />
       </svg>
     </div>

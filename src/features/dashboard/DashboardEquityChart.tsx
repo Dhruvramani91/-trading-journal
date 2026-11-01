@@ -67,7 +67,10 @@ export default function DashboardEquityChart({ data, metric, isPrivate }: Dashbo
           fill="url(#equityGradient)"
           dot={false}
           activeDot={{ r: 4, fill: '#38bdf8', stroke: '#090a0c', strokeWidth: 2 }}
-          isAnimationActive={false}
+          isAnimationActive={true}
+          animationDuration={900}
+          animationEasing="ease-out"
+          animationBegin={150}
         />
       </AreaChart>
     </ResponsiveContainer>

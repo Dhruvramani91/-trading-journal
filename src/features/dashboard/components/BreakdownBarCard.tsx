@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 import { motion } from 'framer-motion';
+import NumberFlow from '@number-flow/react';
+import { motionTokens } from '@/lib/motion';
 
 interface BreakdownBarCardProps {
   title: string;
@@ -67,23 +69,19 @@ export function BreakdownBarCard({
       <div className="grid grid-flow-col auto-cols-fr gap-2 sm:gap-3 items-end min-h-[170px] pt-2 pb-2">
         {items.map((item, idx) => {
           let heightPct = 0;
-          let labelText = '';
           const hasTrades = (item.count ?? 0) > 0;
           const val = item.avgMetric ?? 0;
 
           if (variant === 'winRate') {
             const wr = Math.round(item.winRate ?? 0);
             heightPct = hasTrades ? Math.max(14, wr) : 10;
-            labelText = `${wr}%`;
           } else if (variant === 'duration') {
             const dur = Math.max(0, val);
             heightPct = hasTrades ? Math.max(14, Math.min(100, (dur / maxVal) * 100)) : 10;
-            labelText = item.displayMetric || `${dur}m`;
           } else {
             // Metric variant: scale by absolute value relative to maxVal
             const absVal = Math.abs(val);
             heightPct = hasTrades ? Math.max(14, Math.min(100, (absVal / maxVal) * 100)) : 10;
-            labelText = item.displayMetric || (hasTrades ? val.toFixed(1) : '—');
           }
 
           const isNegative = hasTrades && val < 0;
@@ -97,7 +95,15 @@ export function BreakdownBarCard({
               className="flex flex-col items-center justify-end h-full group cursor-pointer transition-transform duration-150 hover:-translate-y-1"
             >
               {/* Value Indicator Above Bar */}
-              <div
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{
+                  duration: 0.4,
+                  delay: hasTrades ? 0.3 + idx * 0.07 : 0.1,
+                  ease: motionTokens.ease,
+                }}
                 className={`text-[10px] sm:text-[11px] font-mono font-semibold mb-2 transition-all duration-200 truncate ${
                   isGlowing || isTop
                     ? 'text-sky-500 font-bold group-hover:text-sky-400'
@@ -108,17 +114,32 @@ export function BreakdownBarCard({
                         : 'text-fg-dim/40'
                 }`}
               >
-                {hasTrades ? (item.displayMetric || labelText) : '—'}
-              </div>
+                {!hasTrades ? (
+                  '—'
+                ) : item.displayMetric ? (
+                  item.displayMetric
+                ) : variant === 'winRate' ? (
+                  <NumberFlow value={Math.round(item.winRate ?? 0)} suffix="%" />
+                ) : variant === 'duration' ? (
+                  <NumberFlow value={Math.max(0, val)} suffix="m" />
+                ) : (
+                  <NumberFlow
+                    value={val}
+                    format={{ minimumFractionDigits: 1, maximumFractionDigits: 1 }}
+                    suffix="R"
+                  />
+                )}
+              </motion.div>
 
               {/* Column Track & Glowing Rounded Bar */}
               <div className="w-full flex justify-center items-end h-28">
                 <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: `${heightPct}%`, opacity: 1 }}
+                  initial={{ height: hasTrades ? 0 : '10%', opacity: 0 }}
+                  whileInView={{ height: `${heightPct}%`, opacity: 1 }}
+                  viewport={{ once: true, amount: 0.2 }}
                   transition={{
                     duration: 0.65,
-                    delay: idx * 0.05,
+                    delay: idx * 0.07,
                     ease: [0.16, 1, 0.3, 1], // Smooth snappy cubic-bezier spring feel
                   }}
                   className={`w-full max-w-[42px] rounded-t-2xl sm:rounded-t-[20px] relative overflow-hidden flex flex-col justify-start items-center ${
@@ -134,7 +155,13 @@ export function BreakdownBarCard({
               </div>
 
               {/* Bottom Label and Trade Count */}
-              <div className="flex flex-col items-center mt-3 text-center">
+              <motion.div
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.4, delay: idx * 0.05 }}
+                className="flex flex-col items-center mt-3 text-center"
+              >
                 <span
                   className={`text-xs font-semibold tracking-tight truncate max-w-full transition-colors ${
                     isGlowing || isTop
@@ -149,7 +176,7 @@ export function BreakdownBarCard({
                     {item.count} {item.count === 1 ? 'trade' : 'trades'}
                   </span>
                 )}
-              </div>
+              </motion.div>
             </div>
           );
         })}

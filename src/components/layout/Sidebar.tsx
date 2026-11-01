@@ -14,11 +14,13 @@ import {
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import type { KeyboardEvent, PointerEvent } from 'react';
+import { motion } from 'framer-motion';
 import { BrandLogo } from '@/components/layout/Brand';
 import { cn } from '@/lib/cn';
 import { useAuthStore } from '@/store/authStore';
 import { useSidebarStore } from '@/store/sidebarStore';
 import { useRef } from 'react';
+import { slideLeft, staggerContainer } from '@/lib/motion';
 
 const GROUPS = [
   {
@@ -98,7 +100,12 @@ export function Sidebar() {
         {collapsed ? <PanelLeftOpen className="h-3.5 w-3.5" /> : <PanelLeftClose className="h-3.5 w-3.5" />}
       </button>
 
-      <nav className={cn('min-h-0 flex-1 space-y-5 overflow-hidden py-4', collapsed ? 'px-2' : 'px-3')}>
+      <motion.nav
+        initial="hidden"
+        animate="visible"
+        variants={staggerContainer}
+        className={cn('min-h-0 flex-1 space-y-5 overflow-hidden py-4', collapsed ? 'px-2' : 'px-3')}
+      >
         {GROUPS.map((group) => (
           <div key={group.label}>
             {!collapsed && <h2 className="mb-2 px-3 text-[9px] font-bold uppercase tracking-[0.2em] text-fg-dim">{group.label}</h2>}
@@ -106,24 +113,25 @@ export function Sidebar() {
               {group.links.map((item) => {
                 const Icon = item.icon;
                 return (
-                  <NavLink
-                    key={item.to}
-                    to={item.to}
-                    end={'end' in item ? item.end : false}
-                    title={collapsed ? item.label : undefined}
-                    aria-label={collapsed ? item.label : undefined}
-                    className={({ isActive }) => cn(
-                      'group relative flex h-10 items-center rounded-xl text-[13px] font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/40',
-                      collapsed ? 'justify-center px-0' : 'gap-3 px-3',
-                      isActive
-                        ? 'bg-primary-soft text-fg before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:bg-accent'
-                        : 'text-fg-muted hover:bg-bg-3 hover:text-fg',
-                    )}
-                  >
-                    <Icon className="h-[17px] w-[17px] shrink-0" strokeWidth={1.8} />
-                    {!collapsed && <span className="truncate">{item.label}</span>}
-                    {collapsed && <span className="sr-only">{item.label}</span>}
-                  </NavLink>
+                  <motion.div key={item.to} variants={slideLeft}>
+                    <NavLink
+                      to={item.to}
+                      end={'end' in item ? item.end : false}
+                      title={collapsed ? item.label : undefined}
+                      aria-label={collapsed ? item.label : undefined}
+                      className={({ isActive }) => cn(
+                        'group relative flex h-10 items-center rounded-xl text-[13px] font-semibold transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/40',
+                        collapsed ? 'justify-center px-0' : 'gap-3 px-3',
+                        isActive
+                          ? 'bg-primary-soft text-fg before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:bg-accent'
+                          : 'text-fg-muted hover:bg-bg-3 hover:text-fg',
+                      )}
+                    >
+                      <Icon className="h-[17px] w-[17px] shrink-0" strokeWidth={1.8} />
+                      {!collapsed && <span className="truncate">{item.label}</span>}
+                      {collapsed && <span className="sr-only">{item.label}</span>}
+                    </NavLink>
+                  </motion.div>
                 );
               })}
             </div>
@@ -131,14 +139,14 @@ export function Sidebar() {
         ))}
         <div>
           {!collapsed && <h2 className="mb-2 px-3 text-[9px] font-bold uppercase tracking-[0.2em] text-fg-dim">Preferences</h2>}
-          <div>
+          <motion.div variants={slideLeft}>
             <NavLink to="/settings" end title={collapsed ? 'Settings' : undefined} aria-label={collapsed ? 'Settings' : undefined} className={({ isActive }) => cn('group relative flex h-9 items-center rounded-lg text-[13px] font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/40', collapsed ? 'justify-center px-0' : 'gap-3 px-3', isActive ? 'bg-primary-soft text-fg before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:bg-accent' : 'text-fg-muted hover:bg-bg-3 hover:text-fg')}>
               <Settings className="h-[17px] w-[17px] shrink-0" strokeWidth={1.8} />
               {!collapsed && <span className="truncate">Settings</span>}
             </NavLink>
-          </div>
+          </motion.div>
         </div>
-      </nav>
+      </motion.nav>
 
       <div className={cn('shrink-0 border-t border-line py-2', collapsed ? 'px-2' : 'px-3')}>
         {user && (
