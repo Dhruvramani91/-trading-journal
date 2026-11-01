@@ -175,6 +175,20 @@ export function DashboardPage() {
     ? Math.round(tradesToUse.reduce((acc, t) => acc + (t.durationMin || 0), 0) / tradesToUse.length)
     : 0;
 
+  // Average RR calculation with fallback to realized R
+  const displayAvgRR = useMemo(() => {
+    if (s?.avgRR != null && Number.isFinite(s.avgRR) && s.avgRR > 0) return s.avgRR.toFixed(2);
+    const validRs = tradesToUse.filter((t) => typeof t.r === 'number' && Number.isFinite(t.r));
+    if (validRs.length > 0) {
+      const positiveRs = validRs.filter((t) => t.r > 0);
+      if (positiveRs.length > 0) {
+        return (positiveRs.reduce((acc, t) => acc + t.r, 0) / positiveRs.length).toFixed(2);
+      }
+      return (validRs.reduce((acc, t) => acc + Math.abs(t.r), 0) / validRs.length).toFixed(2);
+    }
+    return '—';
+  }, [s, tradesToUse]);
+
   // Recent trades for bottom preview
   const recent = useMemo(() => {
     if (!loaded) return [];
@@ -183,13 +197,10 @@ export function DashboardPage() {
       .slice(0, 7);
   }, [loaded, tradesToUse]);
 
-  // Greeting helper
+  // Greeting header
   const greeting = useMemo(() => {
-    const hour = new Date().getHours();
-    const name = user?.name ? user.name.split(' ')[0] : 'Trader';
-    if (hour < 12) return `Good morning, ${name}.`;
-    if (hour < 17) return `Day's almost done, ${name}.`;
-    return `Good evening, ${name}.`;
+    const name = user?.name ? user.name.split(' ')[0] : '';
+    return name ? `Let's review your edge, ${name}.` : "Let's review your edge.";
   }, [user]);
 
   const formattedCurrentDate = useMemo(() => {
@@ -536,7 +547,7 @@ export function DashboardPage() {
         <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-xl p-4 flex flex-col justify-between shadow-card">
           <span className="text-xs text-fg-muted font-medium">Avg RR</span>
           <span className="text-xl font-bold font-mono text-fg mt-2">
-            {s?.avgRR != null ? s.avgRR.toFixed(2) : '—'}
+            {displayAvgRR}
           </span>
         </div>
 

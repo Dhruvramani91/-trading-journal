@@ -418,11 +418,20 @@ function BacktestTradeDetails({ session, trade, loading, onBack, onEdit, onDelet
   const visiblePhotos = photoEntries.filter(([, value]) => Boolean(value));
   return <div className="space-y-5"><Button variant="ghost" size="sm" onClick={onBack} leftIcon={<ChevronLeft className="h-4 w-4" />}>Back to journal</Button>
     <PageHeader title={`Backtest trade · ${trade.instrument}`} description={`${session.name} · ${formatDate(trade.openedAt)}`} actions={<><Button onClick={onEdit} leftIcon={<Pencil className="h-4 w-4" />}>Edit trade</Button><Button variant="danger" onClick={onDelete} leftIcon={<Trash2 className="h-4 w-4" />}>Delete</Button></>} />
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">{[
-      { label: 'Date', value: formatDate(trade.openedAt) }, { label: 'Direction', value: trade.direction.toUpperCase() }, { label: 'Outcome', value: trade.result.toUpperCase() },
-      { label: 'Grade', value: trade.grade ?? '—' }, { label: 'Realized R', value: trade.realizedR == null ? '—' : formatR(trade.realizedR), tone: trade.realizedR == null ? 'default' as const : trade.realizedR > 0 ? 'win' as const : trade.realizedR < 0 ? 'loss' as const : 'default' as const },
-      { label: 'P&L', value: trade.pnl == null ? '—' : trade.pnl.toFixed(2), tone: trade.pnl == null ? 'default' as const : trade.pnl > 0 ? 'win' as const : trade.pnl < 0 ? 'loss' as const : 'default' as const },
-    ].map((item) => <Card key={item.label}><CardBody><Stat {...item} /></CardBody></Card>)}</div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+        {[
+          { label: 'Date', value: formatDate(trade.openedAt) },
+          { label: 'Direction', value: trade.direction.toUpperCase() },
+          { label: 'Outcome', value: trade.result.toUpperCase() },
+          { label: 'Grade', value: trade.grade ?? '—' },
+          { label: 'Realized R', value: trade.realizedR == null ? '—' : formatR(trade.realizedR), tone: trade.realizedR == null ? 'default' as const : trade.realizedR > 0 ? 'win' as const : trade.realizedR < 0 ? 'loss' as const : 'default' as const },
+          { label: 'P&L', value: trade.pnl == null ? '—' : formatMoney(trade.pnl), tone: trade.pnl == null ? 'default' as const : trade.pnl > 0 ? 'win' as const : trade.pnl < 0 ? 'loss' as const : 'default' as const },
+        ].map((item) => (
+          <div key={item.label} className="rounded-xl border border-line bg-bg-1 p-3.5 shadow-sm">
+            <Stat {...item} />
+          </div>
+        ))}
+      </div>
     <div className="space-y-4"><h2 className="text-sm font-semibold text-fg-muted">{template.name} strategy details</h2>{fields.length ? <Card><CardBody><dl className="grid grid-cols-1 gap-x-6 gap-y-4 text-sm sm:grid-cols-2 lg:grid-cols-3">{fields.map((field) => { const value = trade.templateData[field.key]; return <div key={field.key}><dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">{field.label}</dt><dd className="mt-1 font-medium text-fg">{value == null || value === '' ? '—' : typeof value === 'boolean' ? value ? 'YES' : 'NO' : String(value)}</dd></div>; })}</dl></CardBody></Card> : <Card><CardBody className="text-sm text-fg-dim">No strategy-specific fields.</CardBody></Card>}
       <Card><CardHeader><CardTitle level={3}>Mistakes</CardTitle></CardHeader><CardBody>{trade.mistake ? <p className="text-sm text-fg">{trade.mistake}</p> : <p className="text-sm text-fg-dim">No mistake recorded.</p>}</CardBody></Card>
       <Card><CardHeader><CardTitle level={3}>Notes</CardTitle></CardHeader><CardBody>{trade.notes ? <p className="whitespace-pre-wrap text-sm text-fg">{trade.notes}</p> : <p className="text-sm text-fg-dim">No notes recorded.</p>}</CardBody></Card>

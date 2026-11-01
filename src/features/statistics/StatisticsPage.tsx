@@ -301,11 +301,6 @@ export function StatisticsPage() {
     );
   }, [analysisTrades]);
 
-  const maxAbsR = Math.max(
-    1,
-    ...instruments.map(([, v]) => Math.abs(v.totalR)),
-  );
-
   const tabs = [
     {
       key: 'instrument',
@@ -457,12 +452,15 @@ export function StatisticsPage() {
       </section>
 
             <details className="group border-t border-line">
-              <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-3 text-sm font-semibold text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/60 [&::-webkit-details-marker]:hidden">
+              <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 px-5 py-3 text-sm font-semibold text-fg hover:bg-bg-2/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/60 [&::-webkit-details-marker]:hidden">
                 <span className="min-w-0">
-                  <span className="block">More statistics</span>
+                  <span className="block font-semibold">More statistics</span>
                   <span className="mt-0.5 block text-xs font-normal text-fg-muted">Best and worst trades, drawdowns, and streaks</span>
                 </span>
-                <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 text-fg-muted transition-transform group-open:rotate-180 motion-reduce:transition-none" />
+                <span className="flex items-center gap-2 text-xs font-medium text-fg-muted group-hover:text-fg">
+                  <span>View metrics</span>
+                  <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180 motion-reduce:transition-none" />
+                </span>
               </summary>
               <div>
 
@@ -595,11 +593,10 @@ export function StatisticsPage() {
                       setTab(t.key)
                     }
                     className={cn(
-                      'shrink-0 rounded-lg border px-4 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/40',
-
+                      'shrink-0 rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/40',
                       selected
-                        ? 'border-accent bg-accent/10 text-accent shadow-sm'
-                        : 'border-transparent text-fg-muted hover:border-line hover:bg-bg-3 hover:text-fg',
+                        ? 'bg-bg-1 text-fg shadow-sm border border-line ring-1 ring-black/5 dark:ring-white/10'
+                        : 'text-fg-muted hover:text-fg hover:bg-bg-3/60',
                     )}
                   >
                     {t.label}
@@ -670,13 +667,6 @@ export function StatisticsPage() {
                   ) : (
                     instruments.map(
                       ([instr, v]) => {
-                        const width =
-                          (Math.abs(
-                            v.totalR,
-                          ) /
-                            maxAbsR) *
-                          50;
-
                         const winPct =
                           v.count
                             ? Math.round(
@@ -704,158 +694,81 @@ export function StatisticsPage() {
                         return (
                           <div
                             key={instr}
-                            className="mx-3 my-2 rounded-xl border border-line bg-bg-1 px-4 py-4 transition-colors hover:border-line-strong sm:mx-4"
+                            className="mx-3 my-2.5 rounded-xl border border-line bg-bg-1 p-4 sm:p-5 transition-all hover:border-line-strong hover:shadow-card sm:mx-4"
                           >
-                            {/* Instrument + R */}
-                            <div className="flex items-baseline justify-between gap-3">
-                              <span className="flex min-w-0 items-center gap-2.5 font-medium text-fg">
-                                <InstrumentMark instrument={instr} className="h-8 w-8" />
-                                <span className="truncate">{instr}</span>
-                              </span>
+                            {/* Instrument + P&L / R Metrics Header */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                              <div className="flex items-center gap-3">
+                                <InstrumentMark instrument={instr} className="h-10 w-10 shrink-0" />
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-base font-bold text-fg">{instr}</span>
+                                    <span className="px-2 py-0.5 rounded-full text-2xs font-semibold bg-bg-2 border border-line text-fg-muted">
+                                      {v.count} trade{v.count === 1 ? '' : 's'}
+                                    </span>
+                                  </div>
+                                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-fg-muted">
+                                    <span>{winPct}% win rate</span>
+                                    <span className="text-line">·</span>
+                                    <span>Avg {formatR(averageR)}</span>
+                                    <span className="text-line">·</span>
+                                    <span>Avg {formatMoney(averagePnl)}</span>
+                                  </div>
+                                </div>
+                              </div>
 
-                              <span
-                                className={cn(
-                                  'text-lg font-semibold tabular-nums tracking-tight',
+                              <div className="flex items-center sm:items-end justify-between sm:justify-start gap-4 sm:flex-col">
+                                <div className="text-right">
+                                  <div
+                                    className={cn(
+                                      'text-lg font-bold font-mono tabular-nums tracking-tight',
+                                      tone === 'win' && 'text-win',
+                                      tone === 'loss' && 'text-loss',
+                                      !tone && 'text-fg-muted',
+                                    )}
+                                  >
+                                    {formatR(v.totalR)}
+                                  </div>
+                                  <div
+                                    className={cn(
+                                      'text-xs font-semibold font-mono tabular-nums',
+                                      toneOf(v.totalPnl) === 'win' && 'text-win',
+                                      toneOf(v.totalPnl) === 'loss' && 'text-loss',
+                                      !toneOf(v.totalPnl) && 'text-fg-muted',
+                                    )}
+                                  >
+                                    {formatMoney(v.totalPnl)}
+                                  </div>
+                                </div>
 
-                                  tone ===
-                                    'win' &&
-                                    'text-win',
-
-                                  tone ===
-                                    'loss' &&
-                                    'text-loss',
-
-                                  !tone &&
-                                    'text-fg-muted',
-                                )}
-                              >
-                                {formatR(
-                                  v.totalR,
-                                )}
-                              </span>
+                                <div className="flex items-center gap-1.5">
+                                  {v.wins > 0 && <Badge tone="win">{v.wins} W</Badge>}
+                                  {v.losses > 0 && <Badge tone="loss">{v.losses} L</Badge>}
+                                </div>
+                              </div>
                             </div>
 
-                            {/* P&L */}
-                            <div className="mt-1 flex items-center justify-between gap-3">
-                              <span className="text-xs text-fg-muted">
-                                Total P&L
-                              </span>
-
-                              <span
-                                className={cn(
-                                  'text-sm font-semibold tabular-nums',
-
-                                  toneOf(
-                                    v.totalPnl,
-                                  ) ===
-                                    'win' &&
-                                    'text-win',
-
-                                  toneOf(
-                                    v.totalPnl,
-                                  ) ===
-                                    'loss' &&
-                                    'text-loss',
-
-                                  !toneOf(
-                                    v.totalPnl,
-                                  ) &&
-                                    'text-fg-muted',
-                                )}
-                              >
-                                {formatMoney(
-                                  v.totalPnl,
-                                )}
-                              </span>
-                            </div>
-
-                            {/* Details */}
-                            <div className="mt-1 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs text-fg-muted">
-                              <span className="flex flex-wrap gap-x-4">
-                                <span>
-                                  {v.count}{' '}
-                                  trade
-                                  {v.count === 1
-                                    ? ''
-                                    : 's'}
+                            {/* Refined Proportion Track */}
+                            <div className="relative mt-4">
+                              <div className="flex items-center justify-between text-2xs text-fg-dim font-mono mb-1.5">
+                                <span>Win Rate</span>
+                                <span className={tone === 'win' ? 'text-win font-bold' : tone === 'loss' ? 'text-loss font-bold' : 'text-fg-muted'}>
+                                  {winPct}% ({v.wins}/{v.count})
                                 </span>
-
-                                <span>
-                                  {winPct}%
-                                  {' '}
-                                  win rate
-                                </span>
-
-                                <span>
-                                  avg{' '}
-                                  {formatR(
-                                    averageR,
+                              </div>
+                              <div className="h-2 w-full rounded-full bg-bg-2 overflow-hidden flex border border-line/40">
+                                <div
+                                  className={cn(
+                                    'h-full transition-all duration-300 rounded-full',
+                                    winPct >= 50
+                                      ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
+                                      : winPct > 0
+                                        ? 'bg-gradient-to-r from-amber-500 to-amber-400'
+                                        : 'bg-rose-500',
                                   )}
-                                </span>
-
-                                <span>
-                                  avg{' '}
-                                  {formatMoney(
-                                    averagePnl,
-                                  )}
-                                </span>
-                              </span>
-
-                              <span className="flex gap-1.5">
-                                {v.wins >
-                                  0 && (
-                                  <Badge tone="win">
-                                    {v.wins} W
-                                  </Badge>
-                                )}
-
-                                {v.losses >
-                                  0 && (
-                                  <Badge tone="loss">
-                                    {v.losses} L
-                                  </Badge>
-                                )}
-                              </span>
-                            </div>
-
-                            {/* Existing R bar */}
-                            <div className="relative mt-3 h-2 rounded-full bg-bg-1">
-                              <span className="absolute inset-y-[-3px] left-1/2 w-px bg-line" />
-
-                              <span
-                                className={cn(
-                                  'absolute inset-y-0 rounded-full',
-
-                                  tone ===
-                                    'win' &&
-                                    'bg-win-fill',
-
-                                  tone ===
-                                    'loss' &&
-                                    'bg-loss-fill',
-
-                                  !tone &&
-                                    'bg-fg-dim',
-                                )}
-                                style={
-                                  v.totalR ===
-                                  0
-                                    ? {
-                                        left: 'calc(50% - 3px)',
-                                        width: 6,
-                                      }
-                                    : {
-                                        left: `${
-                                          v.totalR >
-                                          0
-                                            ? 50
-                                            : 50 -
-                                              width
-                                        }%`,
-                                        width: `${width}%`,
-                                      }
-                                }
-                              />
+                                  style={{ width: `${Math.max(4, winPct)}%` }}
+                                />
+                              </div>
                             </div>
                           </div>
                         );

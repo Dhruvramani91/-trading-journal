@@ -411,8 +411,11 @@ export function computeDashboardBreakdowns(
     }
     m.count++;
     if (isWin) m.wins++;
-    if (t.plannedRR && Number.isFinite(t.plannedRR)) {
-      m.rrSum += t.plannedRR;
+    const tradeRR = (typeof t.plannedRR === 'number' && Number.isFinite(t.plannedRR))
+      ? t.plannedRR
+      : (typeof t.r === 'number' && Number.isFinite(t.r) ? Math.abs(t.r) : null);
+    if (tradeRR !== null) {
+      m.rrSum += tradeRR;
       m.rrCount++;
     }
 
@@ -490,7 +493,7 @@ export function computeDashboardBreakdowns(
       count: data.count,
       winRate: data.count > 0 ? (data.wins / data.count) * 100 : 0,
       avgMetric: data.rrCount > 0 ? Number((data.rrSum / data.rrCount).toFixed(2)) : 0,
-      displayMetric: data.rrCount > 0 ? (data.rrSum / data.rrCount).toFixed(2) : '—',
+      displayMetric: data.rrCount > 0 ? `${(data.rrSum / data.rrCount).toFixed(2)}R` : '—',
     }))
     .sort((a, b) => b.count - a.count)
     .slice(0, 4);

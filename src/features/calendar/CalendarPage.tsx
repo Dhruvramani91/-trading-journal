@@ -6,6 +6,8 @@ import {
   ChevronDown,
   Plus,
   Info,
+  PanelRightClose,
+  PanelRightOpen,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Loader } from '@/components/ui/Loader';
@@ -71,6 +73,9 @@ export function CalendarPage() {
 
   // Selected day for side panel breakdown
   const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null);
+
+  // Fullscreen / side-panel toggle for calendar
+  const [isScoreOpen, setIsScoreOpen] = useState(true);
 
   useEffect(() => {
     bootTradesStore();
@@ -376,6 +381,18 @@ export function CalendarPage() {
             ))}
           </div>
 
+          {/* Fullscreen Calendar Toggle */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 px-3 rounded-xl border-line text-xs font-semibold text-fg bg-bg-1 dark:bg-[#121417] hover:bg-bg-2"
+            onClick={() => setIsScoreOpen(!isScoreOpen)}
+            leftIcon={isScoreOpen ? <PanelRightClose className="w-3.5 h-3.5 text-sky-500" /> : <PanelRightOpen className="w-3.5 h-3.5 text-sky-500" />}
+            title={isScoreOpen ? 'Collapse score panel to expand calendar' : 'Show score panel'}
+          >
+            {isScoreOpen ? 'Expand calendar' : 'Show score'}
+          </Button>
+
           {/* Add Trade Button */}
           <Button
             variant="outline"
@@ -402,9 +419,24 @@ export function CalendarPage() {
       </div>
 
       {/* 3. Main Grid: 7-day + Week Column (Left) and Score Radar (Right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-        {/* Left: Calendar Matrix (8 cols: Mon-Sun + Week summary) */}
-        <div className="lg:col-span-8 bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-4 sm:p-5 flex flex-col justify-between overflow-x-auto shadow-card">
+      <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+        {/* Left: Calendar Matrix (Full width when collapsed, 8 cols when score is open) */}
+        <div
+          className={cn(
+            'bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-4 sm:p-5 flex flex-col justify-between overflow-x-auto shadow-card transition-all duration-300 relative',
+            isScoreOpen ? 'lg:col-span-8' : 'lg:col-span-12',
+          )}
+        >
+          {/* Interactive Toggle Handle on the Divider */}
+          <button
+            type="button"
+            onClick={() => setIsScoreOpen(!isScoreOpen)}
+            className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 z-10 w-6 h-12 rounded-full bg-bg-1 dark:bg-[#181b20] border border-line shadow-md items-center justify-center text-fg-muted hover:text-sky-500 hover:scale-105 transition-all cursor-pointer"
+            title={isScoreOpen ? 'Collapse score panel (Full calendar)' : 'Show score panel'}
+          >
+            {isScoreOpen ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
+          </button>
+
           <div className="min-w-[620px]">
             {/* Weekday Header */}
             <div className="grid grid-cols-8 gap-1.5 mb-2.5 text-center">
@@ -538,42 +570,44 @@ export function CalendarPage() {
           </div>
         </div>
 
-        {/* Right: SureScore / Precision Score Card */}
-        <div className="lg:col-span-4 bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card">
-          <div>
-            <div className="flex items-start justify-between mb-3">
-              <div>
-                <h3 className="text-xs font-bold tracking-wider text-fg-muted uppercase flex items-center gap-1.5">
-                  SURESCORE / PRECISION SCORE
-                  <Info className="w-3.5 h-3.5 text-fg-dim" />
-                </h3>
-                <p className="text-xs text-fg-dim mt-0.5">
-                  {isSelectedActive
-                    ? `Day: ${selectedDayKey} · ${selectedDayPerf?.count} trade(s)`
-                    : `Month: ${MONTH_NAMES[month]} ${year} · ${displayTrades.length} trade(s)`}
-                </p>
+        {/* Right: SureScore / Precision Score Card (collapsible) */}
+        {isScoreOpen && (
+          <div className="lg:col-span-4 bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card animate-in fade-in duration-200">
+            <div>
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <h3 className="text-xs font-bold tracking-wider text-fg-muted uppercase flex items-center gap-1.5">
+                    SURESCORE / PRECISION SCORE
+                    <Info className="w-3.5 h-3.5 text-fg-dim" />
+                  </h3>
+                  <p className="text-xs text-fg-dim mt-0.5">
+                    {isSelectedActive
+                      ? `Day: ${selectedDayKey} · ${selectedDayPerf?.count} trade(s)`
+                      : `Month: ${MONTH_NAMES[month]} ${year} · ${displayTrades.length} trade(s)`}
+                  </p>
+                </div>
+                <span className="text-3xl font-extrabold font-mono text-emerald-600 dark:text-emerald-400 tracking-tight">
+                  {scoreData.overallScore.toFixed(1)}
+                </span>
               </div>
-              <span className="text-3xl font-extrabold font-mono text-emerald-600 dark:text-emerald-400 tracking-tight">
-                {scoreData.overallScore.toFixed(1)}
-              </span>
+
+              {/* Radar Spider Plot */}
+              <div className="flex justify-center my-2">
+                <TraderScoreRadar scoreData={scoreData} />
+              </div>
             </div>
 
-            {/* Radar Spider Plot */}
-            <div className="flex justify-center my-2">
-              <TraderScoreRadar scoreData={scoreData} />
+            {/* Breakdown Stats Grid */}
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 pt-4 border-t border-line text-xs">
+              {scoreData.axes.map((ax) => (
+                <div key={ax.label} className="flex items-center justify-between">
+                  <span className="text-fg-muted">{ax.label}</span>
+                  <span className="font-mono font-bold text-fg">{ax.displayValue}</span>
+                </div>
+              ))}
             </div>
           </div>
-
-          {/* Breakdown Stats Grid */}
-          <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 pt-4 border-t border-line text-xs">
-            {scoreData.axes.map((ax) => (
-              <div key={ax.label} className="flex items-center justify-between">
-                <span className="text-fg-muted">{ax.label}</span>
-                <span className="font-mono font-bold text-fg">{ax.displayValue}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
