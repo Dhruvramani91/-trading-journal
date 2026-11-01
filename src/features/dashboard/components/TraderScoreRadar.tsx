@@ -20,7 +20,6 @@ export function TraderScoreRadar({ scoreData, className = '' }: TraderScoreRadar
     return gridLevels.map((lvl) => {
       const r = maxRadius * lvl;
       const pts = axes.map((_, i) => {
-        // -PI/2 so the first axis is at top 12 o'clock
         const angle = i * angleStep - Math.PI / 2;
         const x = center + r * Math.cos(angle);
         const y = center + r * Math.sin(angle);
@@ -96,7 +95,8 @@ export function TraderScoreRadar({ scoreData, className = '' }: TraderScoreRadar
               key={idx}
               points={pts}
               fill="none"
-              stroke="#22272f"
+              stroke="currentColor"
+              className="text-line-strong/40 dark:text-[#22272f]"
               strokeWidth="1"
               strokeDasharray={idx === gridPolygons.length - 1 ? 'none' : '2 2'}
             />
@@ -114,7 +114,8 @@ export function TraderScoreRadar({ scoreData, className = '' }: TraderScoreRadar
                 y1={center}
                 x2={x2}
                 y2={y2}
-                stroke="#22272f"
+                stroke="currentColor"
+                className="text-line-strong/40 dark:text-[#22272f]"
                 strokeWidth="1"
               />
             );
@@ -124,9 +125,9 @@ export function TraderScoreRadar({ scoreData, className = '' }: TraderScoreRadar
           <polygon
             points={activePolygon}
             fill="url(#radarFillGrad)"
-            stroke="#38bdf8"
-            strokeWidth="1.8"
-            className="transition-all duration-700 ease-out"
+            stroke="#0284c7"
+            className="dark:stroke-[#38bdf8] transition-all duration-700 ease-out"
+            strokeWidth="2"
           />
 
           {/* Vertices circles */}
@@ -136,8 +137,7 @@ export function TraderScoreRadar({ scoreData, className = '' }: TraderScoreRadar
               cx={pt.x}
               cy={pt.y}
               r="3.5"
-              fill="#090a0c"
-              stroke="#38bdf8"
+              className="fill-bg-1 dark:fill-[#090a0c] stroke-sky-600 dark:stroke-[#38bdf8]"
               strokeWidth="2"
             />
           ))}
@@ -149,7 +149,7 @@ export function TraderScoreRadar({ scoreData, className = '' }: TraderScoreRadar
                 x={lbl.x}
                 y={lbl.y}
                 textAnchor={lbl.textAnchor}
-                className="fill-[#8c94a0] text-[11px] font-sans font-medium"
+                className="fill-fg-muted text-[11px] font-sans font-medium"
               >
                 {lbl.label}
               </text>
@@ -159,16 +159,16 @@ export function TraderScoreRadar({ scoreData, className = '' }: TraderScoreRadar
       </div>
 
       {/* Score Number & Slider Track */}
-      <div className="w-full mt-2 pt-4 border-t border-[#1f242c]">
+      <div className="w-full mt-2 pt-4 border-t border-line">
         <div className="flex items-baseline justify-between mb-2">
-          <span className="text-xs font-medium text-[#8c94a0]">Precision Score</span>
-          <span className="text-2xl font-bold tracking-tight text-white font-mono">
+          <span className="text-xs font-medium text-fg-muted">Precision Score</span>
+          <span className="text-2xl font-bold tracking-tight text-fg font-mono">
             {scoreData.overallScore.toFixed(1)}
           </span>
         </div>
 
         {/* Gradient Slider Meter */}
-        <div className="relative w-full h-1.5 rounded-full bg-[#181b20] mt-2 mb-1">
+        <div className="relative w-full h-1.5 rounded-full bg-bg-3 dark:bg-[#181b20] mt-2 mb-1">
           <div
             className="absolute inset-0 rounded-full"
             style={{
@@ -177,13 +177,13 @@ export function TraderScoreRadar({ scoreData, className = '' }: TraderScoreRadar
           />
           {/* Slider Thumb Indicator */}
           <div
-            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border-2 border-[#090a0c] shadow-[0_0_8px_rgba(56,189,248,0.8)] -ml-2 transition-all duration-700 ease-out"
+            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border-2 border-line-strong dark:border-[#090a0c] shadow-[0_0_8px_rgba(56,189,248,0.8)] -ml-2 transition-all duration-700 ease-out"
             style={{ left: `${Math.min(98, Math.max(2, scoreData.overallScore))}%` }}
           />
         </div>
 
         {/* Scale Numbers */}
-        <div className="flex justify-between text-[10px] text-[#555e6d] font-mono mt-1">
+        <div className="flex justify-between text-[10px] text-fg-dim font-mono mt-1">
           <span>0</span>
           <span>20</span>
           <span>40</span>
@@ -195,4 +195,3 @@ export function TraderScoreRadar({ scoreData, className = '' }: TraderScoreRadar
     </div>
   );
 }
-

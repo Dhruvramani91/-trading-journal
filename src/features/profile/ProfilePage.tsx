@@ -15,7 +15,6 @@ import {
   Eye,
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { useAuthStore } from '@/store/authStore';
 import { useTradesStore, bootTradesStore } from '@/store/tradesStore';
@@ -256,61 +255,57 @@ export function ProfilePage() {
         actions={<div className="flex flex-wrap gap-2"><Button asChild variant="secondary" leftIcon={<CreditCard className="h-4 w-4" />}><Link to="/manage-subscription">Manage subscription</Link></Button><Button asChild variant="secondary" leftIcon={<ArrowLeft className="h-4 w-4" />}><Link to="/settings">Back to settings</Link></Button></div>}
       />
 
-      <Card className="overflow-hidden">
-        <CardBody className="p-5 sm:p-7">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-            <div className="relative shrink-0">
-              {currentUser.avatar ? (
-                <img
-                  src={currentUser.avatar}
-                  alt={displayName}
-                  className="h-20 w-20 rounded-2xl object-cover border border-line shadow-sm"
-                />
-              ) : (
-                <div className="h-20 w-20 rounded-2xl bg-accent/15 border border-accent/20 text-accent flex items-center justify-center text-xl font-bold">
-                  {getInitials(displayName)}
-                </div>
-              )}
-            </div>
-
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-xl sm:text-2xl font-bold text-fg tracking-tight">
-                  {displayName}
-                </h2>
-
-                <span className="inline-flex items-center gap-1 rounded-full bg-bg-3 px-2 py-1 text-2xs font-semibold text-fg-muted">
-                  <ShieldCheck className="h-3 w-3" />
-                  Verified account
-                </span>
+      <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-6 sm:p-7 shadow-card">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+          <div className="relative shrink-0">
+            {currentUser.avatar ? (
+              <img
+                src={currentUser.avatar}
+                alt={displayName}
+                className="h-20 w-20 rounded-2xl object-cover border border-line shadow-sm"
+              />
+            ) : (
+              <div className="h-20 w-20 rounded-2xl bg-sky-500/15 border border-sky-500/25 text-sky-500 flex items-center justify-center text-xl font-bold shadow-sm">
+                {getInitials(displayName)}
               </div>
+            )}
+          </div>
 
-              <p className="mt-1 text-sm text-fg-muted break-all">{currentUser.email}</p>
-              <p className="mt-2 text-xs text-fg-dim">{traderLevelLabel}</p>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <h2 className="text-xl sm:text-2xl font-bold text-fg tracking-tight">
+                {displayName}
+              </h2>
+
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-2xs font-semibold text-emerald-600 dark:text-emerald-400">
+                <ShieldCheck className="h-3 w-3" />
+                Verified Pro
+              </span>
             </div>
 
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={openEditor}
-              leftIcon={<UserRound className="h-3.5 w-3.5" />}
-            >
-              Edit Profile
-            </Button>
+            <p className="mt-1 text-sm text-fg-muted break-all">{currentUser.email}</p>
+            <p className="mt-2 text-xs font-medium text-fg-dim">{traderLevelLabel}</p>
           </div>
-        </CardBody>
-      </Card>
+
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={openEditor}
+            leftIcon={<UserRound className="h-3.5 w-3.5" />}
+          >
+            Edit Profile
+          </Button>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <UserRound className="h-4 w-4 text-accent" />
-              Account details
-            </CardTitle>
-          </CardHeader>
+        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-6 shadow-card">
+          <div className="flex items-center gap-2 mb-4">
+            <UserRound className="h-4 w-4 text-sky-500" />
+            <h3 className="text-sm font-semibold text-fg tracking-tight">Account details</h3>
+          </div>
 
-          <CardBody className="space-y-1">
+          <div className="space-y-1">
             <div className="flex items-center justify-between gap-4 py-3 border-b border-line">
               <div className="flex items-center gap-3 min-w-0">
                 <Mail className="h-4 w-4 text-fg-dim shrink-0" />
@@ -328,21 +323,18 @@ export function ProfilePage() {
               </div>
               <span className="text-sm font-medium text-fg">{traderLevelLabel}</span>
             </div>
+          </div>
+        </div>
 
-          </CardBody>
-        </Card>
+        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-6 shadow-card">
+          <div className="flex items-center gap-2 mb-4">
+            <BarChart3 className="h-4 w-4 text-sky-500" />
+            <h3 className="text-sm font-semibold text-fg tracking-tight">Trading snapshot</h3>
+          </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-4 w-4 text-accent" />
-              Trading snapshot
-            </CardTitle>
-          </CardHeader>
-
-          <CardBody>
+          <div>
             <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-xl border border-line bg-bg-3/50 p-3">
+              <div className="rounded-xl border border-line bg-bg-2 dark:bg-[#181b20] p-3.5">
                 <p className="text-2xs uppercase tracking-wider font-semibold text-fg-dim">
                   Trades
                 </p>
@@ -351,7 +343,7 @@ export function ProfilePage() {
                 </p>
               </div>
 
-              <div className="rounded-xl border border-line bg-bg-3/50 p-3">
+              <div className="rounded-xl border border-line bg-bg-2 dark:bg-[#181b20] p-3.5">
                 <p className="text-2xs uppercase tracking-wider font-semibold text-fg-dim">
                   Total R
                 </p>
@@ -359,9 +351,9 @@ export function ProfilePage() {
                   className={cn(
                     'mt-1 text-lg font-bold tabular-nums',
                     canViewTradingSnapshot && stats.totalR > 0
-                      ? 'text-win'
+                      ? 'text-emerald-500 dark:text-emerald-400'
                       : canViewTradingSnapshot && stats.totalR < 0
-                        ? 'text-loss'
+                        ? 'text-rose-500 dark:text-rose-400'
                         : 'text-fg',
                   )}
                 >
@@ -369,7 +361,7 @@ export function ProfilePage() {
                 </p>
               </div>
 
-              <div className="rounded-xl border border-line bg-bg-3/50 p-3">
+              <div className="rounded-xl border border-line bg-bg-2 dark:bg-[#181b20] p-3.5">
                 <p className="text-2xs uppercase tracking-wider font-semibold text-fg-dim">
                   Win rate
                 </p>
@@ -381,8 +373,8 @@ export function ProfilePage() {
             {!billingLoading && !canViewTradingSnapshot && (
               <p className="mt-3 text-xs text-fg-muted">Your trading snapshot is available while your subscription is active.</p>
             )}
-          </CardBody>
-        </Card>
+          </div>
+        </div>
       </div>
 
       {editing && (

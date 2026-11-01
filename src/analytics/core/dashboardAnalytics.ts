@@ -1,6 +1,8 @@
-import type { Trade } from '@/domain/models/trade';
+import type { Trade, TemplateDefinition } from '@/domain/models/trade';
 import type { DashboardMetric } from './metrics';
 import { metricValue } from './metrics';
+import { getTemplate, TEMPLATES } from '@/domain/templates/registry';
+import { DEFAULT_TEMPLATE } from '@/domain/templates/default';
 
 export type TimeframeFilter = '7d' | '30d' | '90d' | 'all';
 
@@ -291,21 +293,29 @@ export function computePeriodOverview(trades: readonly Trade[], metric: Dashboar
 }
 
 /**
- * Returns session from trade open time (UTC / local estimate) or template data.
+ * Returns session or timeframe entry from trade template data or time of day.
+ * If the template contains H4 Candle (e.g. 18:00, 22:00, 02:00, 06:00, 10:00, 14:00)
+ * or explicit session fields, it uses the strategy form's definition.
  */
-export function getTradeSession(trade: Trade): 'Asia' | 'London' | 'New York' {
-  const rawSession = trade.templateData?.session || trade.templateData?.Session;
-  if (typeof rawSession === 'string') {
-    const s = rawSession.toLowerCase();
-    if (s.includes('asia') || s.includes('tokyo')) return 'Asia';
-    if (s.includes('london')) return 'London';
-    if (s.includes('ny') || s.includes('york')) return 'New York';
+export function getTradeTimeOrSession(trade: Trade, template?: TemplateDefinition): string {
+  // 1. Check for strategy form time entries (like GXT/Lathyrus 4H Candle)
+  const h4 = trade.templateData?.h4Candle || trade.templateData?.H4Candle || trade.templateData?.h4Profile;
+  if (typeof h4 === 'string' && h4.trim()) {
+    return h4.trim();
   }
 
-  // Time-of-day heuristic based on UTC hour:
-  // Asia: 00:00 - 07:00 UTC
-  // London: 07:00 - 13:00 UTC
-  // New York: 13:00 - 21:00 UTC
+  // 2. Check for explicit session entry in template data
+  const rawSession = trade.templateData?.session || trade.templateData?.Session;
+  if (typeof rawSession === 'string' && rawSession.trim()) {
+    return rawSession.trim();
+  }
+
+  // If a template is known and has an H4 field, do not inject UTC sessions
+  if (template?.fields.some((f) => f.key === 'h4Candle' || f.key === 'h4Profile')) {
+    return '';
+  }
+
+  // 3. Fallback to time-of-day heuristic based on UTC hour only if not an H4 strategy:
   const hour = new Date(trade.openedAt).getUTCHours();
   if (hour >= 0 && hour < 7) return 'Asia';
   if (hour >= 7 && hour < 13) return 'London';
@@ -313,9 +323,51 @@ export function getTradeSession(trade: Trade): 'Asia' | 'London' | 'New York' {
 }
 
 /**
- * Calculates comparative breakdowns (by Direction, Market/Symbol, Duration, Weekday, Month, Session).
+ * Calculates comparative breakdowns (by Direction, Market/Symbol, Duration, Weekday, Month, Session/Time).
  */
-export function computeDashboardBreakdowns(trades: readonly Trade[], metric: DashboardMetric) {
+export function computeDashboardBreakdowns(
+  trades: readonly Trade[],
+  metric: DashboardMetric,
+  templateInput?: string | TemplateDefinition,
+) {
+  // Resolve template definition
+  let tpl: TemplateDefinition = DEFAULT_TEMPLATE;
+  if (typeof templateInput === 'object' && templateInput !== null) {
+    tpl = templateInput;
+  } else if (typeof templateInput === 'string' && templateInput) {
+    try {
+      tpl = TEMPLATES[templateInput] ?? getTemplate(templateInput);
+    } catch {
+      tpl = DEFAULT_TEMPLATE;
+    }
+  } else if (trades.length > 0 && trades[0]?.templateSnapshot) {
+    tpl = trades[0].templateSnapshot;
+  } else if (trades.length > 0 && trades[0]?.templateId) {
+    try {
+      tpl = TEMPLATES[trades[0].templateId] ?? getTemplate(trades[0].templateId);
+    } catch {
+      tpl = DEFAULT_TEMPLATE;
+    }
+  }
+
+  // Determine if the form uses H4 Candle (e.g. GXT / Lathyrus) or Session
+  const h4Field = tpl.fields.find(
+    (f) => f.key === 'h4Candle' || f.key === 'h4Profile' || f.label.toLowerCase().includes('4h'),
+  );
+  const sessionField = tpl.fields.find(
+    (f) => f.key === 'session' || f.label.toLowerCase().includes('session'),
+  );
+
+  const isH4 = Boolean(h4Field);
+  const timeDimensionTitle = isH4 ? 'Best 4H candle' : sessionField ? 'Best session' : 'Best time';
+  const timeCardTitle = isH4 ? 'Win rate by 4H candle' : sessionField ? 'Win rate by session' : 'Win rate by time';
+
+  const defaultTimeBuckets = isH4
+    ? (h4Field?.options && h4Field.options.length > 0 ? h4Field.options : ['18:00', '22:00', '02:00', '06:00', '10:00', '14:00'])
+    : sessionField?.options && sessionField.options.length > 0
+      ? sessionField.options
+      : ['London', 'New York', 'Asia'];
+
   // 1. By Direction
   const dirMap: Record<'long' | 'short', { count: number; wins: number; totalMetric: number; totalDuration: number }> = {
     long: { count: 0, wins: 0, totalMetric: 0, totalDuration: 0 },
@@ -333,12 +385,11 @@ export function computeDashboardBreakdowns(trades: readonly Trade[], metric: Das
   // 4. By Month
   const monthMap = new Map<string, { count: number; wins: number; totalMetric: number }>();
 
-  // 5. By Session
-  const sessionMap: Record<'Asia' | 'London' | 'New York', { count: number; wins: number; totalMetric: number }> = {
-    Asia: { count: 0, wins: 0, totalMetric: 0 },
-    London: { count: 0, wins: 0, totalMetric: 0 },
-    'New York': { count: 0, wins: 0, totalMetric: 0 },
-  };
+  // 5. By Time Entry / Session (GXT / 4H or Session)
+  const sessionMap = new Map<string, { count: number; wins: number; totalMetric: number }>();
+  defaultTimeBuckets.forEach((bucket) => {
+    sessionMap.set(bucket, { count: 0, wins: 0, totalMetric: 0 });
+  });
 
   for (const t of trades) {
     const isWin = t.result === 'win';
@@ -386,11 +437,18 @@ export function computeDashboardBreakdowns(trades: readonly Trade[], metric: Das
     if (isWin) mo.wins++;
     mo.totalMetric += val;
 
-    // Session
-    const sess = getTradeSession(t);
-    sessionMap[sess].count++;
-    if (isWin) sessionMap[sess].wins++;
-    sessionMap[sess].totalMetric += val;
+    // Time entry / Session based on selected form
+    const sessOrTime = getTradeTimeOrSession(t, tpl);
+    if (sessOrTime) {
+      let sEntry = sessionMap.get(sessOrTime);
+      if (!sEntry) {
+        sEntry = { count: 0, wins: 0, totalMetric: 0 };
+        sessionMap.set(sessOrTime, sEntry);
+      }
+      sEntry.count++;
+      if (isWin) sEntry.wins++;
+      sEntry.totalMetric += val;
+    }
   }
 
   // Format arrays for cards
@@ -454,20 +512,31 @@ export function computeDashboardBreakdowns(trades: readonly Trade[], metric: Das
     avgMetric: data.count > 0 ? data.totalMetric / data.count : 0,
   }));
 
-  const sessionWinRates = (['London', 'New York', 'Asia'] as const).map((s) => {
-    const data = sessionMap[s];
-    return {
-      label: s,
+  // Session / Time Entry win rates
+  const sessionWinRates = Array.from(sessionMap.entries())
+    .map(([lbl, data]) => ({
+      label: lbl,
       count: data.count,
       winRate: data.count > 0 ? (data.wins / data.count) * 100 : 0,
       avgMetric: data.count > 0 ? data.totalMetric / data.count : 0,
-    };
-  });
+    }))
+    .slice(0, 6);
 
   // Best of items
-  const bestDay = [...weekdayWinRates].sort((a, b) => b.winRate - a.winRate)[0]?.label || '—';
-  const bestMonth = [...monthWinRates].sort((a, b) => b.winRate - a.winRate)[0]?.label || '—';
-  const bestSession = [...sessionWinRates].sort((a, b) => b.winRate - a.winRate)[0]?.label || '—';
+  const bestDayTrades = weekdayWinRates.filter((d) => d.count > 0);
+  const bestDay = bestDayTrades.length > 0
+    ? [...bestDayTrades].sort((a, b) => b.winRate - a.winRate)[0]?.label || '—'
+    : '—';
+
+  const bestMonthTrades = monthWinRates.filter((m) => m.count > 0);
+  const bestMonth = bestMonthTrades.length > 0
+    ? [...bestMonthTrades].sort((a, b) => b.winRate - a.winRate)[0]?.label || '—'
+    : '—';
+
+  const bestSessionTrades = sessionWinRates.filter((s) => s.count > 0);
+  const bestSession = bestSessionTrades.length > 0
+    ? [...bestSessionTrades].sort((a, b) => b.winRate - a.winRate)[0]?.label || '—'
+    : '—';
 
   return {
     directionWinRates,
@@ -479,6 +548,8 @@ export function computeDashboardBreakdowns(trades: readonly Trade[], metric: Das
     bestDay,
     bestMonth,
     bestSession,
+    timeCardTitle,
+    timeDimensionTitle,
   };
 }
 

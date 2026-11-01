@@ -207,25 +207,25 @@ export function DashboardPage() {
   return (
     <div className="mx-auto w-full max-w-[1440px] space-y-6 pb-16">
       {/* 1. Header with Greeting, Time, PnL/R Toggle, Account, Privacy & Snapshot */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1f242c] pb-5">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-line pb-5">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white flex items-center gap-2">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-fg flex items-center gap-2">
             {greeting}
           </h1>
-          <p className="text-sm font-medium text-[#8c94a0] mt-1">{formattedCurrentDate}</p>
+          <p className="text-sm font-medium text-fg-muted mt-1">{formattedCurrentDate}</p>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           {/* PnL ⇄ R Segmented Toggle */}
-          <div className="inline-flex items-center p-1 rounded-xl bg-[#121417] border border-[#1f242c] shadow-sm">
+          <div className="inline-flex items-center p-1 rounded-xl bg-bg-1 dark:bg-[#121417] border border-line shadow-sm">
             <button
               type="button"
               onClick={() => setMetric('pnl')}
               className={cn(
                 'px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-tight transition-all',
                 metric === 'pnl'
-                  ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30 shadow-sm'
-                  : 'text-[#8c94a0] hover:text-white',
+                  ? 'bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm'
+                  : 'text-fg-muted hover:text-fg',
               )}
             >
               P&amp;L ($)
@@ -236,8 +236,8 @@ export function DashboardPage() {
               className={cn(
                 'px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-tight transition-all',
                 metric === 'r'
-                  ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30 shadow-sm'
-                  : 'text-[#8c94a0] hover:text-white',
+                  ? 'bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm'
+                  : 'text-fg-muted hover:text-fg',
               )}
             >
               Realized R
@@ -249,7 +249,7 @@ export function DashboardPage() {
             <select
               value={selectedAccountId}
               onChange={(e) => handleAccountChange(e.target.value)}
-              className="appearance-none bg-[#121417] border border-[#1f242c] rounded-xl px-3.5 py-1.5 pr-8 text-xs font-medium text-white hover:border-[#2f3642] focus:outline-none focus:border-sky-500/50 cursor-pointer shadow-sm"
+              className="appearance-none bg-bg-1 dark:bg-[#121417] border border-line rounded-xl px-3.5 py-1.5 pr-8 text-xs font-medium text-fg hover:border-line-strong focus:outline-none focus:border-sky-500/50 cursor-pointer shadow-sm"
             >
               <option value="all">All Accounts</option>
               {accounts.map((acc) => (
@@ -258,7 +258,7 @@ export function DashboardPage() {
                 </option>
               ))}
             </select>
-            <ChevronDown className="w-3.5 h-3.5 text-[#8c94a0] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ChevronDown className="w-3.5 h-3.5 text-fg-muted absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
           {/* Privacy Toggle (Eye icon) */}
@@ -266,9 +266,9 @@ export function DashboardPage() {
             type="button"
             onClick={() => setIsPrivate(!isPrivate)}
             title={isPrivate ? 'Show sensitive balances' : 'Hide sensitive balances'}
-            className="p-2 rounded-xl bg-[#121417] border border-[#1f242c] text-[#8c94a0] hover:text-white hover:border-[#2f3642] transition-colors shadow-sm"
+            className="p-2 rounded-xl bg-bg-1 dark:bg-[#121417] border border-line text-fg-muted hover:text-fg hover:border-line-strong transition-colors shadow-sm"
           >
-            {isPrivate ? <EyeOff className="w-4 h-4 text-amber-400" /> : <Eye className="w-4 h-4" />}
+            {isPrivate ? <EyeOff className="w-4 h-4 text-amber-500 dark:text-amber-400" /> : <Eye className="w-4 h-4" />}
           </button>
 
           {/* New Trade Primary CTA */}
@@ -281,12 +281,12 @@ export function DashboardPage() {
       {/* 2. Top Metric Gauge Cards (5 Cards Grid) */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
         {/* Card 1: Net P&L / R */}
-        <div className="bg-[#121417] border border-[#1f242c] rounded-2xl p-5 flex flex-col justify-between">
+        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium text-[#8c94a0]">
+            <span className="text-xs font-semibold text-fg-muted">
               {metric === 'r' ? 'Net Realized R' : 'Net P&L'}
             </span>
-            <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-[#181b20] text-[#8c94a0] border border-[#22272f]">
+            <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-bg-2 dark:bg-[#181b20] text-fg-muted border border-line">
               {tradesToUse.length} trades
             </span>
           </div>
@@ -294,7 +294,7 @@ export function DashboardPage() {
             <div
               className={cn(
                 'text-3xl font-extrabold font-mono tracking-tight',
-                isNetPositive ? 'text-emerald-400' : 'text-rose-400',
+                isNetPositive ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400',
               )}
             >
               {isPrivate
@@ -303,20 +303,20 @@ export function DashboardPage() {
                   ? formatR(netValue)
                   : formatSignedMoney(netValue)}
             </div>
-            <span className="text-[11px] text-[#555e6d] font-medium mt-1.5 block">
+            <span className="text-[11px] text-fg-dim font-medium mt-1.5 block">
               {metric === 'r' ? 'Total R multiple gained' : 'Realized journal total'}
             </span>
           </div>
         </div>
 
         {/* Card 2: Trade Win % with Semi-Circle Speedometer */}
-        <div className="bg-[#121417] border border-[#1f242c] rounded-2xl p-5 flex items-center justify-between">
+        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex items-center justify-between shadow-card">
           <div className="flex flex-col justify-between h-full">
-            <span className="text-xs font-medium text-[#8c94a0]">Trade win %</span>
-            <div className="text-3xl font-extrabold font-mono text-white tracking-tight mt-2">
+            <span className="text-xs font-semibold text-fg-muted">Trade win %</span>
+            <div className="text-3xl font-extrabold font-mono text-fg tracking-tight mt-2">
               {s?.winRate != null ? `${(s.winRate * 100).toFixed(0)}%` : '0%'}
             </div>
-            <span className="text-[11px] text-[#555e6d] font-medium mt-1">Per execution</span>
+            <span className="text-[11px] text-fg-dim font-medium mt-1">Per execution</span>
           </div>
           <SemiCircleGauge
             value={s?.winRate != null ? s.winRate * 100 : 0}
@@ -327,30 +327,30 @@ export function DashboardPage() {
         </div>
 
         {/* Card 3: Profit Factor with Circular Ring */}
-        <div className="bg-[#121417] border border-[#1f242c] rounded-2xl p-5 flex items-center justify-between">
+        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex items-center justify-between shadow-card">
           <div className="flex flex-col justify-between h-full">
-            <span className="text-xs font-medium text-[#8c94a0]">Profit factor</span>
+            <span className="text-xs font-semibold text-fg-muted">Profit factor</span>
             <div
               className={cn(
                 'text-3xl font-extrabold font-mono tracking-tight mt-2',
-                profitFactor >= 1.5 ? 'text-emerald-400' : profitFactor >= 1 ? 'text-amber-300' : 'text-rose-400',
+                profitFactor >= 1.5 ? 'text-emerald-600 dark:text-emerald-400' : profitFactor >= 1 ? 'text-amber-500 dark:text-amber-300' : 'text-rose-600 dark:text-rose-400',
               )}
             >
               {profitFactor.toFixed(2)}
             </div>
-            <span className="text-[11px] text-[#555e6d] font-medium mt-1">Gross W / Gross L</span>
+            <span className="text-[11px] text-fg-dim font-medium mt-1">Gross W / Gross L</span>
           </div>
           <CircularRingGauge value={profitFactor} benchmark={3.0} />
         </div>
 
         {/* Card 4: Day Win % with Semi-Circle Speedometer */}
-        <div className="bg-[#121417] border border-[#1f242c] rounded-2xl p-5 flex items-center justify-between">
+        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex items-center justify-between shadow-card">
           <div className="flex flex-col justify-between h-full">
-            <span className="text-xs font-medium text-[#8c94a0]">Day win %</span>
-            <div className="text-3xl font-extrabold font-mono text-white tracking-tight mt-2">
+            <span className="text-xs font-semibold text-fg-muted">Day win %</span>
+            <div className="text-3xl font-extrabold font-mono text-fg tracking-tight mt-2">
               {dayWinData.dayWinRate.toFixed(0)}%
             </div>
-            <span className="text-[11px] text-[#555e6d] font-medium mt-1">
+            <span className="text-[11px] text-fg-dim font-medium mt-1">
               {dayWinData.winDays} of {dayWinData.totalDays} days green
             </span>
           </div>
@@ -363,10 +363,10 @@ export function DashboardPage() {
         </div>
 
         {/* Card 5: Avg Win / Loss with Dual Split Bar */}
-        <div className="bg-[#121417] border border-[#1f242c] rounded-2xl p-5 flex flex-col justify-between">
+        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-[#8c94a0]">Avg win/loss</span>
-            <span className="text-xl font-bold font-mono text-white tracking-tight">
+            <span className="text-xs font-semibold text-fg-muted">Avg win/loss</span>
+            <span className="text-xl font-bold font-mono text-fg tracking-tight">
               {avgWinLossRatio.toFixed(2)}
             </span>
           </div>
@@ -394,13 +394,13 @@ export function DashboardPage() {
       {/* 3. Hero Middle Section: Precision Score Radar (Left) + Cumulative Curve (Right) */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* Left: Trader Precision Score Spider Radar */}
-        <div className="lg:col-span-5 bg-[#121417] border border-[#1f242c] rounded-2xl p-6 flex flex-col justify-between">
+        <div className="lg:col-span-5 bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-6 flex flex-col justify-between shadow-card">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
-              <h2 className="text-sm font-semibold text-white tracking-tight">Precision Score</h2>
-              <Info className="w-3.5 h-3.5 text-[#555e6d]" />
+              <h2 className="text-sm font-semibold text-fg tracking-tight">Precision Score</h2>
+              <Info className="w-3.5 h-3.5 text-fg-dim" />
             </div>
-            <span className="text-[11px] text-sky-400 font-medium px-2 py-0.5 rounded-full bg-sky-500/10 border border-sky-500/20">
+            <span className="text-[11px] text-sky-600 dark:text-sky-400 font-medium px-2 py-0.5 rounded-full bg-sky-500/10 border border-sky-500/20">
               Composite 0-100
             </span>
           </div>
@@ -409,14 +409,14 @@ export function DashboardPage() {
         </div>
 
         {/* Right: Daily Net Cumulative Curve */}
-        <div className="lg:col-span-7 bg-[#121417] border border-[#1f242c] rounded-2xl p-6 flex flex-col justify-between">
+        <div className="lg:col-span-7 bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-6 flex flex-col justify-between shadow-card">
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
               <div>
-                <h2 className="text-sm font-semibold text-white tracking-tight">
+                <h2 className="text-sm font-semibold text-fg tracking-tight">
                   {metric === 'r' ? 'Daily Net Cumulative R' : 'Daily Net Cumulative P&L'}
                 </h2>
-                <div className="text-3xl font-extrabold font-mono text-white tracking-tight mt-1">
+                <div className="text-3xl font-extrabold font-mono text-fg tracking-tight mt-1">
                   {isPrivate
                     ? '***'
                     : metric === 'r'
@@ -426,7 +426,7 @@ export function DashboardPage() {
               </div>
 
               {/* Timeframe Tabs: 7d, 30d, 90d, All */}
-              <div className="inline-flex items-center p-1 rounded-xl bg-[#181b20] border border-[#22272f] self-start sm:self-auto">
+              <div className="inline-flex items-center p-1 rounded-xl bg-bg-2 dark:bg-[#181b20] border border-line self-start sm:self-auto">
                 {(['7d', '30d', '90d', 'all'] as const).map((tab) => (
                   <button
                     key={tab}
@@ -435,8 +435,8 @@ export function DashboardPage() {
                     className={cn(
                       'px-3 py-1 rounded-lg text-xs font-semibold transition-all capitalize',
                       timeframe === tab
-                        ? 'bg-[#262c36] text-white shadow-sm'
-                        : 'text-[#8c94a0] hover:text-white',
+                        ? 'bg-bg-3 dark:bg-[#262c36] text-fg shadow-sm'
+                        : 'text-fg-muted hover:text-fg',
                     )}
                   >
                     {tab === 'all' ? 'All' : tab}
@@ -447,7 +447,7 @@ export function DashboardPage() {
 
             {/* Chart Container */}
             <div className="h-60 w-full mt-4">
-              <Suspense fallback={<div className="h-full flex items-center justify-center text-xs text-zinc-500">Loading curve…</div>}>
+              <Suspense fallback={<div className="h-full flex items-center justify-center text-xs text-fg-muted">Loading curve…</div>}>
                 <DashboardEquityChart
                   data={chartData}
                   metric={metric}
@@ -459,63 +459,63 @@ export function DashboardPage() {
           </div>
 
           {/* Period Overview Sub-bar */}
-          <div className="mt-6 pt-4 border-t border-[#1f242c] flex flex-col gap-2">
-            <div className="flex items-center justify-between text-xs text-[#8c94a0]">
-              <span className="font-medium">Period overview</span>
+          <div className="mt-6 pt-4 border-t border-line flex flex-col gap-2">
+            <div className="flex items-center justify-between text-xs text-fg-muted">
+              <span className="font-semibold">Period overview</span>
               <span className="font-mono">{periodOverview.tradingDaysCount} trading days</span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-1">
               {/* Peak */}
-              <div className="bg-[#181b20]/60 border border-[#22272f] rounded-xl p-2.5">
-                <span className="text-[10px] font-medium text-[#8c94a0] uppercase tracking-wider block">Peak</span>
-                <span className="text-sm font-bold font-mono text-emerald-400 mt-0.5 block">
+              <div className="bg-bg-2/60 dark:bg-[#181b20]/60 border border-line rounded-xl p-2.5">
+                <span className="text-[10px] font-medium text-fg-muted uppercase tracking-wider block">Peak</span>
+                <span className="text-sm font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-0.5 block">
                   {isPrivate
                     ? '***'
                     : metric === 'r'
                       ? `+${periodOverview.peakValue.toFixed(1)}R`
                       : formatSignedMoney(periodOverview.peakValue)}
                 </span>
-                <span className="text-[10px] text-[#555e6d] block truncate">
+                <span className="text-[10px] text-fg-dim block truncate">
                   {periodOverview.peakDate ? formatDate(periodOverview.peakDate) : '—'}
                 </span>
               </div>
 
               {/* Max Drawdown */}
-              <div className="bg-[#181b20]/60 border border-[#22272f] rounded-xl p-2.5">
-                <span className="text-[10px] font-medium text-[#8c94a0] uppercase tracking-wider block">Max Drawdown</span>
-                <span className="text-sm font-bold font-mono text-rose-400 mt-0.5 block">
+              <div className="bg-bg-2/60 dark:bg-[#181b20]/60 border border-line rounded-xl p-2.5">
+                <span className="text-[10px] font-medium text-fg-muted uppercase tracking-wider block">Max Drawdown</span>
+                <span className="text-sm font-bold font-mono text-rose-600 dark:text-rose-400 mt-0.5 block">
                   {isPrivate
                     ? '***'
                     : metric === 'r'
                       ? `-${periodOverview.maxDrawdownValue.toFixed(1)}R`
                       : `-$${Math.round(periodOverview.maxDrawdownValue)}`}
                 </span>
-                <span className="text-[10px] text-[#555e6d] block truncate">
+                <span className="text-[10px] text-fg-dim block truncate">
                   -{periodOverview.maxDrawdownPct.toFixed(0)}% of peak
                 </span>
               </div>
 
               {/* Streak */}
-              <div className="bg-[#181b20]/60 border border-[#22272f] rounded-xl p-2.5">
-                <span className="text-[10px] font-medium text-[#8c94a0] uppercase tracking-wider block">Streak</span>
-                <span className="text-sm font-bold font-mono text-white mt-0.5 block">
+              <div className="bg-bg-2/60 dark:bg-[#181b20]/60 border border-line rounded-xl p-2.5">
+                <span className="text-[10px] font-medium text-fg-muted uppercase tracking-wider block">Streak</span>
+                <span className="text-sm font-bold font-mono text-fg mt-0.5 block">
                   {periodOverview.winStreakDays}W
                 </span>
-                <span className="text-[10px] text-[#555e6d] block truncate">consecutive days</span>
+                <span className="text-[10px] text-fg-dim block truncate">consecutive days</span>
               </div>
 
               {/* Best Day */}
-              <div className="bg-[#181b20]/60 border border-[#22272f] rounded-xl p-2.5">
-                <span className="text-[10px] font-medium text-[#8c94a0] uppercase tracking-wider block">Best Day</span>
-                <span className="text-sm font-bold font-mono text-emerald-400 mt-0.5 block">
+              <div className="bg-bg-2/60 dark:bg-[#181b20]/60 border border-line rounded-xl p-2.5">
+                <span className="text-[10px] font-medium text-fg-muted uppercase tracking-wider block">Best Day</span>
+                <span className="text-sm font-bold font-mono text-emerald-600 dark:text-emerald-400 mt-0.5 block">
                   {isPrivate
                     ? '***'
                     : metric === 'r'
                       ? `+${periodOverview.bestDayValue.toFixed(1)}R`
                       : formatSignedMoney(periodOverview.bestDayValue)}
                 </span>
-                <span className="text-[10px] text-[#555e6d] block truncate">
+                <span className="text-[10px] text-fg-dim block truncate">
                   {periodOverview.bestDayDate ? formatDate(periodOverview.bestDayDate) : '—'}
                 </span>
               </div>
@@ -526,40 +526,40 @@ export function DashboardPage() {
 
       {/* 4. Quick KPI Stat Pills Row (6 Items) */}
       <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-        <div className="bg-[#121417] border border-[#1f242c] rounded-xl p-4 flex flex-col justify-between">
-          <span className="text-xs text-[#8c94a0] font-medium">Win rate</span>
-          <span className="text-xl font-bold font-mono text-white mt-2">
+        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-xl p-4 flex flex-col justify-between shadow-card">
+          <span className="text-xs text-fg-muted font-medium">Win rate</span>
+          <span className="text-xl font-bold font-mono text-fg mt-2">
             {s?.winRate != null ? `${(s.winRate * 100).toFixed(0)}%` : '0%'}
           </span>
         </div>
 
-        <div className="bg-[#121417] border border-[#1f242c] rounded-xl p-4 flex flex-col justify-between">
-          <span className="text-xs text-[#8c94a0] font-medium">Avg RR</span>
-          <span className="text-xl font-bold font-mono text-white mt-2">
+        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-xl p-4 flex flex-col justify-between shadow-card">
+          <span className="text-xs text-fg-muted font-medium">Avg RR</span>
+          <span className="text-xl font-bold font-mono text-fg mt-2">
             {s?.avgRR != null ? s.avgRR.toFixed(2) : '—'}
           </span>
         </div>
 
-        <div className="bg-[#121417] border border-[#1f242c] rounded-xl p-4 flex flex-col justify-between">
-          <span className="text-xs text-[#8c94a0] font-medium">Avg duration</span>
-          <span className="text-xl font-bold font-mono text-white mt-2">
+        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-xl p-4 flex flex-col justify-between shadow-card">
+          <span className="text-xs text-fg-muted font-medium">Avg duration</span>
+          <span className="text-xl font-bold font-mono text-fg mt-2">
             {avgDurationMin > 0 ? `${avgDurationMin}m` : '—'}
           </span>
         </div>
 
-        <div className="bg-[#121417] border border-[#1f242c] rounded-xl p-4 flex flex-col justify-between">
-          <span className="text-xs text-[#8c94a0] font-medium">Best day</span>
-          <span className="text-xl font-bold text-white mt-2 truncate">{breakdowns.bestDay}</span>
+        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-xl p-4 flex flex-col justify-between shadow-card">
+          <span className="text-xs text-fg-muted font-medium">Best day</span>
+          <span className="text-xl font-bold text-fg mt-2 truncate">{breakdowns.bestDay}</span>
         </div>
 
-        <div className="bg-[#121417] border border-[#1f242c] rounded-xl p-4 flex flex-col justify-between">
-          <span className="text-xs text-[#8c94a0] font-medium">Best month</span>
-          <span className="text-xl font-bold text-white mt-2 truncate">{breakdowns.bestMonth}</span>
+        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-xl p-4 flex flex-col justify-between shadow-card">
+          <span className="text-xs text-fg-muted font-medium">Best month</span>
+          <span className="text-xl font-bold text-fg mt-2 truncate">{breakdowns.bestMonth}</span>
         </div>
 
-        <div className="bg-[#121417] border border-[#1f242c] rounded-xl p-4 flex flex-col justify-between">
-          <span className="text-xs text-[#8c94a0] font-medium">Best session</span>
-          <span className="text-xl font-bold text-white mt-2 truncate">{breakdowns.bestSession}</span>
+        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-xl p-4 flex flex-col justify-between shadow-card">
+          <span className="text-xs text-fg-muted font-medium">{breakdowns.timeDimensionTitle}</span>
+          <span className="text-xl font-bold text-fg mt-2 truncate">{breakdowns.bestSession}</span>
         </div>
       </section>
 
@@ -600,19 +600,19 @@ export function DashboardPage() {
           variant="winRate"
         />
 
-        {/* 6. Win Rate by Session */}
+        {/* 6. Win Rate by Time Entry / Session (Dynamic based on selected template) */}
         <BreakdownBarCard
-          title="Win rate by session"
+          title={breakdowns.timeCardTitle}
           items={breakdowns.sessionWinRates}
           variant="winRate"
         />
       </section>
 
       {/* 6. Recent Trades Table Preview */}
-      <section className="bg-[#121417] border border-[#1f242c] rounded-2xl p-6">
+      <section className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-6 shadow-card">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-white tracking-tight">Recent Trades</h2>
-          <Button asChild variant="ghost" className="h-8 px-2.5 text-xs text-[#8c94a0] hover:text-white">
+          <h2 className="text-sm font-semibold text-fg tracking-tight">Recent Trades</h2>
+          <Button asChild variant="ghost" className="h-8 px-2.5 text-xs text-fg-muted hover:text-fg">
             <Link to="/journal">View full journal →</Link>
           </Button>
         </div>
@@ -634,10 +634,10 @@ export function DashboardPage() {
             <TBody>
               {recent.map((t, i) => (
                 <TR key={t.id} interactive onClick={() => navigate(`/journal/${t.id}`)}>
-                  <TD className="text-center text-[#555e6d] font-mono text-xs">{t.number ?? i + 1}</TD>
-                  <TD className="whitespace-nowrap font-mono text-xs text-[#8c94a0]">{formatDate(t.openedAt)}</TD>
+                  <TD className="text-center text-fg-dim font-mono text-xs">{t.number ?? i + 1}</TD>
+                  <TD className="whitespace-nowrap font-mono text-xs text-fg-muted">{formatDate(t.openedAt)}</TD>
                   <TD>
-                    <span className="font-semibold text-white text-xs">{t.instrument}</span>
+                    <span className="font-semibold text-fg text-xs">{t.instrument}</span>
                   </TD>
                   <TD>
                     <DirectionPill direction={t.direction} />
@@ -647,7 +647,7 @@ export function DashboardPage() {
                   </TD>
                   <TD
                     align="right"
-                    className={cn('num font-bold text-xs', t.r > 0 ? 'text-emerald-400' : t.r < 0 ? 'text-rose-400' : 'text-zinc-400')}
+                    className={cn('num font-bold text-xs', t.r > 0 ? 'text-emerald-600 dark:text-emerald-400' : t.r < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-fg-muted')}
                   >
                     {formatR(t.r)}
                   </TD>
@@ -656,10 +656,10 @@ export function DashboardPage() {
                     className={cn(
                       'num font-semibold text-xs',
                       typeof t.pnl === 'number' && t.pnl > 0
-                        ? 'text-emerald-400'
+                        ? 'text-emerald-600 dark:text-emerald-400'
                         : typeof t.pnl === 'number' && t.pnl < 0
-                          ? 'text-rose-400'
-                          : 'text-zinc-400',
+                          ? 'text-rose-600 dark:text-rose-400'
+                          : 'text-fg-muted',
                     )}
                   >
                     {isPrivate
@@ -668,7 +668,7 @@ export function DashboardPage() {
                         ? formatSignedMoney(t.pnl)
                         : '—'}
                   </TD>
-                  <TD align="right" className="text-xs text-[#8c94a0] num">
+                  <TD align="right" className="text-xs text-fg-muted num">
                     {t.durationMin > 0 ? formatDuration(t.durationMin) : '—'}
                   </TD>
                 </TR>

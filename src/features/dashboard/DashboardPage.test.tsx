@@ -187,6 +187,6 @@ describe('DashboardPage — upgraded layout & features', () => {
     expect(screen.getByText('Avg duration by direction')).toBeInTheDocument();
     expect(screen.getByText('Win rate by weekday')).toBeInTheDocument();
     expect(screen.getByText('Win rate by month')).toBeInTheDocument();
-    expect(screen.getByText('Win rate by session')).toBeInTheDocument();
+    expect(screen.getByText('Win rate by 4H candle')).toBeInTheDocument();
   });
 });

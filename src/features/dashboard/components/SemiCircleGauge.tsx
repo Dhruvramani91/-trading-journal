@@ -14,7 +14,6 @@ export function SemiCircleGauge({
   className = '',
 }: SemiCircleGaugeProps) {
   const clamped = Math.min(100, Math.max(0, value));
-  // Half circle: radius 40, center (50, 48)
   const radius = 38;
   const strokeWidth = 8;
   const circumference = Math.PI * radius; // half circle perimeter
@@ -35,7 +34,8 @@ export function SemiCircleGauge({
           <path
             d="M 12 50 A 38 38 0 0 1 88 50"
             fill="none"
-            stroke="#262b34"
+            stroke="currentColor"
+            className="text-line-strong/30 dark:text-[#262b34]"
             strokeWidth={strokeWidth}
             strokeLinecap="round"
           />
@@ -55,13 +55,13 @@ export function SemiCircleGauge({
 
       {(wins !== undefined || losses !== undefined || bes !== undefined) && (
         <div className="flex items-center gap-1.5 mt-1 text-[11px] font-medium tracking-tight">
-          <span className="flex items-center gap-0.5 text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
+          <span className="flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
             {wins ?? 0}
           </span>
-          <span className="flex items-center gap-0.5 text-zinc-400 bg-zinc-800/60 px-1.5 py-0.5 rounded">
+          <span className="flex items-center gap-0.5 text-fg-muted bg-bg-3 px-1.5 py-0.5 rounded">
             {bes ?? 0}
           </span>
-          <span className="flex items-center gap-0.5 text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded">
+          <span className="flex items-center gap-0.5 text-rose-600 dark:text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded">
             {losses ?? 0}
           </span>
         </div>
@@ -69,4 +69,3 @@ export function SemiCircleGauge({
     </div>
   );
 }
-

@@ -19,7 +19,7 @@ import {
 } from 'recharts';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Loader } from '@/components/ui/Loader';
-import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardBody } from '@/components/ui/Card';
 import { Stat } from '@/components/ui/Stat';
 import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -126,108 +126,100 @@ export function MistakesPage() {
       ) : (
         <>
           {/* Hero stats */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <Card className="overflow-hidden border-t-2 border-t-loss/70">
-              <CardBody className="p-4 sm:p-5">
-                <Stat
-                  label="Trades with mistakes"
-                  value={String(totalMistakeTrades)}
-                />
-                <div className="mt-1 text-2xs text-fg-dim">
-                  {trades.length > 0
-                    ? formatPct(totalMistakeTrades / trades.length)
-                    : '—'}{' '}
-                  of all trades
-                </div>
-              </CardBody>
-            </Card>
-            <Card className="overflow-hidden border-t-2 border-t-loss/70">
-              <CardBody className="p-4 sm:p-5">
-                <Stat
-                  label="R lost to mistakes"
-                  value={formatR(totalRLost)}
-                  tone={totalRLost < 0 ? 'loss' : 'default'}
-                />
-              </CardBody>
-            </Card>
-            <Card className="overflow-hidden border-t-2 border-t-accent/70">
-              <CardBody className="p-4 sm:p-5">
-                <Stat
-                  label="Most common"
-                  value={mostCommon?.label ?? '—'}
-                />
-                <div className="mt-1 text-2xs text-fg-dim">
-                  {mostCommon ? `${mostCommon.count} occurrence${mostCommon.count === 1 ? '' : 's'}` : '—'}
-                </div>
-              </CardBody>
-            </Card>
-            <Card className="overflow-hidden border-t-2 border-t-win/70">
-              <CardBody className="p-4 sm:p-5">
-                <Stat
-                  label="Clean trades"
-                  value={String(noMistakeBucket?.count ?? 0)}
-                />
-                <div className="mt-1 text-2xs text-fg-dim">
-                  {noMistakeBucket
-                    ? `${formatR(noMistakeBucket.totalR)} total R`
-                    : '—'}
-                </div>
-              </CardBody>
-            </Card>
+          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 shadow-card border-t-2 border-t-rose-500/70 hover:border-line-strong transition-all">
+              <Stat
+                label="Trades with mistakes"
+                value={String(totalMistakeTrades)}
+              />
+              <div className="mt-1 text-2xs text-fg-dim">
+                {trades.length > 0
+                  ? formatPct(totalMistakeTrades / trades.length)
+                  : '—'}{' '}
+                of all trades
+              </div>
+            </div>
+            <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 shadow-card border-t-2 border-t-rose-500/70 hover:border-line-strong transition-all">
+              <Stat
+                label="R lost to mistakes"
+                value={formatR(totalRLost)}
+                tone={totalRLost < 0 ? 'loss' : 'default'}
+              />
+            </div>
+            <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 shadow-card border-t-2 border-t-sky-500/70 hover:border-line-strong transition-all">
+              <Stat
+                label="Most common"
+                value={mostCommon?.label ?? '—'}
+              />
+              <div className="mt-1 text-2xs text-fg-dim">
+                {mostCommon ? `${mostCommon.count} occurrence${mostCommon.count === 1 ? '' : 's'}` : '—'}
+              </div>
+            </div>
+            <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 shadow-card border-t-2 border-t-emerald-500/70 hover:border-line-strong transition-all">
+              <Stat
+                label="Clean trades"
+                value={String(noMistakeBucket?.count ?? 0)}
+              />
+              <div className="mt-1 text-2xs text-fg-dim">
+                {noMistakeBucket
+                  ? `${formatR(noMistakeBucket.totalR)} total R`
+                  : '—'}
+              </div>
+            </div>
           </div>
 
           {/* Top 3 costliest mistakes */}
           {costliest.length > 0 && (
-            <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-3">
               {costliest.map((b, i) => (
-                <Card key={b.key} className="overflow-hidden border-t-2 border-t-loss/70">
-                  <CardHeader className="bg-loss-fill/5">
-                    <CardTitle className="flex items-center gap-2">
-                      <TrendingDown className="h-4 w-4 text-loss" />
+                <div key={b.key} className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl overflow-hidden shadow-card border-t-2 border-t-rose-500/70 hover:border-line-strong transition-all">
+                  <div className="px-5 py-3 border-b border-line bg-rose-500/5 flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-xs font-semibold text-rose-500 dark:text-rose-400">
+                      <TrendingDown className="h-4 w-4 text-rose-500" />
                       #{i + 1} Costliest
-                    </CardTitle>
-                  </CardHeader>
-                  <CardBody className="p-4 sm:p-5">
+                    </span>
+                  </div>
+                  <div className="p-5">
                     <div className="flex items-center justify-between gap-3">
                       <Badge tone="loss" className="max-w-[70%] truncate">{b.label}</Badge>
-                      <span className="text-lg font-bold text-loss tabular-nums">
+                      <span className="text-lg font-bold text-rose-500 dark:text-rose-400 tabular-nums">
                         {formatR(b.totalR)}
                       </span>
                     </div>
-                    <div className="mt-2 grid grid-cols-3 gap-2 text-xs text-fg-muted">
+                    <div className="mt-3 grid grid-cols-3 gap-2 text-xs text-fg-muted">
                       <div>
-                        <span className="block text-2xs text-fg-dim uppercase">Count</span>
-                        <span className="font-medium text-fg">{b.count}</span>
+                        <span className="block text-2xs text-fg-dim uppercase font-semibold">Count</span>
+                        <span className="font-semibold text-fg">{b.count}</span>
                       </div>
                       <div>
-                        <span className="block text-2xs text-fg-dim uppercase">Avg R</span>
-                        <span className={cn('font-medium', b.avgR < 0 ? 'text-loss' : 'text-win')}>
+                        <span className="block text-2xs text-fg-dim uppercase font-semibold">Avg R</span>
+                        <span className={cn('font-semibold', b.avgR < 0 ? 'text-rose-500 dark:text-rose-400' : 'text-emerald-500 dark:text-emerald-400')}>
                           {formatR(b.avgR)}
                         </span>
                       </div>
                       <div>
-                        <span className="block text-2xs text-fg-dim uppercase">Win Rate</span>
-                        <span className="font-medium text-fg">
+                        <span className="block text-2xs text-fg-dim uppercase font-semibold">Win Rate</span>
+                        <span className="font-semibold text-fg">
                           {b.winRate == null ? '—' : formatPct(b.winRate)}
                         </span>
                       </div>
                     </div>
-                  </CardBody>
-                </Card>
+                  </div>
+                </div>
               ))}
             </div>
           )}
 
-{/* R Impact bar chart */}
+          {/* R Impact bar chart */}
           {chartData.length > 0 && (
-            <Card>
-              <CardHeader className="bg-bg-1">
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4 text-accent" />
+            <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl overflow-hidden shadow-card">
+              <div className="px-5 py-3.5 border-b border-line flex items-center justify-between">
+                <span className="flex items-center gap-2 text-xs font-semibold text-fg">
+                  <BarChart3 className="h-4 w-4 text-sky-500" />
                   R Impact by Mistake Type
-                </CardTitle>
-              </CardHeader>
-              <CardBody className="h-72 p-3 sm:h-80 sm:p-5">
+                </span>
+              </div>
+              <div className="h-72 p-3 sm:h-80 sm:p-5">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={chartData}
@@ -283,87 +275,85 @@ export function MistakesPage() {
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
-              </CardBody>
-            </Card>
+              </div>
+            </div>
           )}
 
           {/* Detailed table */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Hash className="h-4 w-4 text-accent" />
+          <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl overflow-hidden shadow-card">
+            <div className="px-5 py-3.5 border-b border-line flex items-center justify-between">
+              <span className="flex items-center gap-2 text-xs font-semibold text-fg">
+                <Hash className="h-4 w-4 text-sky-500" />
                 Full Breakdown
-              </CardTitle>
-            </CardHeader>
-            <CardBody className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[640px] text-sm">
-                  <thead className="bg-bg-3/80">
-                    <tr className="border-b border-line">
-                      <th className="px-4 py-2.5 text-left text-2xs uppercase tracking-wider text-fg-dim font-medium">
-                        Mistake
-                      </th>
-                      <th className="px-4 py-2.5 text-right text-2xs uppercase tracking-wider text-fg-dim font-medium">
-                        Count
-                      </th>
-                      <th className="px-4 py-2.5 text-right text-2xs uppercase tracking-wider text-fg-dim font-medium">
-                        Total R
-                      </th>
-                      <th className="px-4 py-2.5 text-right text-2xs uppercase tracking-wider text-fg-dim font-medium">
-                        Avg R
-                      </th>
-                      <th className="px-4 py-2.5 text-right text-2xs uppercase tracking-wider text-fg-dim font-medium">
-                        Win Rate
-                      </th>
-                      <th className="px-4 py-2.5 text-right text-2xs uppercase tracking-wider text-fg-dim font-medium">
-                        W / L / BE
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-line bg-bg-2">
-                    {/* Clean trades first, de-emphasized */}
-                    {noMistakeBucket && (
-                      <MistakeRow bucket={noMistakeBucket} muted />
-                    )}
-                    {/* Actual mistakes, sorted by R impact ascending */}
-                    {sortedByImpact.map((b) => (
-                      <MistakeRow key={b.key} bucket={b} />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardBody>
-          </Card>
+              </span>
+            </div>
+            <div className="p-0 overflow-x-auto">
+              <table className="w-full min-w-[640px] text-sm">
+                <thead className="bg-bg-2/70 border-b border-line">
+                  <tr>
+                    <th className="px-5 py-3 text-left text-2xs uppercase tracking-wider text-fg-dim font-semibold">
+                      Mistake
+                    </th>
+                    <th className="px-5 py-3 text-right text-2xs uppercase tracking-wider text-fg-dim font-semibold">
+                      Count
+                    </th>
+                    <th className="px-5 py-3 text-right text-2xs uppercase tracking-wider text-fg-dim font-semibold">
+                      Total R
+                    </th>
+                    <th className="px-5 py-3 text-right text-2xs uppercase tracking-wider text-fg-dim font-semibold">
+                      Avg R
+                    </th>
+                    <th className="px-5 py-3 text-right text-2xs uppercase tracking-wider text-fg-dim font-semibold">
+                      Win Rate
+                    </th>
+                    <th className="px-5 py-3 text-right text-2xs uppercase tracking-wider text-fg-dim font-semibold">
+                      W / L / BE
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {/* Clean trades first, de-emphasized */}
+                  {noMistakeBucket && (
+                    <MistakeRow bucket={noMistakeBucket} muted />
+                  )}
+                  {/* Actual mistakes, sorted by R impact ascending */}
+                  {sortedByImpact.map((b) => (
+                    <MistakeRow key={b.key} bucket={b} />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
           {/* Insight callout */}
           {costliest.length > 0 && (
-            <Card>
-              <CardBody>
-                <div className="flex items-start gap-3">
-                  <Target className="h-5 w-5 text-accent shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-medium text-fg">Focus area</p>
-                    <p className="mt-1 text-sm text-fg-muted">
-                      Your costliest mistake is{' '}
-                      <span className="text-loss font-semibold">{costliest[0]!.label}</span>,
-                      costing you{' '}
-                      <span className="text-loss font-semibold tabular-nums">
-                        {formatR(costliest[0]!.totalR)}
-                      </span>{' '}
-                      across {costliest[0]!.count} trade{costliest[0]!.count === 1 ? '' : 's'}.
-                      {costliest[0]!.winRate != null && costliest[0]!.winRate < 0.5 && (
-                        <> With a win rate of only{' '}
-                          <span className="text-loss font-semibold">
-                            {formatPct(costliest[0]!.winRate)}
-                          </span>
-                          , eliminating this mistake should be your top priority.
-                        </>
-                      )}
-                    </p>
-                  </div>
+            <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 shadow-card">
+              <div className="flex items-start gap-3.5">
+                <div className="p-2 rounded-xl bg-sky-500/10 text-sky-500 shrink-0">
+                  <Target className="h-5 w-5" />
                 </div>
-              </CardBody>
-            </Card>
+                <div>
+                  <p className="text-sm font-semibold text-fg">Focus area</p>
+                  <p className="mt-1 text-sm text-fg-muted">
+                    Your costliest mistake is{' '}
+                    <span className="text-rose-500 font-semibold">{costliest[0]!.label}</span>,
+                    costing you{' '}
+                    <span className="text-rose-500 font-semibold tabular-nums">
+                      {formatR(costliest[0]!.totalR)}
+                    </span>{' '}
+                    across {costliest[0]!.count} trade{costliest[0]!.count === 1 ? '' : 's'}.
+                    {costliest[0]!.winRate != null && costliest[0]!.winRate < 0.5 && (
+                      <> With a win rate of only{' '}
+                        <span className="text-rose-500 font-semibold">
+                          {formatPct(costliest[0]!.winRate)}
+                        </span>
+                        , eliminating this mistake should be your top priority.
+                      </>
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
           )}
         </>
       )}

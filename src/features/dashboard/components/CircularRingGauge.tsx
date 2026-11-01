@@ -24,7 +24,8 @@ export function CircularRingGauge({
           cy="28"
           r={radius}
           fill="none"
-          stroke="#262b34"
+          stroke="currentColor"
+          className="text-line-strong/30 dark:text-[#262b34]"
           strokeWidth={strokeWidth}
         />
         <circle
@@ -43,4 +44,3 @@ export function CircularRingGauge({
     </div>
   );
 }
-
