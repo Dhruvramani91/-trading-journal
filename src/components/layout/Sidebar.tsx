@@ -156,9 +156,8 @@ export function Sidebar() {
               {user.avatar ? <img src={user.avatar} alt="" className="h-full w-full object-cover" /> : <UserRound className="h-4 w-4" />}
             </span>
             {!collapsed && (
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-xs font-semibold text-fg">{user.name || user.email}</span>
-                <span className="block truncate text-[10px] text-fg-dim">Signed in</span>
+              <span className="min-w-0 flex-1 flex items-center">
+                <span className="block truncate text-xs font-bold text-fg">{user.name || user.email}</span>
               </span>
             )}
           </button>

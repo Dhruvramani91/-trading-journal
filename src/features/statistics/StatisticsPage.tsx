@@ -58,10 +58,10 @@ function Metric({
 
         <p
           className={cn(
-            'mt-1 font-semibold tabular-nums tracking-tight',
+            'mt-1 font-mono font-extrabold tracking-tight',
             size === 'lg' ? 'text-2xl sm:text-[1.75rem]' : 'text-lg',
-            tone === 'win' && 'text-win',
-            tone === 'loss' && 'text-loss',
+            tone === 'win' && 'text-emerald-600 dark:text-emerald-400',
+            tone === 'loss' && 'text-rose-600 dark:text-rose-400',
             !tone && 'text-fg',
           )}
         >
@@ -382,183 +382,150 @@ export function StatisticsPage() {
       ) : (
         <>
           {/* =========================================================
-              SUMMARY
-              Existing R analytics + NEW P&L analytics
+              SUMMARY & TOP KPI METRICS
+              Dashboard-aligned aesthetic cards with identical fonts and styling
              ========================================================= */}
-
-          <Card className="overflow-hidden">
-      <section aria-label="Performance summary" className="grid grid-cols-2 gap-x-4 gap-y-5 p-4 sm:grid-cols-3 sm:p-5 xl:grid-cols-5 xl:gap-x-0 xl:divide-x xl:divide-line xl:p-6 [&>*]:px-3 xl:[&>*:first-child]:pl-0 xl:[&>*:last-child]:pr-0">
-
-              {/* EXISTING */}
-              <Metric
-                label="Total R"
-                value={formatR(s.totalR ?? 0)}
-                tone={toneOf(s.totalR ?? 0)}
-              />
-
-              {/* NEW */}
-              <Metric
-                label="Total P&L"
-                value={formatMoney(pnlStats.totalPnl)}
-                tone={toneOf(pnlStats.totalPnl)}
-              />
-
-              {/* EXISTING */}
-              <Metric
-                label="Win rate"
-                value={
-                  s.winRate == null
-                    ? '—'
-                    : formatPct(s.winRate)
-                }
-                sub={
-                  `Avg R ${formatR(s.avgR ?? 0)}`
-                }
-                aside={
-                  <WinRateRing
-                    rate={s.winRate ?? 0}
-                    size={40}
-                  />
-                }
-              />
-
-              {/* EXISTING */}
-              <Metric
-                label="Trades"
-                value={String(s.count ?? 0)}
-                sub={
-                  <span className="flex flex-wrap gap-1.5">
-                    <Badge tone="win">
-                      {s.wins ?? 0} W
-                    </Badge>
-
-                    <Badge tone="loss">
-                      {s.losses ?? 0} L
-                    </Badge>
-
-                    <Badge tone="be">
-                      {s.bes ?? 0} BE
-                    </Badge>
+          <div className="space-y-4">
+            {/* Top 5 Metric Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+              {/* Total R */}
+              <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Total R</span>
+                  <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-bg-2 dark:bg-[#181b20] text-fg-muted border border-line">
+                    R Multiple
                   </span>
-                }
-              />
-
-              {/* EXISTING */}
-              <Metric
-                label="Expectancy"
-                value={formatR(s.expectancy ?? 0)}
-                tone={toneOf(s.expectancy ?? 0)}
-              />
-      </section>
-
-            <details className="group border-t border-line">
-              <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 px-5 py-3 text-sm font-semibold text-fg hover:bg-bg-2/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/60 [&::-webkit-details-marker]:hidden">
-                <span className="min-w-0">
-                  <span className="block font-semibold">More statistics</span>
-                  <span className="mt-0.5 block text-xs font-normal text-fg-muted">Best and worst trades, drawdowns, and streaks</span>
-                </span>
-                <span className="flex items-center gap-2 text-xs font-medium text-fg-muted group-hover:text-fg">
-                  <span>View metrics</span>
-                  <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180 motion-reduce:transition-none" />
-                </span>
-              </summary>
-              <div>
-
-            <section aria-label="Additional R and P&L statistics" className="grid grid-cols-2 gap-x-4 gap-y-5 border-t border-line px-4 py-5 sm:grid-cols-3 sm:px-5 xl:grid-cols-5 xl:gap-x-0 xl:divide-x xl:divide-line xl:px-6 [&>*]:px-3 xl:[&>*:first-child]:pl-0 xl:[&>*:last-child]:pr-0">
-
-              {/* EXISTING */}
-              <Metric
-                size="sm"
-                label="Best trade"
-                value={formatR(s.bestR ?? 0)}
-                tone="win"
-              />
-
-              {/* NEW */}
-              <Metric
-                size="sm"
-                label="Best P&L"
-                value={formatMoney(pnlStats.bestPnl)}
-                tone="win"
-              />
-
-              {/* EXISTING */}
-              <Metric
-                size="sm"
-                label="Worst trade"
-                value={formatR(s.worstR ?? 0)}
-                tone="loss"
-              />
-
-              {/* NEW */}
-              <Metric
-                size="sm"
-                label="Worst P&L"
-                value={formatMoney(pnlStats.worstPnl)}
-                tone="loss"
-              />
-
-              {/* EXISTING */}
-              <Metric
-                size="sm"
-                label="Max drawdown"
-                value={formatR(s.maxDrawdownR ?? 0)}
-                tone="loss"
-              />
-            </section>
-
-            <section aria-label="Average performance and streaks" className="grid grid-cols-2 gap-x-4 gap-y-5 border-t border-line px-4 py-5 sm:grid-cols-3 sm:px-5 xl:grid-cols-5 xl:gap-x-0 xl:divide-x xl:divide-line xl:px-6 [&>*]:px-3 xl:[&>*:first-child]:pl-0 xl:[&>*:last-child]:pr-0">
-
-              {/* NEW */}
-              <Metric
-                size="sm"
-                label="Average P&L"
-                value={formatMoney(pnlStats.averagePnl)}
-                tone={toneOf(pnlStats.averagePnl)}
-              />
-
-              {/* NEW */}
-              <Metric
-                size="sm"
-                label="P&L drawdown"
-                value={formatMoney(
-                  pnlStats.maxDrawdownPnl,
-                )}
-                tone="loss"
-              />
-
-              {/* EXISTING */}
-              <Metric
-                size="sm"
-                label="Longest win streak"
-                value={String(
-                  s.longestWinStreak ?? 0,
-                )}
-              />
-
-              {/* EXISTING */}
-              <Metric
-                size="sm"
-                label="Longest loss streak"
-                value={String(
-                  s.longestLossStreak ?? 0,
-                )}
-              />
-
-              {/* Small R / P&L relationship */}
-              <Metric
-                size="sm"
-                label="R / P&L"
-                value={`${formatR(
-                  s.avgR ?? 0,
-                )} · ${formatMoney(
-                  pnlStats.averagePnl,
-                )}`}
-              />
-            </section>
+                </div>
+                <div className="mt-1">
+                  <div
+                    className={cn(
+                      'text-3xl font-extrabold font-mono tracking-tight',
+                      (s.totalR ?? 0) > 0 ? 'text-emerald-600 dark:text-emerald-400' : (s.totalR ?? 0) < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-fg',
+                    )}
+                  >
+                    {formatR(s.totalR ?? 0)}
+                  </div>
+                  <span className="text-[11px] text-fg-dim font-medium mt-1.5 block">
+                    Realized R across all trades
+                  </span>
+                </div>
               </div>
-            </details>
-          </Card>
+
+              {/* Total P&L */}
+              <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Total P&L</span>
+                  <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-bg-2 dark:bg-[#181b20] text-fg-muted border border-line">
+                    Currency
+                  </span>
+                </div>
+                <div className="mt-1">
+                  <div
+                    className={cn(
+                      'text-3xl font-extrabold font-mono tracking-tight',
+                      pnlStats.totalPnl > 0 ? 'text-emerald-600 dark:text-emerald-400' : pnlStats.totalPnl < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-fg',
+                    )}
+                  >
+                    {formatMoney(pnlStats.totalPnl)}
+                  </div>
+                  <span className="text-[11px] text-fg-dim font-medium mt-1.5 block">
+                    Net cash balance generated
+                  </span>
+                </div>
+              </div>
+
+              {/* Win Rate */}
+              <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex items-center justify-between shadow-card">
+                <div className="flex flex-col justify-between h-full">
+                  <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Win Rate</span>
+                  <div className="text-3xl font-extrabold font-mono text-fg tracking-tight mt-2">
+                    {s.winRate == null ? '—' : formatPct(s.winRate)}
+                  </div>
+                  <span className="text-[11px] text-fg-dim font-medium mt-1">
+                    Avg R {formatR(s.avgR ?? 0)}
+                  </span>
+                </div>
+                <WinRateRing rate={s.winRate ?? 0} size={48} />
+              </div>
+
+              {/* Trades */}
+              <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Trades</span>
+                  <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-bg-2 dark:bg-[#181b20] text-fg-muted border border-line">
+                    {s.count ?? 0} executed
+                  </span>
+                </div>
+                <div className="mt-1">
+                  <div className="text-3xl font-extrabold font-mono text-fg tracking-tight">
+                    {s.count ?? 0}
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <Badge tone="win">{s.wins ?? 0} W</Badge>
+                    <Badge tone="loss">{s.losses ?? 0} L</Badge>
+                    <Badge tone="be">{s.bes ?? 0} BE</Badge>
+                  </div>
+                </div>
+              </div>
+
+              {/* Expectancy */}
+              <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Expectancy</span>
+                  <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-bg-2 dark:bg-[#181b20] text-fg-muted border border-line">
+                    Edge
+                  </span>
+                </div>
+                <div className="mt-1">
+                  <div
+                    className={cn(
+                      'text-3xl font-extrabold font-mono tracking-tight',
+                      (s.expectancy ?? 0) > 0 ? 'text-emerald-600 dark:text-emerald-400' : (s.expectancy ?? 0) < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-fg',
+                    )}
+                  >
+                    {formatR(s.expectancy ?? 0)}
+                  </div>
+                  <span className="text-[11px] text-fg-dim font-medium mt-1.5 block">
+                    Expected return per execution
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Accordion: Extended In-Depth Analytics */}
+            <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl overflow-hidden shadow-card">
+              <details className="group">
+                <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 px-5 py-3.5 text-sm font-semibold text-fg hover:bg-bg-2/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/60 [&::-webkit-details-marker]:hidden">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-fg-muted">More statistics</span>
+                    <span className="text-xs text-fg-dim font-normal">— Best & worst trades, drawdowns, streaks</span>
+                  </div>
+                  <span className="flex items-center gap-2 text-xs font-medium text-fg-muted group-hover:text-fg">
+                    <span>View breakdown</span>
+                    <ChevronDown aria-hidden="true" className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180 motion-reduce:transition-none" />
+                  </span>
+                </summary>
+
+                <div className="border-t border-line">
+                  <section aria-label="Additional R and P&L statistics" className="grid grid-cols-2 gap-x-4 gap-y-5 px-5 py-5 sm:grid-cols-3 xl:grid-cols-5 xl:gap-x-0 xl:divide-x xl:divide-line [&>*]:px-3 xl:[&>*:first-child]:pl-0 xl:[&>*:last-child]:pr-0">
+                    <Metric size="sm" label="Best trade" value={formatR(s.bestR ?? 0)} tone="win" />
+                    <Metric size="sm" label="Best P&L" value={formatMoney(pnlStats.bestPnl)} tone="win" />
+                    <Metric size="sm" label="Worst trade" value={formatR(s.worstR ?? 0)} tone="loss" />
+                    <Metric size="sm" label="Worst P&L" value={formatMoney(pnlStats.worstPnl)} tone="loss" />
+                    <Metric size="sm" label="Max drawdown" value={formatR(s.maxDrawdownR ?? 0)} tone="loss" />
+                  </section>
+
+                  <section aria-label="Average performance and streaks" className="grid grid-cols-2 gap-x-4 gap-y-5 border-t border-line px-5 py-5 sm:grid-cols-3 xl:grid-cols-5 xl:gap-x-0 xl:divide-x xl:divide-line [&>*]:px-3 xl:[&>*:first-child]:pl-0 xl:[&>*:last-child]:pr-0">
+                    <Metric size="sm" label="Average P&L" value={formatMoney(pnlStats.averagePnl)} tone={toneOf(pnlStats.averagePnl)} />
+                    <Metric size="sm" label="P&L drawdown" value={formatMoney(pnlStats.maxDrawdownPnl)} tone="loss" />
+                    <Metric size="sm" label="Longest win streak" value={String(s.longestWinStreak ?? 0)} />
+                    <Metric size="sm" label="Longest loss streak" value={String(s.longestLossStreak ?? 0)} />
+                    <Metric size="sm" label="R / P&L" value={`${formatR(s.avgR ?? 0)} · ${formatMoney(pnlStats.averagePnl)}`} />
+                  </section>
+                </div>
+              </details>
+            </div>
+          </div>
 
           {/* =========================================================
               BREAKDOWN TABS

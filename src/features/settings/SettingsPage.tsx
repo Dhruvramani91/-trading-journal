@@ -77,17 +77,19 @@ export function SettingsPage() {
         <div className="grid gap-2.5 sm:grid-cols-2">
           {/* Appearance Card */}
           <Card className="shadow-card border-line transition-all hover:border-line-strong hover:bg-bg-2/70">
-            <CardBody className="flex min-h-[82px] items-center gap-3.5 p-4">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400">
-                <Palette className="h-4.5 w-4.5" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <CardTitle className="text-sm font-semibold">Interface Theme</CardTitle>
-                <span className="mt-0.5 block text-xs text-fg-muted leading-tight">
-                  Switch between dark and light modes.
+            <CardBody className="flex min-h-[82px] items-center justify-between gap-3.5 p-4">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400">
+                  <Palette className="h-4.5 w-4.5" />
                 </span>
-              </span>
-              <ThemeToggle showLabel className="h-8.5 w-auto shrink-0 px-2.5 text-xs font-semibold rounded-xl" />
+                <span className="min-w-0 flex-1">
+                  <CardTitle className="text-sm font-semibold">Interface Theme</CardTitle>
+                  <span className="mt-0.5 block text-xs text-fg-muted leading-tight">
+                    Switch between dark and light modes.
+                  </span>
+                </span>
+              </div>
+              <ThemeToggle showLabel={false} className="h-9 w-9 shrink-0 rounded-xl border border-line bg-bg-2 hover:bg-bg-3" />
             </CardBody>
           </Card>
 

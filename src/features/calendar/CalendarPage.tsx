@@ -419,7 +419,7 @@ export function CalendarPage() {
       </div>
 
       {/* 3. Main Grid: 7-day + Week Column (Left) and Score Radar (Right) */}
-      <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+      <div className="relative grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
         {/* Left: Calendar Matrix (Full width when collapsed, 8 cols when score is open) */}
         <div
           className={cn(
@@ -427,14 +427,19 @@ export function CalendarPage() {
             isScoreOpen ? 'lg:col-span-8' : 'lg:col-span-12',
           )}
         >
-          {/* Interactive Toggle Handle on the Divider */}
+          {/* Interactive Toggle Handle on the Divider (Clean pill design, perfectly positioned) */}
           <button
             type="button"
             onClick={() => setIsScoreOpen(!isScoreOpen)}
-            className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 z-10 w-6 h-12 rounded-full bg-bg-1 dark:bg-[#181b20] border border-line shadow-md items-center justify-center text-fg-muted hover:text-sky-500 hover:scale-105 transition-all cursor-pointer"
-            title={isScoreOpen ? 'Collapse score panel (Full calendar)' : 'Show score panel'}
+            className="hidden lg:flex absolute -right-3.5 top-1/2 -translate-y-1/2 z-20 h-14 w-7 rounded-full bg-bg-1 dark:bg-[#181b20] border-2 border-line shadow-lg items-center justify-center text-fg-muted hover:text-sky-500 hover:border-sky-500/50 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            title={isScoreOpen ? 'Hide score panel (Full calendar)' : 'Show score panel'}
+            aria-label={isScoreOpen ? 'Hide score panel' : 'Show score panel'}
           >
-            {isScoreOpen ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
+            {isScoreOpen ? (
+              <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+            ) : (
+              <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+            )}
           </button>
 
           <div className="min-w-[620px]">

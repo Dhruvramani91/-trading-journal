@@ -5,7 +5,7 @@ import { Pencil, ArrowLeft, Trash2 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { InstrumentMark } from '@/components/trade/InstrumentMark';
 import { TradeGradeBadge } from '@/components/trade/TradeGradeBadge';
-import { Card, CardHeader, CardTitle, CardBody } from '@/components/ui/Card';
+import { Card, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { ResultPill } from '@/components/ui/ResultPill';
 import { DirectionPill } from '@/components/ui/DirectionPill';
@@ -223,123 +223,147 @@ export function TradeDetailsPage() {
       />
 
       {/* =========================================================
-          TRADE PERFORMANCE
+          TRADE PERFORMANCE METRIC CARDS
       ========================================================= */}
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-        <Card>
-          <CardBody>
-            <Stat
-              label="Entry"
-              value={
-                trade.entry != null
-                  ? String(trade.entry)
-                  : '—'
-              }
-            />
-          </CardBody>
-        </Card>
+        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-4 shadow-card">
+          <Stat
+            label="Entry"
+            value={
+              trade.entry != null
+                ? String(trade.entry)
+                : '—'
+            }
+          />
+        </div>
 
-        <Card>
-          <CardBody>
-            <Stat
-              label="Exit"
-              value={
-                trade.exit != null
-                  ? String(trade.exit)
-                  : '—'
-              }
-            />
-          </CardBody>
-        </Card>
+        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-4 shadow-card">
+          <Stat
+            label="Exit"
+            value={
+              trade.exit != null
+                ? String(trade.exit)
+                : '—'
+            }
+          />
+        </div>
 
-        <Card>
-          <CardBody>
-            <Stat
-              label="P&L"
-              value={formattedPnl}
-              tone={pnlTone}
-            />
-          </CardBody>
-        </Card>
+        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-4 shadow-card">
+          <Stat
+            label="P&L"
+            value={formattedPnl}
+            tone={pnlTone}
+          />
+        </div>
 
-        <Card>
-          <CardBody>
-            <Stat
-              label="Realized R"
-              value={formatR(trade.r)}
-              tone={
-                trade.r > 0
-                  ? 'win'
-                  : trade.r < 0
-                    ? 'loss'
-                    : 'default'
-              }
-            />
-          </CardBody>
-        </Card>
+        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-4 shadow-card">
+          <Stat
+            label="Realized R"
+            value={formatR(trade.r)}
+            tone={
+              trade.r > 0
+                ? 'win'
+                : trade.r < 0
+                  ? 'loss'
+                  : 'default'
+            }
+          />
+        </div>
 
-        <Card>
-          <CardBody>
-            <Stat
-              label="Direction"
-              value={
-                <DirectionPill
-                  direction={trade.direction}
-                />
-              }
-            />
-          </CardBody>
-        </Card>
+        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-4 shadow-card">
+          <Stat
+            label="Direction"
+            value={
+              <DirectionPill
+                direction={trade.direction}
+              />
+            }
+          />
+        </div>
 
-        <Card>
-          <CardBody>
-            <Stat
-              label="Outcome"
-              value={
-                <ResultPill
-                  result={trade.result}
-                />
-              }
-            />
-          </CardBody>
-        </Card>
+        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-4 shadow-card">
+          <Stat
+            label="Outcome"
+            value={
+              <ResultPill
+                result={trade.result}
+              />
+            }
+          />
+        </div>
 
-        <Card>
-          <CardBody>
-            <Stat label="Grade" value={<TradeGradeBadge grade={trade.grade} />} />
-          </CardBody>
-        </Card>
+        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-4 shadow-card">
+          <Stat label="Grade" value={<TradeGradeBadge grade={trade.grade} />} />
+        </div>
 
-        <Card>
-          <CardBody>
-            <Stat
-              label="Duration"
-              value={formatDuration(trade.durationMin)}
-            />
-          </CardBody>
-        </Card>
+        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-4 shadow-card">
+          <Stat
+            label="Duration"
+            value={formatDuration(trade.durationMin)}
+          />
+        </div>
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-sm font-semibold text-fg-muted">{template.name} strategy details</h2>
-        {templateGroups.map(([group, fields]) => <Card key={group}><CardHeader><CardTitle level={3}>{group}</CardTitle></CardHeader><CardBody><dl className="grid grid-cols-1 gap-x-6 gap-y-3.5 text-sm sm:grid-cols-2 lg:grid-cols-3">{fields.map((field) => {
-          const value = trade.templateData[field.key];
-          return <div key={field.key}><dt className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">{field.label}</dt><dd className="font-medium text-fg">{value === undefined || value === null || value === '' ? '—' : readFieldLabel(trade, field.key)}</dd></div>;
-        })}</dl></CardBody></Card>)}
-        <Card><CardHeader><CardTitle level={3}>Mistakes</CardTitle></CardHeader><CardBody>{trade.templateData.mistake ? <p className="text-sm text-fg">{String(trade.templateData.mistake)}</p> : <p className="text-sm text-fg-dim">No mistake recorded.</p>}</CardBody></Card>
-        <Card><CardHeader><CardTitle level={3}>Notes</CardTitle></CardHeader><CardBody>{trade.notes ? <div className="rounded-lg border border-line bg-bg-3 p-3.5 text-sm text-fg whitespace-pre-wrap">{trade.notes}</div> : <p className="text-sm text-fg-dim">No notes recorded.</p>}</CardBody></Card>
+        <h2 className="text-sm font-semibold text-fg-muted uppercase tracking-wider">{template.name} strategy details</h2>
+        {templateGroups.map(([group, fields]) => (
+          <div key={group} className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl overflow-hidden shadow-card">
+            <div className="border-b border-line px-5 py-3.5 bg-bg-2/30">
+              <h3 className="text-sm font-bold text-fg tracking-tight">{group}</h3>
+            </div>
+            <div className="p-5">
+              <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4 text-sm">
+                {fields.map((field) => {
+                  const value = trade.templateData[field.key];
+                  return (
+                    <div key={field.key} className="rounded-xl bg-bg-2/50 border border-line/60 p-3">
+                      <dt className="text-[10px] font-bold uppercase tracking-wider text-fg-dim">{field.label}</dt>
+                      <dd className="font-semibold text-fg mt-1 text-sm">{value === undefined || value === null || value === '' ? '—' : readFieldLabel(trade, field.key)}</dd>
+                    </div>
+                  );
+                })}
+              </dl>
+            </div>
+          </div>
+        ))}
+
+        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl overflow-hidden shadow-card">
+          <div className="border-b border-line px-5 py-3.5 bg-bg-2/30">
+            <h3 className="text-sm font-bold text-fg tracking-tight">Mistakes</h3>
+          </div>
+          <div className="p-5">
+            {trade.templateData.mistake ? (
+              <p className="text-sm text-rose-500 dark:text-rose-400 font-medium">{String(trade.templateData.mistake)}</p>
+            ) : (
+              <p className="text-sm text-fg-dim">No mistake recorded.</p>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl overflow-hidden shadow-card">
+          <div className="border-b border-line px-5 py-3.5 bg-bg-2/30">
+            <h3 className="text-sm font-bold text-fg tracking-tight">Notes</h3>
+          </div>
+          <div className="p-5">
+            {trade.notes ? (
+              <div className="rounded-xl border border-line bg-bg-2/40 p-4 text-sm text-fg whitespace-pre-wrap leading-relaxed">{trade.notes}</div>
+            ) : (
+              <p className="text-sm text-fg-dim">No notes recorded.</p>
+            )}
+          </div>
+        </div>
       </div>
 
         {/* =======================================================
             SCREENSHOTS
         ======================================================= */}
         {trade.photos && Object.values(trade.photos).some((value) => Array.isArray(value) ? value.some(Boolean) : Boolean(value)) && (
-          <Card className="lg:col-span-3">
-            <CardHeader>
-              <CardTitle level={3}>Screenshots</CardTitle>
-            </CardHeader>
+          <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl overflow-hidden shadow-card">
+            <div className="border-b border-line px-5 py-3.5 bg-bg-2/30">
+              <h3 className="text-sm font-bold text-fg tracking-tight">Screenshots</h3>
+            </div>
 
-            <CardBody>
+            <div className="p-5">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {Object.entries(resolvedPhotoUrls).map(([slot, src]) => {
                   const label = slot === 'htf' ? 'Image 1' : slot === 'itf' ? 'Image 2' : slot === 'ltf' ? 'Image 3' : `Image ${Number(slot.slice(5))}`;
@@ -347,9 +371,9 @@ export function TradeDetailsPage() {
                   return (
                     <div
                       key={slot}
-                      className="flex flex-col gap-2"
+                      className="flex flex-col gap-2 rounded-xl border border-line/60 bg-bg-2/30 p-3"
                     >
-                      <span className="text-xs font-bold uppercase tracking-wider text-fg-dim">
+                      <span className="text-2xs font-bold uppercase tracking-wider text-fg-dim">
                         {label}
                       </span>
 
@@ -368,15 +392,15 @@ export function TradeDetailsPage() {
                         </a>
                       ) : (
                         <div className="rounded-lg border border-dashed border-line bg-bg-3 aspect-video flex items-center justify-center text-xs text-fg-dim">
-                          No image
+                          No screenshot
                         </div>
                       )}
                     </div>
                   );
                 })}
               </div>
-            </CardBody>
-          </Card>
+            </div>
+          </div>
         )}
       <ConfirmDialog
         open={deleteConfirmOpen}
