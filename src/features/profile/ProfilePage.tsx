@@ -385,17 +385,17 @@ export function ProfilePage() {
           }}
         >
           <div
-            className="w-full max-w-4xl max-h-[min(90vh,760px)] overflow-y-auto rounded-2xl border border-line bg-bg-1 shadow-2xl animate-fade-in"
+            className="w-full max-w-4xl rounded-2xl border border-line bg-bg-1 shadow-2xl animate-fade-in"
             role="dialog"
             aria-modal="true"
             aria-labelledby="edit-profile-title"
           >
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-bg-1/95 px-5 py-4 backdrop-blur sm:px-7">
+            <div className="flex items-center justify-between border-b border-line bg-bg-1/95 px-5 py-4 sm:px-7">
               <div>
                 <h3 id="edit-profile-title" className="text-base font-bold text-fg">
                   Edit Profile
                 </h3>
-                <p className="mt-0.5 text-sm text-fg-muted">
+                <p className="mt-0.5 text-xs text-fg-muted">
                   A couple of details to make your workspace yours.
                 </p>
               </div>
@@ -413,16 +413,16 @@ export function ProfilePage() {
 
             <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-12 lg:gap-8">
               <section aria-labelledby="profile-form-heading" className="lg:col-span-7">
-                <div className="mb-5">
-                  <h4 id="profile-form-heading" className="text-2xl font-bold tracking-tight text-fg sm:text-3xl">
+                <div className="mb-4">
+                  <h4 id="profile-form-heading" className="text-xl font-bold tracking-tight text-fg sm:text-2xl">
                     Set up your profile
                   </h4>
-                  <p className="mt-1 text-sm text-fg-muted">Two quick details. You can change them anytime.</p>
+                  <p className="mt-0.5 text-xs text-fg-muted">Two quick details. You can change them anytime.</p>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-4">
                   <div>
-                    <label htmlFor="profile-name" className="mb-2 block text-sm font-semibold text-fg">
+                    <label htmlFor="profile-name" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-fg-dim">
                       Your name
                     </label>
                     <input
@@ -431,15 +431,15 @@ export function ProfilePage() {
                       onChange={(event) => setName(event.target.value)}
                       maxLength={50}
                       autoComplete="name"
-                      className="h-11 w-full rounded-xl border border-line bg-bg-2 px-4 text-sm text-fg outline-none transition-colors placeholder:text-fg-dim focus-visible:border-focus focus-visible:ring-2 focus-visible:ring-focus/20"
+                      className="h-10 w-full rounded-xl border border-line bg-bg-2 px-3.5 text-sm text-fg outline-none transition-colors placeholder:text-fg-dim focus-visible:border-focus focus-visible:ring-2 focus-visible:ring-focus/20"
                       placeholder="What should we call you?"
                     />
                   </div>
 
                   <fieldset>
-                    <legend className="text-sm font-semibold text-fg">Trading experience</legend>
-                    <p className="mb-3 mt-1 text-sm text-fg-muted">Pick what feels closest. You can update this later.</p>
-                    <div className="space-y-2.5">
+                    <legend className="text-xs font-semibold uppercase tracking-wider text-fg-dim">Trading experience</legend>
+                    <p className="mb-2 mt-0.5 text-xs text-fg-muted">Pick what feels closest. You can update this later.</p>
+                    <div className="space-y-2">
                       {([
                         ['beginner', 'Beginner', "I'm learning the basics and building good habits."],
                         ['intermediate', 'Intermediate', "I have a routine and I'm working on consistency."],
@@ -448,7 +448,7 @@ export function ProfilePage() {
                         <label
                           key={value}
                           className={cn(
-                            'group flex cursor-pointer items-center gap-3.5 rounded-xl border px-4 py-3 transition-colors focus-within:ring-2 focus-within:ring-focus/40',
+                            'group flex cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-2.5 transition-colors focus-within:ring-2 focus-within:ring-focus/40',
                             traderLevel === value
                               ? 'border-line-strong bg-bg-3'
                               : 'border-line bg-bg-2 hover:border-line-strong hover:bg-bg-3/70',
@@ -463,8 +463,8 @@ export function ProfilePage() {
                             onChange={() => setTraderLevel(value)}
                           />
                           <span className="min-w-0">
-                            <span className="block text-sm font-semibold text-fg">{label}</span>
-                            <span className="mt-0.5 block text-sm text-fg-muted">{description}</span>
+                            <span className="block text-xs font-bold text-fg">{label}</span>
+                            <span className="block text-2xs text-fg-muted leading-tight">{description}</span>
                           </span>
                         </label>
                       ))}
@@ -474,18 +474,18 @@ export function ProfilePage() {
               </section>
 
               <aside aria-label="Live profile preview" className="flex flex-col justify-center lg:col-span-5">
-                <div className="rounded-2xl border border-line bg-bg-2 p-5 sm:p-6">
-                  <div className="mb-5 flex items-center justify-between border-b border-line pb-4">
+                <div className="rounded-2xl border border-line bg-bg-2 p-4 sm:p-5">
+                  <div className="mb-4 flex items-center justify-between border-b border-line pb-3">
                     <div className="flex items-center gap-2">
                       <span className="h-2 w-2 rounded-full bg-fg-muted" aria-hidden="true" />
                       <span className="text-xs font-semibold uppercase tracking-wider text-fg-muted">Your profile preview</span>
                     </div>
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-bg-3 px-2.5 py-1 text-xs text-fg-muted">
-                      <Eye className="h-3.5 w-3.5" /> Live
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-bg-3 px-2 py-0.5 text-2xs font-semibold text-fg-muted">
+                      <Eye className="h-3 w-3" /> Live
                     </span>
                   </div>
 
-                  <div className="rounded-xl border border-line bg-bg-1 p-4">
+                  <div className="rounded-xl border border-line bg-bg-1 p-3.5">
                     <div className="flex items-center gap-3.5">
                       <div className="relative shrink-0">
                         {preview ? (
@@ -498,29 +498,30 @@ export function ProfilePage() {
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border border-line bg-primary text-primary-fg shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-bg-1"
+                          className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-bg-1 bg-fg text-bg-1 shadow-md transition-all hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
                           aria-label="Upload profile picture"
+                          title="Change profile photo"
                         >
                           <Camera className="h-3.5 w-3.5" />
                         </button>
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex min-w-0 items-center gap-1.5">
-                          <span className={cn('truncate text-base font-semibold', name.trim() ? 'text-fg' : 'text-fg-dim')}>
+                          <span className={cn('truncate text-sm font-bold', name.trim() ? 'text-fg' : 'text-fg-dim')}>
                             {name.trim() || 'Your name'}
                           </span>
-                          <ShieldCheck className="h-4 w-4 shrink-0 text-fg-muted" aria-label="Verified account" />
+                          <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-500" aria-label="Verified account" />
                         </div>
-                        <p className="mt-0.5 truncate text-sm text-fg-muted">{currentUser.email}</p>
-                        <p className="mt-1 text-xs text-fg-dim">ThePrecisionLab trader</p>
+                        <p className="truncate text-xs text-fg-muted">{currentUser.email}</p>
+                        <p className="mt-0.5 text-2xs text-fg-dim">ThePrecisionLab trader</p>
                       </div>
                     </div>
-                    <div className="mt-4 flex items-center gap-2 border-t border-line pt-4">
-                      <span className="inline-flex items-center gap-1.5 rounded-md border border-line bg-bg-3 px-2.5 py-1 text-xs font-medium text-fg-muted">
+                    <div className="mt-3 flex items-center gap-2 border-t border-line pt-3">
+                      <span className="inline-flex items-center gap-1.5 rounded-md border border-line bg-bg-3 px-2 py-0.5 text-2xs font-semibold text-fg-muted">
                         <span className="h-1.5 w-1.5 rounded-full bg-fg-muted" aria-hidden="true" />
                         {traderLevel.charAt(0).toUpperCase() + traderLevel.slice(1)}
                       </span>
-                      <span className="text-xs text-fg-dim">Experience level</span>
+                      <span className="text-2xs text-fg-dim">Experience level</span>
                     </div>
                   </div>
 
@@ -531,7 +532,7 @@ export function ProfilePage() {
                     className="sr-only"
                     onChange={(event) => handleAvatarChange(event.target.files?.[0])}
                   />
-                  <p className="mt-3 text-center text-xs text-fg-dim">Profile photo is optional. JPG, PNG or WebP.</p>
+                  <p className="mt-2 text-center text-2xs text-fg-dim">Profile photo is optional. JPG, PNG or WebP.</p>
                 </div>
               </aside>
 

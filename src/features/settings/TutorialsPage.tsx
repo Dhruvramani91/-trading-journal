@@ -15,7 +15,7 @@ export function TutorialsPage() {
     <PageHeader
       title="Help & tutorials"
       description="Short guides to help you get more from your trading journal."
-      actions={<Button asChild variant="ghost" leftIcon={<ArrowLeft className="h-4 w-4" />}><Link to="/settings">Back to settings</Link></Button>}
+      actions={<Button asChild variant="secondary" className="rounded-xl border-line text-xs font-semibold" leftIcon={<ArrowLeft className="h-4 w-4" />}><Link to="/settings">Back to settings</Link></Button>}
     />
     <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
       {tutorials.map((tutorial, index) => (

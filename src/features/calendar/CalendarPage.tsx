@@ -423,15 +423,15 @@ export function CalendarPage() {
         {/* Left: Calendar Matrix (Full width when collapsed, 8 cols when score is open) */}
         <div
           className={cn(
-            'bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-4 sm:p-5 flex flex-col justify-between overflow-x-auto shadow-card transition-all duration-300 relative',
+            'bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-3 sm:p-4 md:p-5 flex flex-col justify-between shadow-card transition-all duration-300 relative',
             isScoreOpen ? 'lg:col-span-8' : 'lg:col-span-12',
           )}
         >
-          {/* Interactive Toggle Handle on the Divider (Exact styling matching sidebar collapse button) */}
+          {/* Interactive Toggle Handle on the Divider (Positioned top-middle of the border) */}
           <button
             type="button"
             onClick={() => setIsScoreOpen(!isScoreOpen)}
-            className="hidden lg:flex absolute -right-3.5 top-1/2 -translate-y-1/2 z-40 h-7 w-7 rounded-full border border-line bg-bg-1 text-fg-dim shadow-sm items-center justify-center transition-all hover:bg-bg-3 hover:text-fg hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/40 cursor-pointer"
+            className="hidden lg:flex absolute -right-3.5 top-8 z-40 h-7 w-7 rounded-full border border-line bg-bg-1 text-fg-dim shadow-sm items-center justify-center transition-all hover:bg-bg-3 hover:text-fg hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/40 cursor-pointer"
             title={isScoreOpen ? 'Hide score panel (Full calendar)' : 'Show score panel'}
             aria-label={isScoreOpen ? 'Hide score panel' : 'Show score panel'}
           >
@@ -442,25 +442,25 @@ export function CalendarPage() {
             )}
           </button>
 
-          <div className="min-w-[620px]">
+          <div className="w-full">
             {/* Weekday Header */}
-            <div className="grid grid-cols-8 gap-1.5 mb-2.5 text-center">
+            <div className="grid grid-cols-8 gap-1 sm:gap-1.5 mb-2.5 text-center">
               {WEEKDAY_HEADERS.map((hName) => (
-                <div key={hName} className="text-[11px] font-bold text-fg-dim uppercase tracking-wider py-1">
+                <div key={hName} className="text-[10px] sm:text-[11px] font-bold text-fg-dim uppercase tracking-wider py-1 truncate">
                   {hName}
                 </div>
               ))}
-              <div className="text-[11px] font-bold text-fg-dim uppercase tracking-wider py-1">
+              <div className="text-[10px] sm:text-[11px] font-bold text-fg-dim uppercase tracking-wider py-1 truncate">
                 WEEK
               </div>
             </div>
 
             {/* Calendar Cells Grid with Week Summary Column */}
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1 sm:gap-1.5">
               {Array.from({ length: calendarGrid.length / 7 }).map((_, rIdx) => {
                 const weekRow = weekSummaries[rIdx];
                 return (
-                  <div key={rIdx} className="grid grid-cols-8 gap-1.5">
+                  <div key={rIdx} className="grid grid-cols-8 gap-1 sm:gap-1.5">
                     {/* 7 Days */}
                     {calendarGrid.slice(rIdx * 7, rIdx * 7 + 7).map((cell) => {
                       const perf = dayMap.get(cell.dateKey);
@@ -478,7 +478,7 @@ export function CalendarPage() {
                             setSelectedDayKey(isSelected ? null : cell.dateKey);
                           }}
                           className={cn(
-                            'min-h-[82px] rounded-xl p-2.5 flex flex-col justify-between transition-all border cursor-pointer select-none',
+                            'min-h-[64px] sm:min-h-[76px] lg:min-h-[82px] rounded-xl p-1.5 sm:p-2.5 flex flex-col justify-between transition-all border cursor-pointer select-none',
                             // Inactive vs Active Day styling
                             hasTrades
                               ? isWin
@@ -496,7 +496,7 @@ export function CalendarPage() {
                           <div className="flex items-center justify-between">
                             <span
                               className={cn(
-                                'text-xs font-semibold font-mono',
+                                'text-[11px] sm:text-xs font-semibold font-mono',
                                 isPrevOrNext ? 'text-fg-dim' : 'text-fg',
                                 cell.isToday && 'text-sky-500 dark:text-sky-400 font-bold',
                               )}
@@ -522,10 +522,10 @@ export function CalendarPage() {
 
                           {/* Bottom: Monetary P&L / R & Trade count */}
                           {hasTrades ? (
-                            <div className="mt-1">
+                            <div className="mt-0.5 sm:mt-1">
                               <span
                                 className={cn(
-                                  'text-xs font-bold font-mono tracking-tight block truncate',
+                                  'text-[10px] sm:text-xs font-bold font-mono tracking-tight block truncate',
                                   isWin ? 'text-emerald-600 dark:text-emerald-400' : isLoss ? 'text-rose-600 dark:text-rose-400' : 'text-fg-muted',
                                 )}
                               >
@@ -535,24 +535,24 @@ export function CalendarPage() {
                                     ? formatSignedMoney(perf!.totalPnl)
                                     : '—'}
                               </span>
-                              <span className="text-[10px] text-fg-muted block truncate mt-0.5">
+                              <span className="text-[9px] sm:text-[10px] text-fg-muted block truncate mt-0.5">
                                 {perf!.count} trade{perf!.count === 1 ? '' : 's'} · {perf!.count > 0 ? `${Math.round((perf!.wins / perf!.count) * 100)}%` : '0%'}
                               </span>
                             </div>
                           ) : (
-                            <div className="h-4" />
+                            <div className="h-3 sm:h-4" />
                           )}
                         </div>
                       );
                     })}
 
                     {/* 8th Column: Week Summary Block */}
-                    <div className="min-h-[82px] rounded-xl p-2 bg-bg-2/50 dark:bg-[#0d0f12]/60 border border-line/60 flex flex-col justify-center items-center text-center">
+                    <div className="min-h-[64px] sm:min-h-[76px] lg:min-h-[82px] rounded-xl p-1.5 sm:p-2 bg-bg-2/50 dark:bg-[#0d0f12]/60 border border-line/60 flex flex-col justify-center items-center text-center">
                       {weekRow && weekRow.count > 0 ? (
                         <div>
                           <span
                             className={cn(
-                              'text-xs font-bold font-mono block',
+                              'text-[10px] sm:text-xs font-bold font-mono block truncate',
                               weekRow.totalR > 0 ? 'text-emerald-600 dark:text-emerald-400' : weekRow.totalR < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-fg-muted',
                             )}
                           >
@@ -560,8 +560,8 @@ export function CalendarPage() {
                               ? formatR(weekRow.totalR, 1)
                               : formatSignedMoney(weekRow.totalPnl)}
                           </span>
-                          <span className="text-[10px] text-fg-dim font-mono mt-0.5 block">
-                            {weekRow.count} trades
+                          <span className="text-[9px] sm:text-[10px] text-fg-dim font-mono mt-0.5 block truncate">
+                            {weekRow.count} tr
                           </span>
                         </div>
                       ) : (

@@ -1,7 +1,7 @@
 import { useEffect, useId, useMemo, useState, type KeyboardEvent } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useNavigate, useParams } from 'react-router-dom';
-import { BarChart3, CalendarDays, Camera, Check, ChevronLeft, ChevronRight, FlaskConical, ImagePlus, Pencil, Plus, ScrollText, Trash2, X } from 'lucide-react';
+import { BarChart3, CalendarDays, Camera, Check, ChevronLeft, ChevronRight, FlaskConical, ImagePlus, Pencil, Plus, ScrollText, Trash2, X, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -263,7 +263,7 @@ function BacktestWorkspace({ session, section, tradeId, onBack, onSection, onTra
     </>;
   }
   return <>
-    <div className="mb-5"><Button variant="ghost" size="sm" onClick={onBack} leftIcon={<ChevronLeft className="h-4 w-4" />}>All backtests</Button></div>
+    <div className="mb-5"><Button variant="secondary" size="sm" className="rounded-xl border-line text-xs font-semibold" onClick={onBack} leftIcon={<ArrowLeft className="h-4 w-4" />}>All backtests</Button></div>
     <PageHeader title={session.name} description={`${session.templateSnapshot.name} · ${session.instruments.join(', ')} · ${formatDate(session.startDate)} – ${formatDate(session.endDate)}`} actions={section === 'journal' ? <Button leftIcon={<Plus className="h-4 w-4" />} onClick={() => { setEditingTrade(null); setEditorOpen(true); }}>Add backtest trade</Button> : undefined} />
     <nav aria-label="Backtest sections" className="mb-5 flex gap-1 overflow-x-auto rounded-xl border border-line bg-bg-2 p-1">
       {SECTIONS.map(({ id, label, icon: Icon }) => <button key={id} type="button" onClick={() => onSection(id)} aria-current={section === id ? 'page' : undefined} className={`inline-flex h-9 shrink-0 items-center gap-2 rounded-lg px-3 text-sm transition-colors ${section === id ? 'bg-bg-4 text-fg shadow-sm' : 'text-fg-muted hover:bg-bg-3 hover:text-fg'}`}><Icon className="h-4 w-4" />{label}</button>)}
@@ -416,7 +416,7 @@ function BacktestTradeDetails({ session, trade, loading, onBack, onEdit, onDelet
   ];
   (trade.photos?.additional ?? []).forEach((value, index) => photoEntries.push([`Image ${index + 4}`, value]));
   const visiblePhotos = photoEntries.filter(([, value]) => Boolean(value));
-  return <div className="space-y-5"><Button variant="ghost" size="sm" onClick={onBack} leftIcon={<ChevronLeft className="h-4 w-4" />}>Back to journal</Button>
+  return <div className="space-y-5"><Button variant="secondary" size="sm" className="rounded-xl border-line text-xs font-semibold" onClick={onBack} leftIcon={<ArrowLeft className="h-4 w-4" />}>Back to journal</Button>
     <PageHeader title={`Backtest trade · ${trade.instrument}`} description={`${session.name} · ${formatDate(trade.openedAt)}`} actions={<><Button onClick={onEdit} leftIcon={<Pencil className="h-4 w-4" />}>Edit trade</Button><Button variant="danger" onClick={onDelete} leftIcon={<Trash2 className="h-4 w-4" />}>Delete</Button></>} />
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
         {[

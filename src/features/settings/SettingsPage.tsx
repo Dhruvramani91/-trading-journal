@@ -77,14 +77,14 @@ export function SettingsPage() {
         <div className="grid gap-2.5 sm:grid-cols-2">
           {/* Appearance Card */}
           <Card className="shadow-card border-line transition-all hover:border-line-strong hover:bg-bg-2/70">
-            <CardBody className="flex min-h-[82px] items-center justify-between gap-3.5 p-4">
-              <div className="flex items-center gap-3.5 min-w-0">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400">
-                  <Palette className="h-4.5 w-4.5" />
+            <CardBody className="flex min-h-[96px] items-center justify-between gap-4 p-5">
+              <div className="flex items-center gap-4 min-w-0">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400">
+                  <Palette className="h-5 w-5" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <CardTitle className="text-sm font-semibold">Interface Theme</CardTitle>
-                  <span className="mt-0.5 block text-xs text-fg-muted leading-tight">
+                  <CardTitle className="text-base font-semibold">Interface Theme</CardTitle>
+                  <span className="mt-1 block text-xs text-fg-muted leading-relaxed">
                     Switch between dark and light modes.
                   </span>
                 </span>
@@ -119,14 +119,14 @@ export function SettingsPage() {
 
           {/* Sign Out Card */}
           <Card className="shadow-card border-line transition-all hover:border-line-strong hover:bg-bg-2/70 sm:col-span-2">
-            <CardBody className="flex min-h-[82px] items-center justify-between gap-3.5 p-4">
-              <div className="flex items-center gap-3.5 min-w-0">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400">
-                  <LogOut className="h-4.5 w-4.5" />
+            <CardBody className="flex min-h-[96px] items-center justify-between gap-4 p-5">
+              <div className="flex items-center gap-4 min-w-0">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400">
+                  <LogOut className="h-5 w-5" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <CardTitle className="text-sm font-semibold">Sign Out</CardTitle>
-                  <span className="mt-0.5 block text-xs text-fg-muted leading-tight">
+                  <CardTitle className="text-base font-semibold">Sign Out</CardTitle>
+                  <span className="mt-1 block text-xs text-fg-muted leading-relaxed">
                     Securely terminate your active session on this device.
                   </span>
                 </span>
