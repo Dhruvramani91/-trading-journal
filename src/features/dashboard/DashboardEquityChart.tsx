@@ -16,47 +16,57 @@ interface DashboardEquityChartProps {
   data: Array<{ dateLabel: string; cumulative: number }>;
   metric: DashboardMetric;
   chart: ChartPalette;
+  isPrivate?: boolean;
 }
 
-export default function DashboardEquityChart({ data, metric, chart }: DashboardEquityChartProps) {
+export default function DashboardEquityChart({ data, metric, isPrivate }: DashboardEquityChartProps) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart data={data} margin={{ top: 8, right: 16, left: metric === 'r' ? -20 : 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="2 5" stroke={chart.grid} vertical={false} />
-        <XAxis dataKey="dateLabel" tick={{ fontSize: 11, fill: chart.axisText }} axisLine={false} tickLine={false} />
+        <CartesianGrid strokeDasharray="2 5" stroke="#1f242c" vertical={false} />
+        <XAxis dataKey="dateLabel" tick={{ fontSize: 11, fill: '#8c94a0' }} axisLine={false} tickLine={false} />
         <YAxis
-          tick={{ fontSize: 11, fill: chart.axisText }}
+          tick={{ fontSize: 11, fill: '#8c94a0' }}
           axisLine={false}
           tickLine={false}
-          tickFormatter={(value: number) => (metric === 'r' ? `${value}R` : formatMoneyCompact(value))}
+          tickFormatter={(value: number) => {
+            if (isPrivate) return '***';
+            return metric === 'r' ? `${value}R` : formatMoneyCompact(value);
+          }}
           width={metric === 'r' ? 45 : 64}
         />
         <ReTooltip
           contentStyle={{
-            background: chart.tooltipBg,
-            border: `1px solid ${chart.tooltipBorder}`,
+            background: '#121417',
+            border: '1px solid #1f242c',
             borderRadius: '0.75rem',
-            boxShadow: chart.tooltipShadow,
-            color: chart.tooltipText,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+            color: '#f1f3f5',
             fontSize: '0.75rem',
           }}
           formatter={(value: unknown, _name: unknown, item: TooltipPayloadEntry) => {
             const point = item.payload as { dateLabel: string } | undefined;
             const numericValue = typeof value === 'number' ? value : 0;
             const name = metric === 'r' ? 'Cumulative' : 'Cumulative P&L';
+            if (isPrivate) return ['***', name];
             const formatted = metric === 'r' ? formatR(numericValue) : formatSignedMoney(numericValue);
             return [point ? `${formatted} (${point.dateLabel})` : formatted, name];
           }}
         />
+        <defs>
+          <linearGradient id="equityGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#38bdf8" stopOpacity={0.35} />
+            <stop offset="100%" stopColor="#38bdf8" stopOpacity={0.0} />
+          </linearGradient>
+        </defs>
         <Area
           type="monotone"
           dataKey="cumulative"
-          stroke={chart.accent}
-          strokeWidth={2}
-          fill={chart.accent}
-          fillOpacity={0.07}
+          stroke="#38bdf8"
+          strokeWidth={2.5}
+          fill="url(#equityGradient)"
           dot={false}
-          activeDot={{ r: 4, fill: chart.accent, stroke: chart.tooltipBg, strokeWidth: 2 }}
+          activeDot={{ r: 4, fill: '#38bdf8', stroke: '#090a0c', strokeWidth: 2 }}
           isAnimationActive={false}
         />
       </AreaChart>

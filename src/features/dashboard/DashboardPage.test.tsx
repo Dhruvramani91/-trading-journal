@@ -24,6 +24,14 @@ vi.mock('@/store/filterStore', () => ({
 
 vi.mock('@/store/authStore', () => ({ useAuthStore: h.useAuthStore }));
 
+vi.mock('@/data/supabaseAccountRepository', () => ({
+  accountRepository: {
+    list: vi.fn().mockResolvedValue([
+      { id: 'acc-1', name: '100K FTMO' },
+    ]),
+  },
+}));
+
 vi.mock('@/lib/chartTheme', () => ({
   useChartTheme: () => ({
     grid: '#eee', axisText: '#aaa', axisMuted: '#999', tickLine: '#ddd',
@@ -32,10 +40,10 @@ vi.mock('@/lib/chartTheme', () => ({
   }),
 }));
 
-// Charts are irrelevant here; stub recharts so jsdom needs no ResizeObserver.
+// Stub recharts
 vi.mock('recharts', () => ({
-  ResponsiveContainer: () => null,
-  AreaChart: () => null,
+  ResponsiveContainer: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  AreaChart: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
   Area: () => null,
   LineChart: () => null,
   Line: () => null,
@@ -65,13 +73,11 @@ function makeTrade(
   };
 }
 
-// Best setup differs by metric: t1 is best by R, t2 is best by P&L.
 const TRADES: Trade[] = [
-  makeTrade({ id: 't1', number: 1, openedAt: '2026-01-01T10:00:00Z', instrument: 'NQ', r: 5, pnl: 100, result: 'win', templateData: { dailyCandle: 'Reversal [C2]' } }),
-  makeTrade({ id: 't2', number: 2, openedAt: '2026-01-02T10:00:00Z', instrument: 'ES', r: 1, pnl: 900, result: 'win', templateData: { dailyCandle: 'Continuation [C3]' } }),
-  makeTrade({ id: 't3', number: 3, openedAt: '2026-01-03T10:00:00Z', instrument: 'SI', r: -2, pnl: -300, result: 'loss', direction: 'short', templateData: { dailyCandle: 'Continuation [C3]' } }),
-  // No P&L recorded — must never render NaN/$undefined.
-  makeTrade({ id: 't4', number: 4, openedAt: '2026-01-04T10:00:00Z', instrument: 'CL', r: 0, result: 'be', templateData: { dailyCandle: 'Reversal [C2]' } }),
+  makeTrade({ id: 't1', number: 1, openedAt: '2026-01-01T10:00:00Z', instrument: 'NQ', r: 5, pnl: 100, result: 'win' }),
+  makeTrade({ id: 't2', number: 2, openedAt: '2026-01-02T10:00:00Z', instrument: 'ES', r: 1, pnl: 900, result: 'win' }),
+  makeTrade({ id: 't3', number: 3, openedAt: '2026-01-03T10:00:00Z', instrument: 'SI', r: -2, pnl: -300, result: 'loss', direction: 'short' }),
+  makeTrade({ id: 't4', number: 4, openedAt: '2026-01-04T10:00:00Z', instrument: 'CL', r: 0, result: 'be' }),
 ];
 
 const FILTERS = {
@@ -87,14 +93,14 @@ function renderDashboard() {
   );
 }
 
-describe('DashboardPage — P&L support', () => {
+describe('DashboardPage — upgraded layout & features', () => {
   beforeEach(() => {
     h.useTradesStore.mockImplementation((selector?: (s: { trades: Trade[] }) => unknown) =>
       selector ? selector({ trades: TRADES }) : { loaded: true, load: vi.fn(), trades: TRADES },
     );
     h.bootTradesStore.mockImplementation(() => undefined);
     h.useFilteredTrades.mockImplementation(() => ({ filtered: TRADES, filters: FILTERS, activeCount: 0 }));
-    h.useAuthStore.mockImplementation(() => ({ user: { id: 'u1', name: 'Test User', email: 't@t.com' } }));
+    h.useAuthStore.mockImplementation(() => ({ user: { id: 'u1', name: 'Thomas Anderson', email: 't@t.com' } }));
     h.useFilterStore.mockImplementation(() => ({
       filters: FILTERS,
       setFilter: vi.fn(),
@@ -107,54 +113,50 @@ describe('DashboardPage — P&L support', () => {
     vi.clearAllMocks();
   });
 
-  it('keeps the R section and adds a P&L section', async () => {
+  it('renders dynamic greeting and account switcher', async () => {
     renderDashboard();
-    await screen.findByText('Performance in R');
-
-    expect(screen.getByText('Performance in P&L')).toBeInTheDocument();
-    expect(screen.getByText('Total R')).toBeInTheDocument();
-    expect(screen.getByText('Total P&L')).toBeInTheDocument();
-    expect(screen.getByText('+4.00R')).toBeInTheDocument(); // R total unchanged
+    expect(screen.getByText(/Thomas/)).toBeInTheDocument();
+    expect(screen.getByRole('combobox')).toBeInTheDocument();
+    expect(screen.getByText('All Accounts')).toBeInTheDocument();
   });
 
-  it('shows average realized R independently of planned R:R values', async () => {
-    const trades = [
-      makeTrade({ openedAt: '2026-01-01T10:00:00Z', r: 5, result: 'win' }),
-      makeTrade({ openedAt: '2026-01-02T10:00:00Z', r: 1, result: 'win' }),
-      makeTrade({ openedAt: '2026-01-03T10:00:00Z', r: -2, result: 'loss' }),
-      makeTrade({ openedAt: '2026-01-04T10:00:00Z', r: 0, result: 'be' }),
-      makeTrade({ openedAt: '2026-01-05T10:00:00Z', r: 4, result: 'win' }),
-    ];
-    h.useFilteredTrades.mockImplementation(() => ({
-      filtered: trades,
-      filters: FILTERS,
-      activeCount: 0,
-    }));
-
+  it('renders top metric cards including Net P&L, Win %, Profit Factor and Avg win/loss', async () => {
     renderDashboard();
-    await screen.findByText('Performance in R');
-
-    expect(screen.getByText('Total R')).toBeInTheDocument();
-    expect(screen.getByText('+8.00R')).toBeInTheDocument();
-    expect(screen.getByText('Average R')).toBeInTheDocument();
-    expect(screen.getByText('+1.60R')).toBeInTheDocument();
-    expect(screen.queryByText('Average R:R')).not.toBeInTheDocument();
+    expect(screen.getByText('Net P&L')).toBeInTheDocument();
+    expect(screen.getAllByText('+$700.00').length).toBeGreaterThan(0);
+    expect(screen.getByText('Trade win %')).toBeInTheDocument();
+    expect(screen.getAllByText('Profit factor').length).toBeGreaterThan(0);
+    expect(screen.getByText('Day win %')).toBeInTheDocument();
+    expect(screen.getAllByText('Avg win/loss').length).toBeGreaterThan(0);
   });
 
-  it('totals and averages Journal Trade P&L (not account values)', async () => {
+  it('switches between P&L and Realized R metrics smoothly', async () => {
     renderDashboard();
-    await screen.findByText('Performance in P&L');
+    expect(screen.getByText('Net P&L')).toBeInTheDocument();
+    expect(screen.getAllByText('+$700.00').length).toBeGreaterThan(0);
 
-    // 100 + 900 - 300 = 700 (t4 has no P&L and must not count as 0)
-    expect(screen.getByText('+$700.00')).toBeInTheDocument();
-    // 700 / 3 trades that recorded P&L
-    expect(screen.getByText('+$233.33')).toBeInTheDocument();
+    // Click Realized R toggle
+    const rToggle = screen.getByRole('button', { name: 'Realized R' });
+    fireEvent.click(rToggle);
+
+    expect(screen.getByText('Net Realized R')).toBeInTheDocument();
+    expect(screen.getAllByText('+4.00R').length).toBeGreaterThan(0);
   });
 
-  it('shows both R and P&L in Recent trades for the same row', async () => {
+  it('toggles privacy mask for financial numbers', async () => {
     renderDashboard();
-    await screen.findByText('Recent trades');
+    expect(screen.getAllByText('+$700.00').length).toBeGreaterThan(0);
 
+    // Click Eye button
+    const eyeBtn = screen.getByTitle('Hide sensitive balances');
+    fireEvent.click(eyeBtn);
+
+    expect(screen.getAllByText('***').length).toBeGreaterThan(0);
+    expect(screen.queryByText('+$700.00')).toBeNull();
+  });
+
+  it('shows both R and P&L in Recent trades table', async () => {
+    renderDashboard();
     const table = screen.getByRole('table');
     expect(within(table).getByRole('columnheader', { name: 'R' })).toBeInTheDocument();
     expect(within(table).getByRole('columnheader', { name: 'P&L' })).toBeInTheDocument();
@@ -163,42 +165,28 @@ describe('DashboardPage — P&L support', () => {
     expect(within(nqRow).getByText('+5.00R')).toBeInTheDocument();
     expect(within(nqRow).getByText('+$100.00')).toBeInTheDocument();
 
-    const siRow = within(table).getByText('SI').closest('tr')!;
-    expect(within(siRow).getByText('-2.00R')).toBeInTheDocument();
-    expect(within(siRow).getByText('-$300.00')).toBeInTheDocument();
-  });
-
-  it('renders an em dash (never NaN) for a trade with no P&L', async () => {
-    renderDashboard();
-    await screen.findByText('Recent trades');
-
-    const table = screen.getByRole('table');
     const clRow = within(table).getByText('CL').closest('tr')!;
+    expect(within(clRow).getByText('0.00R')).toBeInTheDocument();
     expect(within(clRow).getByText('—')).toBeInTheDocument();
-    expect(within(clRow).queryByText(/NaN/)).toBeNull();
   });
 
-  it('switches Best/Worst setup when the metric toggle changes', async () => {
+  it('renders Precision Score radar and period overview metrics', async () => {
     renderDashboard();
-    await screen.findByText('Performance in R');
-
-    expect(screen.getByText('+5.00R avg R')).toBeInTheDocument();
-    expect(screen.getByText('-2.00R avg R')).toBeInTheDocument();
-    expect(screen.getAllByText('Context · Daily Candle')).toHaveLength(2);
-
-    fireEvent.click(screen.getByRole('button', { name: 'Cumulative P&L' }));
-
-    expect(screen.getByText('+$900.00 avg P&L')).toBeInTheDocument();
-    expect(screen.getByText('-$300.00 avg P&L')).toBeInTheDocument();
-    expect(screen.queryByText('+5.00R avg R')).toBeNull();
+    expect(screen.getAllByText('Precision Score').length).toBeGreaterThan(0);
+    expect(screen.getByText('Period overview')).toBeInTheDocument();
+    expect(screen.getByText('Peak')).toBeInTheDocument();
+    expect(screen.getByText('Max Drawdown')).toBeInTheDocument();
+    expect(screen.getByText('Streak')).toBeInTheDocument();
+    expect(screen.getByText('Best Day')).toBeInTheDocument();
   });
 
-  it('shows both R and P&L in a Weekdays row', async () => {
+  it('renders comparative breakdown cards', async () => {
     renderDashboard();
-    await screen.findByText('Weekdays');
-
-    const satRow = screen.getByText('Sat').closest('div')!;
-    expect(within(satRow).getByText('-2.00R')).toBeInTheDocument();
-    expect(within(satRow).getByText('-$300.00')).toBeInTheDocument();
+    expect(screen.getByText('Win rate by direction')).toBeInTheDocument();
+    expect(screen.getByText('Avg RR by market')).toBeInTheDocument();
+    expect(screen.getByText('Avg duration by direction')).toBeInTheDocument();
+    expect(screen.getByText('Win rate by weekday')).toBeInTheDocument();
+    expect(screen.getByText('Win rate by month')).toBeInTheDocument();
+    expect(screen.getByText('Win rate by session')).toBeInTheDocument();
   });
 });
