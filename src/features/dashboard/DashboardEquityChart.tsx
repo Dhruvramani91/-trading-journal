@@ -23,7 +23,7 @@ export default function DashboardEquityChart({ data, metric, isPrivate }: Dashbo
   return (
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart data={data} margin={{ top: 8, right: 16, left: metric === 'r' ? -20 : 0, bottom: 0 }}>
-        <CartesianGrid strokeDasharray="2 5" stroke="#1f242c" vertical={false} />
+        <CartesianGrid strokeDasharray="3 6" stroke="currentColor" strokeOpacity={0.08} vertical={false} />
         <XAxis dataKey="dateLabel" tick={{ fontSize: 11, fill: '#8c94a0' }} axisLine={false} tickLine={false} />
         <YAxis
           tick={{ fontSize: 11, fill: '#8c94a0' }}

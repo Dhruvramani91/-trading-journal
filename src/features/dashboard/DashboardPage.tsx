@@ -4,10 +4,10 @@ import {
   TrendingUp,
   Eye,
   EyeOff,
-  ChevronDown,
   Info,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { Select } from '@/components/ui/Select';
 import { Loader } from '@/components/ui/Loader';
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/Table';
 import { ResultPill } from '@/components/ui/ResultPill';
@@ -226,14 +226,14 @@ export function DashboardPage() {
           <p className="text-sm font-medium text-fg-muted mt-1">{formattedCurrentDate}</p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          {/* PnL ⇄ R Segmented Toggle */}
-          <div className="inline-flex items-center p-1 rounded-xl bg-bg-1 dark:bg-[#121417] border border-line shadow-sm">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* PnL ⇄ R Segmented Toggle (Height 40px - h-10) */}
+          <div className="inline-flex h-10 items-center p-1 rounded-xl bg-bg-1 dark:bg-[#121417] border border-line shadow-sm">
             <button
               type="button"
               onClick={() => setMetric('pnl')}
               className={cn(
-                'px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-tight transition-all',
+                'h-8 px-3.5 rounded-lg text-xs font-semibold tracking-tight transition-all flex items-center justify-center',
                 metric === 'pnl'
                   ? 'bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm'
                   : 'text-fg-muted hover:text-fg',
@@ -245,7 +245,7 @@ export function DashboardPage() {
               type="button"
               onClick={() => setMetric('r')}
               className={cn(
-                'px-3.5 py-1.5 rounded-lg text-xs font-semibold tracking-tight transition-all',
+                'h-8 px-3.5 rounded-lg text-xs font-semibold tracking-tight transition-all flex items-center justify-center',
                 metric === 'r'
                   ? 'bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm'
                   : 'text-fg-muted hover:text-fg',
@@ -255,12 +255,12 @@ export function DashboardPage() {
             </button>
           </div>
 
-          {/* Account Selector Dropdown */}
-          <div className="relative">
-            <select
+          {/* Account Selector Custom Form Select (Height 40px - h-10) */}
+          <div className="min-w-[150px]">
+            <Select
               value={selectedAccountId}
               onChange={(e) => handleAccountChange(e.target.value)}
-              className="appearance-none bg-bg-1 dark:bg-[#121417] border border-line rounded-xl px-3.5 py-1.5 pr-8 text-xs font-medium text-fg hover:border-line-strong focus:outline-none focus:border-sky-500/50 cursor-pointer shadow-sm"
+              className="h-10 text-xs font-medium rounded-xl border-line bg-bg-1 dark:bg-[#121417] shadow-sm"
             >
               <option value="all">All Accounts</option>
               {accounts.map((acc) => (
@@ -268,22 +268,21 @@ export function DashboardPage() {
                   {acc.name}
                 </option>
               ))}
-            </select>
-            <ChevronDown className="w-3.5 h-3.5 text-fg-muted absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </Select>
           </div>
 
-          {/* Privacy Toggle (Eye icon) */}
+          {/* Privacy Toggle (Eye icon) (Height 40px - h-10) */}
           <button
             type="button"
             onClick={() => setIsPrivate(!isPrivate)}
             title={isPrivate ? 'Show sensitive balances' : 'Hide sensitive balances'}
-            className="p-2 rounded-xl bg-bg-1 dark:bg-[#121417] border border-line text-fg-muted hover:text-fg hover:border-line-strong transition-colors shadow-sm"
+            className="h-10 w-10 flex items-center justify-center rounded-xl bg-bg-1 dark:bg-[#121417] border border-line text-fg-muted hover:text-fg hover:border-line-strong transition-colors shadow-sm"
           >
             {isPrivate ? <EyeOff className="w-4 h-4 text-amber-500 dark:text-amber-400" /> : <Eye className="w-4 h-4" />}
           </button>
 
-          {/* New Trade Primary CTA */}
-          <Button asChild variant="primary" className="h-9 px-3.5 text-xs font-semibold shadow-sm" leftIcon={<TrendingUp className="h-3.5 w-3.5" />}>
+          {/* New Trade Primary CTA (Height 40px - h-10) */}
+          <Button asChild variant="primary" className="h-10 px-4 text-xs font-semibold shadow-sm rounded-xl" leftIcon={<TrendingUp className="h-3.5 w-3.5" />}>
             <Link to="/journal/new">New trade</Link>
           </Button>
         </div>

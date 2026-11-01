@@ -62,7 +62,7 @@ export function SettingsPage() {
           <Button
             asChild
             variant="outline"
-            className="rounded-xl border-line text-xs font-semibold self-start sm:self-auto hover:bg-bg-3 h-8.5 px-3"
+            className="rounded-xl border-line text-xs font-semibold self-start sm:self-auto hover:bg-bg-3 h-10 px-4"
           >
             <Link to="/profile">Edit Profile →</Link>
           </Button>
@@ -89,7 +89,7 @@ export function SettingsPage() {
                   </span>
                 </span>
               </div>
-              <ThemeToggle showLabel={false} className="h-9 w-9 shrink-0 rounded-xl border border-line bg-bg-2 hover:bg-bg-3" />
+              <ThemeToggle showLabel={false} className="h-10 w-10 shrink-0 rounded-xl border border-line bg-bg-2 hover:bg-bg-3 shadow-sm flex items-center justify-center" />
             </CardBody>
           </Card>
 
@@ -119,20 +119,22 @@ export function SettingsPage() {
 
           {/* Sign Out Card */}
           <Card className="shadow-card border-line transition-all hover:border-line-strong hover:bg-bg-2/70 sm:col-span-2">
-            <CardBody className="flex min-h-[82px] items-center gap-3.5 p-4">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400">
-                <LogOut className="h-4.5 w-4.5" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <CardTitle className="text-sm font-semibold">Sign Out</CardTitle>
-                <span className="mt-0.5 block text-xs text-fg-muted leading-tight">
-                  Securely terminate your active session on this device.
+            <CardBody className="flex min-h-[82px] items-center justify-between gap-3.5 p-4">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400">
+                  <LogOut className="h-4.5 w-4.5" />
                 </span>
-              </span>
+                <span className="min-w-0 flex-1">
+                  <CardTitle className="text-sm font-semibold">Sign Out</CardTitle>
+                  <span className="mt-0.5 block text-xs text-fg-muted leading-tight">
+                    Securely terminate your active session on this device.
+                  </span>
+                </span>
+              </div>
               <Button
                 variant="danger"
                 size="sm"
-                className="shrink-0 rounded-xl px-3.5 h-8.5 text-xs font-semibold"
+                className="shrink-0 rounded-xl px-4 h-10 text-xs font-semibold shadow-sm"
                 onClick={() => setLogoutOpen(true)}
               >
                 Sign out

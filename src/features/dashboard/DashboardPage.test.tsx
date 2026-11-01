@@ -117,7 +117,7 @@ describe('DashboardPage — upgraded layout & features', () => {
     renderDashboard();
     expect(screen.getByText(/Thomas/)).toBeInTheDocument();
     expect(screen.getByRole('combobox')).toBeInTheDocument();
-    expect(screen.getByText('All Accounts')).toBeInTheDocument();
+    expect(screen.getAllByText('All Accounts').length).toBeGreaterThan(0);
   });
 
   it('renders top metric cards including Net P&L, Win %, Profit Factor and Avg win/loss', async () => {

@@ -427,18 +427,18 @@ export function CalendarPage() {
             isScoreOpen ? 'lg:col-span-8' : 'lg:col-span-12',
           )}
         >
-          {/* Interactive Toggle Handle on the Divider (Clean pill design, perfectly positioned) */}
+          {/* Interactive Toggle Handle on the Divider (Exact styling matching sidebar collapse button) */}
           <button
             type="button"
             onClick={() => setIsScoreOpen(!isScoreOpen)}
-            className="hidden lg:flex absolute -right-3.5 top-1/2 -translate-y-1/2 z-20 h-14 w-7 rounded-full bg-bg-1 dark:bg-[#181b20] border-2 border-line shadow-lg items-center justify-center text-fg-muted hover:text-sky-500 hover:border-sky-500/50 hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            className="hidden lg:flex absolute -right-3.5 top-1/2 -translate-y-1/2 z-40 h-7 w-7 rounded-full border border-line bg-bg-1 text-fg-dim shadow-sm items-center justify-center transition-all hover:bg-bg-3 hover:text-fg hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/40 cursor-pointer"
             title={isScoreOpen ? 'Hide score panel (Full calendar)' : 'Show score panel'}
             aria-label={isScoreOpen ? 'Hide score panel' : 'Show score panel'}
           >
             {isScoreOpen ? (
-              <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+              <PanelRightClose className="h-3.5 w-3.5" />
             ) : (
-              <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+              <PanelRightOpen className="h-3.5 w-3.5" />
             )}
           </button>
 
