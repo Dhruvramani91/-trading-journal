@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/Badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { WinRateRing } from '@/components/stats/WinRateRing';
 import { BreakdownCard } from '@/components/stats/BreakdownCard';
+import { BreakdownBarCard } from '@/features/dashboard/components/BreakdownBarCard';
 import { InstrumentMark } from '@/components/trade/InstrumentMark';
 import { TradeGradeBadge } from '@/components/trade/TradeGradeBadge';
 
@@ -434,51 +435,103 @@ export function StatisticsPage() {
           <div className="space-y-4">
             {/* Top 5 Metric Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
-              {/* Total R */}
-              <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Total R</span>
-                  <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-bg-2 dark:bg-[#181b20] text-fg-muted border border-line">
-                    R Multiple
-                  </span>
-                </div>
-                <div className="mt-1">
-                  <div
-                    className={cn(
-                      'text-3xl font-extrabold font-mono tracking-tight',
-                      (s.totalR ?? 0) > 0 ? 'text-emerald-600 dark:text-emerald-400' : (s.totalR ?? 0) < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-fg',
-                    )}
-                  >
-                    {formatR(s.totalR ?? 0)}
+              {metricMode === 'pnl' ? (
+                <>
+                  {/* Total P&L */}
+                  <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Total P&L</span>
+                      <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-bg-2 dark:bg-[#181b20] text-fg-muted border border-line">
+                        Currency
+                      </span>
+                    </div>
+                    <div className="mt-1">
+                      <div
+                        className={cn(
+                          'text-3xl font-extrabold font-mono tracking-tight',
+                          pnlStats.totalPnl > 0 ? 'text-emerald-600 dark:text-emerald-400' : pnlStats.totalPnl < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-fg',
+                        )}
+                      >
+                        {formatMoney(pnlStats.totalPnl)}
+                      </div>
+                      <span className="text-[11px] text-fg-dim font-medium mt-1.5 block">
+                        Net cash balance generated
+                      </span>
+                    </div>
                   </div>
-                  <span className="text-[11px] text-fg-dim font-medium mt-1.5 block">
-                    Realized R across all trades
-                  </span>
-                </div>
-              </div>
 
-              {/* Total P&L */}
-              <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Total P&L</span>
-                  <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-bg-2 dark:bg-[#181b20] text-fg-muted border border-line">
-                    Currency
-                  </span>
-                </div>
-                <div className="mt-1">
-                  <div
-                    className={cn(
-                      'text-3xl font-extrabold font-mono tracking-tight',
-                      pnlStats.totalPnl > 0 ? 'text-emerald-600 dark:text-emerald-400' : pnlStats.totalPnl < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-fg',
-                    )}
-                  >
-                    {formatMoney(pnlStats.totalPnl)}
+                  {/* Avg P&L */}
+                  <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Average P&L</span>
+                      <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-bg-2 dark:bg-[#181b20] text-fg-muted border border-line">
+                        Per Trade
+                      </span>
+                    </div>
+                    <div className="mt-1">
+                      <div
+                        className={cn(
+                          'text-3xl font-extrabold font-mono tracking-tight',
+                          pnlStats.averagePnl > 0 ? 'text-emerald-600 dark:text-emerald-400' : pnlStats.averagePnl < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-fg',
+                        )}
+                      >
+                        {formatMoney(pnlStats.averagePnl)}
+                      </div>
+                      <span className="text-[11px] text-fg-dim font-medium mt-1.5 block">
+                        Average profit per execution
+                      </span>
+                    </div>
                   </div>
-                  <span className="text-[11px] text-fg-dim font-medium mt-1.5 block">
-                    Net cash balance generated
-                  </span>
-                </div>
-              </div>
+                </>
+              ) : (
+                <>
+                  {/* Total R */}
+                  <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Total R</span>
+                      <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-bg-2 dark:bg-[#181b20] text-fg-muted border border-line">
+                        R Multiple
+                      </span>
+                    </div>
+                    <div className="mt-1">
+                      <div
+                        className={cn(
+                          'text-3xl font-extrabold font-mono tracking-tight',
+                          (s.totalR ?? 0) > 0 ? 'text-emerald-600 dark:text-emerald-400' : (s.totalR ?? 0) < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-fg',
+                        )}
+                      >
+                        {formatR(s.totalR ?? 0)}
+                      </div>
+                      <span className="text-[11px] text-fg-dim font-medium mt-1.5 block">
+                        Realized R across all trades
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Expectancy */}
+                  <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Expectancy</span>
+                      <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-bg-2 dark:bg-[#181b20] text-fg-muted border border-line">
+                        Edge
+                      </span>
+                    </div>
+                    <div className="mt-1">
+                      <div
+                        className={cn(
+                          'text-3xl font-extrabold font-mono tracking-tight',
+                          (s.expectancy ?? 0) > 0 ? 'text-emerald-600 dark:text-emerald-400' : (s.expectancy ?? 0) < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-fg',
+                        )}
+                      >
+                        {formatR(s.expectancy ?? 0)}
+                      </div>
+                      <span className="text-[11px] text-fg-dim font-medium mt-1.5 block">
+                        Expected return per execution
+                      </span>
+                    </div>
+                  </div>
+                </>
+              )}
 
               {/* Win Rate */}
               <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex items-center justify-between shadow-card">
@@ -488,7 +541,7 @@ export function StatisticsPage() {
                     {s.winRate == null ? '—' : formatPct(s.winRate)}
                   </div>
                   <span className="text-[11px] text-fg-dim font-medium mt-1">
-                    Avg R {formatR(s.avgR ?? 0)}
+                    {metricMode === 'pnl' ? `Avg ${formatMoney(pnlStats.averagePnl)}` : `Avg ${formatR(s.avgR ?? 0)}`}
                   </span>
                 </div>
                 <WinRateRing rate={s.winRate ?? 0} size={48} />
@@ -514,25 +567,22 @@ export function StatisticsPage() {
                 </div>
               </div>
 
-              {/* Expectancy */}
+              {/* Best Performer Metric */}
               <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Expectancy</span>
+                  <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">
+                    {metricMode === 'pnl' ? 'Best P&L' : 'Best Trade'}
+                  </span>
                   <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-bg-2 dark:bg-[#181b20] text-fg-muted border border-line">
-                    Edge
+                    High
                   </span>
                 </div>
                 <div className="mt-1">
-                  <div
-                    className={cn(
-                      'text-3xl font-extrabold font-mono tracking-tight',
-                      (s.expectancy ?? 0) > 0 ? 'text-emerald-600 dark:text-emerald-400' : (s.expectancy ?? 0) < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-fg',
-                    )}
-                  >
-                    {formatR(s.expectancy ?? 0)}
+                  <div className="text-3xl font-extrabold font-mono text-emerald-600 dark:text-emerald-400 tracking-tight">
+                    {metricMode === 'pnl' ? formatMoney(pnlStats.bestPnl) : formatR(s.bestR ?? 0)}
                   </div>
                   <span className="text-[11px] text-fg-dim font-medium mt-1.5 block">
-                    Expected return per execution
+                    {metricMode === 'pnl' ? 'Largest single trade gain' : 'Largest single trade R'}
                   </span>
                 </div>
               </div>
@@ -553,21 +603,43 @@ export function StatisticsPage() {
                 </summary>
 
                 <div className="border-t border-line">
-                  <section aria-label="Additional R and P&L statistics" className="grid grid-cols-2 gap-x-4 gap-y-5 px-5 py-5 sm:grid-cols-3 xl:grid-cols-5 xl:gap-x-0 xl:divide-x xl:divide-line [&>*]:px-3 xl:[&>*:first-child]:pl-0 xl:[&>*:last-child]:pr-0">
-                    <Metric size="sm" label="Best trade" value={formatR(s.bestR ?? 0)} tone="win" />
-                    <Metric size="sm" label="Best P&L" value={formatMoney(pnlStats.bestPnl)} tone="win" />
-                    <Metric size="sm" label="Worst trade" value={formatR(s.worstR ?? 0)} tone="loss" />
-                    <Metric size="sm" label="Worst P&L" value={formatMoney(pnlStats.worstPnl)} tone="loss" />
-                    <Metric size="sm" label="Max drawdown" value={formatR(s.maxDrawdownR ?? 0)} tone="loss" />
-                  </section>
+                  {metricMode === 'pnl' ? (
+                    <>
+                      <section aria-label="Additional P&L statistics" className="grid grid-cols-2 gap-x-4 gap-y-5 px-5 py-5 sm:grid-cols-3 xl:grid-cols-5 xl:gap-x-0 xl:divide-x xl:divide-line [&>*]:px-3 xl:[&>*:first-child]:pl-0 xl:[&>*:last-child]:pr-0">
+                        <Metric size="sm" label="Best P&L" value={formatMoney(pnlStats.bestPnl)} tone="win" />
+                        <Metric size="sm" label="Worst P&L" value={formatMoney(pnlStats.worstPnl)} tone="loss" />
+                        <Metric size="sm" label="Average P&L" value={formatMoney(pnlStats.averagePnl)} tone={toneOf(pnlStats.averagePnl)} />
+                        <Metric size="sm" label="P&L Drawdown" value={formatMoney(pnlStats.maxDrawdownPnl)} tone="loss" />
+                        <Metric size="sm" label="Net P&L" value={formatMoney(pnlStats.totalPnl)} tone={toneOf(pnlStats.totalPnl)} />
+                      </section>
 
-                  <section aria-label="Average performance and streaks" className="grid grid-cols-2 gap-x-4 gap-y-5 border-t border-line px-5 py-5 sm:grid-cols-3 xl:grid-cols-5 xl:gap-x-0 xl:divide-x xl:divide-line [&>*]:px-3 xl:[&>*:first-child]:pl-0 xl:[&>*:last-child]:pr-0">
-                    <Metric size="sm" label="Average P&L" value={formatMoney(pnlStats.averagePnl)} tone={toneOf(pnlStats.averagePnl)} />
-                    <Metric size="sm" label="P&L drawdown" value={formatMoney(pnlStats.maxDrawdownPnl)} tone="loss" />
-                    <Metric size="sm" label="Longest win streak" value={String(s.longestWinStreak ?? 0)} />
-                    <Metric size="sm" label="Longest loss streak" value={String(s.longestLossStreak ?? 0)} />
-                    <Metric size="sm" label="R / P&L" value={`${formatR(s.avgR ?? 0)} · ${formatMoney(pnlStats.averagePnl)}`} />
-                  </section>
+                      <section aria-label="Streaks and trade outcomes" className="grid grid-cols-2 gap-x-4 gap-y-5 border-t border-line px-5 py-5 sm:grid-cols-3 xl:grid-cols-5 xl:gap-x-0 xl:divide-x xl:divide-line [&>*]:px-3 xl:[&>*:first-child]:pl-0 xl:[&>*:last-child]:pr-0">
+                        <Metric size="sm" label="Longest win streak" value={String(s.longestWinStreak ?? 0)} />
+                        <Metric size="sm" label="Longest loss streak" value={String(s.longestLossStreak ?? 0)} />
+                        <Metric size="sm" label="Total executions" value={String(s.count ?? 0)} />
+                        <Metric size="sm" label="Winning trades" value={`${s.wins ?? 0} trades`} tone="win" />
+                        <Metric size="sm" label="Losing trades" value={`${s.losses ?? 0} trades`} tone="loss" />
+                      </section>
+                    </>
+                  ) : (
+                    <>
+                      <section aria-label="Additional R statistics" className="grid grid-cols-2 gap-x-4 gap-y-5 px-5 py-5 sm:grid-cols-3 xl:grid-cols-5 xl:gap-x-0 xl:divide-x xl:divide-line [&>*]:px-3 xl:[&>*:first-child]:pl-0 xl:[&>*:last-child]:pr-0">
+                        <Metric size="sm" label="Best trade" value={formatR(s.bestR ?? 0)} tone="win" />
+                        <Metric size="sm" label="Worst trade" value={formatR(s.worstR ?? 0)} tone="loss" />
+                        <Metric size="sm" label="Average R" value={formatR(s.avgR ?? 0)} tone={toneOf(s.avgR)} />
+                        <Metric size="sm" label="Max drawdown" value={formatR(s.maxDrawdownR ?? 0)} tone="loss" />
+                        <Metric size="sm" label="Total Realized R" value={formatR(s.totalR ?? 0)} tone={toneOf(s.totalR)} />
+                      </section>
+
+                      <section aria-label="Streaks and edge" className="grid grid-cols-2 gap-x-4 gap-y-5 border-t border-line px-5 py-5 sm:grid-cols-3 xl:grid-cols-5 xl:gap-x-0 xl:divide-x xl:divide-line [&>*]:px-3 xl:[&>*:first-child]:pl-0 xl:[&>*:last-child]:pr-0">
+                        <Metric size="sm" label="Longest win streak" value={String(s.longestWinStreak ?? 0)} />
+                        <Metric size="sm" label="Longest loss streak" value={String(s.longestLossStreak ?? 0)} />
+                        <Metric size="sm" label="Expectancy" value={formatR(s.expectancy ?? 0)} tone={toneOf(s.expectancy)} />
+                        <Metric size="sm" label="Winning trades" value={`${s.wins ?? 0} trades`} tone="win" />
+                        <Metric size="sm" label="Losing trades" value={`${s.losses ?? 0} trades`} tone="loss" />
+                      </section>
+                    </>
+                  )}
                 </div>
               </details>
             </div>
@@ -623,177 +695,242 @@ export function StatisticsPage() {
               role="tabpanel"
             >
               {showGrades ? (
-                <Card className="overflow-hidden">
-                  <div className="border-b border-line bg-bg-1 px-5 py-4">
-                    <h2 className="text-base font-semibold text-fg">Trade grade analysis</h2>
-                    <p className="mt-0.5 text-xs text-fg-muted">Compare execution quality by win rate and realized R.</p>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[560px] text-sm">
-                      <thead className="bg-bg-3/50 text-left text-xs text-fg-dim">
-                        <tr>
-                          <th className="px-5 py-3 font-medium">Grade</th>
-                          <th className="px-5 py-3 text-right font-medium">Trades</th>
-                          <th className="px-5 py-3 text-right font-medium">Win rate</th>
-                          <th className="px-5 py-3 text-right font-medium">Avg R</th>
-                          <th className="px-5 py-3 text-right font-medium">Total R</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {grades.map((row) => (
-                          <tr key={row.grade} className="border-t border-line">
-                            <td className="px-5 py-3"><TradeGradeBadge grade={row.grade} /></td>
-                            <td className="px-5 py-3 text-right tabular-nums">{row.count}</td>
-                            <td className="px-5 py-3 text-right tabular-nums">{row.winRate == null ? '—' : formatPct(row.winRate)}</td>
-                            <td className={cn('px-5 py-3 text-right font-mono tabular-nums', toneOf(row.averageR) === 'win' ? 'text-win' : toneOf(row.averageR) === 'loss' ? 'text-loss' : 'text-fg-muted')}>
-                              {row.count ? formatR(row.averageR) : '—'}
-                            </td>
-                            <td className={cn('px-5 py-3 text-right font-mono tabular-nums', toneOf(row.totalR) === 'win' ? 'text-win' : toneOf(row.totalR) === 'loss' ? 'text-loss' : 'text-fg-muted')}>
-                              {row.count ? formatR(row.totalR) : '—'}
-                            </td>
+                <div className="space-y-4">
+                  <BreakdownBarCard
+                    title="Grade Performance"
+                    items={grades.map((row) => ({
+                      label: `Grade ${row.grade}`,
+                      count: row.count,
+                      winRate: row.count > 0 && row.winRate != null ? Math.round(row.winRate * 100) : 0,
+                      avgMetric: metricMode === 'pnl'
+                        ? (analysisTrades.filter((t) => t.grade === row.grade).reduce((sum, t) => sum + (typeof t.pnl === 'number' && Number.isFinite(t.pnl) ? t.pnl : 0), 0))
+                        : row.totalR,
+                      displayMetric: row.count > 0
+                        ? (metricMode === 'pnl'
+                            ? formatMoney(analysisTrades.filter((t) => t.grade === row.grade).reduce((sum, t) => sum + (typeof t.pnl === 'number' && Number.isFinite(t.pnl) ? t.pnl : 0), 0))
+                            : formatR(row.totalR))
+                        : '—',
+                    }))}
+                    variant="metric"
+                    metricMode={metricMode}
+                  />
+
+                  <Card className="overflow-hidden">
+                    <div className="border-b border-line bg-bg-1 px-5 py-4">
+                      <h2 className="text-base font-semibold text-fg">Trade grade analysis</h2>
+                      <p className="mt-0.5 text-xs text-fg-muted">
+                        Compare execution quality by win rate and {metricMode === 'pnl' ? 'P&L' : 'realized R'}.
+                      </p>
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full min-w-[560px] text-sm">
+                        <thead className="bg-bg-3/50 text-left text-xs text-fg-dim">
+                          <tr>
+                            <th className="px-5 py-3 font-medium">Grade</th>
+                            <th className="px-5 py-3 text-right font-medium">Trades</th>
+                            <th className="px-5 py-3 text-right font-medium">Win rate</th>
+                            {metricMode === 'pnl' ? (
+                              <>
+                                <th className="px-5 py-3 text-right font-medium">Avg P&amp;L</th>
+                                <th className="px-5 py-3 text-right font-medium">Total P&amp;L</th>
+                              </>
+                            ) : (
+                              <>
+                                <th className="px-5 py-3 text-right font-medium">Avg R</th>
+                                <th className="px-5 py-3 text-right font-medium">Total R</th>
+                              </>
+                            )}
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </Card>
+                        </thead>
+                        <tbody>
+                          {grades.map((row) => {
+                            const gradeTrades = analysisTrades.filter((t) => t.grade === row.grade);
+                            const gradePnl = gradeTrades.reduce((sum, t) => sum + (typeof t.pnl === 'number' && Number.isFinite(t.pnl) ? t.pnl : 0), 0);
+                            const avgGradePnl = row.count > 0 ? gradePnl / row.count : 0;
+
+                            return (
+                              <tr key={row.grade} className="border-t border-line">
+                                <td className="px-5 py-3"><TradeGradeBadge grade={row.grade} /></td>
+                                <td className="px-5 py-3 text-right tabular-nums">{row.count}</td>
+                                <td className="px-5 py-3 text-right tabular-nums">{row.winRate == null ? '—' : formatPct(row.winRate)}</td>
+                                {metricMode === 'pnl' ? (
+                                  <>
+                                    <td className={cn('px-5 py-3 text-right font-mono tabular-nums', toneOf(avgGradePnl) === 'win' ? 'text-win' : toneOf(avgGradePnl) === 'loss' ? 'text-loss' : 'text-fg-muted')}>
+                                      {row.count ? formatMoney(avgGradePnl) : '—'}
+                                    </td>
+                                    <td className={cn('px-5 py-3 text-right font-mono tabular-nums', toneOf(gradePnl) === 'win' ? 'text-win' : toneOf(gradePnl) === 'loss' ? 'text-loss' : 'text-fg-muted')}>
+                                      {row.count ? formatMoney(gradePnl) : '—'}
+                                    </td>
+                                  </>
+                                ) : (
+                                  <>
+                                    <td className={cn('px-5 py-3 text-right font-mono tabular-nums', toneOf(row.averageR) === 'win' ? 'text-win' : toneOf(row.averageR) === 'loss' ? 'text-loss' : 'text-fg-muted')}>
+                                      {row.count ? formatR(row.averageR) : '—'}
+                                    </td>
+                                    <td className={cn('px-5 py-3 text-right font-mono tabular-nums', toneOf(row.totalR) === 'win' ? 'text-win' : toneOf(row.totalR) === 'loss' ? 'text-loss' : 'text-fg-muted')}>
+                                      {row.count ? formatR(row.totalR) : '—'}
+                                    </td>
+                                  </>
+                                )}
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </Card>
+                </div>
               ) : showInstruments ? (
-                <Card className="overflow-hidden">
-                  <div className="flex items-center justify-between border-b border-line bg-bg-1 px-5 py-4">
-                    <div>
-                    <h2 className="text-base font-semibold text-fg">
-                      Instruments
-                    </h2>
-                    <p className="mt-0.5 text-xs text-fg-muted">Performance by traded market</p>
+                <div className="space-y-4">
+                  {instruments.length > 0 && (
+                    <BreakdownBarCard
+                      title="Instruments Performance"
+                      items={instruments.map(([instr, v]) => ({
+                        label: instr,
+                        count: v.count,
+                        winRate: v.count ? Math.round((v.wins / v.count) * 100) : 0,
+                        avgMetric: metricMode === 'pnl' ? v.totalPnl : v.totalR,
+                        displayMetric: v.count > 0 ? (metricMode === 'pnl' ? formatMoney(v.totalPnl) : formatR(v.totalR)) : '—',
+                      }))}
+                      variant="metric"
+                      metricMode={metricMode}
+                    />
+                  )}
+
+                  <Card className="overflow-hidden">
+                    <div className="flex items-center justify-between border-b border-line bg-bg-1 px-5 py-4">
+                      <div>
+                        <h2 className="text-base font-semibold text-fg">
+                          Instruments
+                        </h2>
+                        <p className="mt-0.5 text-xs text-fg-muted">
+                          Performance by traded market ({metricMode === 'pnl' ? 'P&L focus' : 'Realized R focus'})
+                        </p>
+                      </div>
+
+                      <span className="text-xs text-fg-dim">
+                        {instruments.length} traded
+                      </span>
                     </div>
 
-                    <span className="text-xs text-fg-dim">
-                      {instruments.length}{' '}
-                      traded
-                    </span>
-                  </div>
+                    {instruments.length === 0 ? (
+                      <p className="border-t border-line px-5 py-6 text-sm text-fg-dim">
+                        No instrument data.
+                      </p>
+                    ) : (
+                      instruments.map(
+                        ([instr, v]) => {
+                          const winPct =
+                            v.count
+                              ? Math.round(
+                                  (v.wins /
+                                    v.count) *
+                                    100,
+                                )
+                              : 0;
 
-                  {instruments.length === 0 ? (
-                    <p className="border-t border-line px-5 py-6 text-sm text-fg-dim">
-                      No instrument data.
-                    </p>
-                  ) : (
-                    instruments.map(
-                      ([instr, v]) => {
-                        const winPct =
-                          v.count
-                            ? Math.round(
-                                (v.wins /
-                                  v.count) *
-                                  100,
-                              )
-                            : 0;
+                          const mainTone =
+                            metricMode === 'pnl' ? toneOf(v.totalPnl) : toneOf(v.totalR);
 
-                        const tone =
-                          toneOf(v.totalR);
+                          const averageR =
+                            v.count
+                              ? v.totalR /
+                                v.count
+                              : 0;
 
-                        const averageR =
-                          v.count
-                            ? v.totalR /
-                              v.count
-                            : 0;
+                          const averagePnl =
+                            v.count
+                              ? v.totalPnl /
+                                v.count
+                              : 0;
 
-                        const averagePnl =
-                          v.count
-                            ? v.totalPnl /
-                              v.count
-                            : 0;
-
-                        return (
-                          <div
-                            key={instr}
-                            className="mx-3 my-2.5 rounded-xl border border-line bg-bg-1 p-4 sm:p-5 transition-all hover:border-line-strong hover:shadow-card sm:mx-4"
-                          >
-                            {/* Instrument + P&L / R Metrics Header */}
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                              <div className="flex items-center gap-3">
-                                <InstrumentMark instrument={instr} className="h-10 w-10 shrink-0" />
-                                <div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-base font-bold text-fg">{instr}</span>
-                                    <span className="px-2 py-0.5 rounded-full text-2xs font-semibold bg-bg-2 border border-line text-fg-muted">
-                                      {v.count} trade{v.count === 1 ? '' : 's'}
-                                    </span>
+                          return (
+                            <div
+                              key={instr}
+                              className="mx-3 my-2.5 rounded-xl border border-line bg-bg-1 p-4 sm:p-5 transition-all hover:border-line-strong hover:shadow-card sm:mx-4"
+                            >
+                              {/* Instrument + P&L / R Metrics Header */}
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                  <InstrumentMark instrument={instr} className="h-10 w-10 shrink-0" />
+                                  <div>
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-base font-bold text-fg">{instr}</span>
+                                      <span className="px-2 py-0.5 rounded-full text-2xs font-semibold bg-bg-2 border border-line text-fg-muted">
+                                        {v.count} trade{v.count === 1 ? '' : 's'}
+                                      </span>
+                                    </div>
+                                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-fg-muted">
+                                      <span>{winPct}% win rate</span>
+                                      <span className="text-line">·</span>
+                                      {metricMode === 'pnl' ? (
+                                        <span>Avg {formatMoney(averagePnl)}</span>
+                                      ) : (
+                                        <span>Avg {formatR(averageR)}</span>
+                                      )}
+                                    </div>
                                   </div>
-                                  <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-fg-muted">
-                                    <span>{winPct}% win rate</span>
-                                    <span className="text-line">·</span>
-                                    <span>Avg {formatR(averageR)}</span>
-                                    <span className="text-line">·</span>
-                                    <span>Avg {formatMoney(averagePnl)}</span>
+                                </div>
+
+                                <div className="flex items-center sm:items-end justify-between sm:justify-start gap-4 sm:flex-col">
+                                  <div className="text-right">
+                                    <div
+                                      className={cn(
+                                        'text-lg font-bold font-mono tabular-nums tracking-tight',
+                                        mainTone === 'win' && 'text-win',
+                                        mainTone === 'loss' && 'text-loss',
+                                        !mainTone && 'text-fg-muted',
+                                      )}
+                                    >
+                                      {metricMode === 'pnl' ? formatMoney(v.totalPnl) : formatR(v.totalR)}
+                                    </div>
+                                    <div className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
+                                      {metricMode === 'pnl' ? 'Total P&L' : 'Total R'}
+                                    </div>
+                                  </div>
+
+                                  <div className="flex items-center gap-1.5">
+                                    {v.wins > 0 && <Badge tone="win">{v.wins} W</Badge>}
+                                    {v.losses > 0 && <Badge tone="loss">{v.losses} L</Badge>}
                                   </div>
                                 </div>
                               </div>
 
-                              <div className="flex items-center sm:items-end justify-between sm:justify-start gap-4 sm:flex-col">
-                                <div className="text-right">
-                                  <div
-                                    className={cn(
-                                      'text-lg font-bold font-mono tabular-nums tracking-tight',
-                                      tone === 'win' && 'text-win',
-                                      tone === 'loss' && 'text-loss',
-                                      !tone && 'text-fg-muted',
-                                    )}
-                                  >
-                                    {formatR(v.totalR)}
-                                  </div>
-                                  <div
-                                    className={cn(
-                                      'text-xs font-semibold font-mono tabular-nums',
-                                      toneOf(v.totalPnl) === 'win' && 'text-win',
-                                      toneOf(v.totalPnl) === 'loss' && 'text-loss',
-                                      !toneOf(v.totalPnl) && 'text-fg-muted',
-                                    )}
-                                  >
-                                    {formatMoney(v.totalPnl)}
-                                  </div>
+                              {/* Refined Proportion Track */}
+                              <div className="relative mt-4">
+                                <div className="flex items-center justify-between text-2xs text-fg-dim font-mono mb-1.5">
+                                  <span>Win Rate</span>
+                                  <span className={mainTone === 'win' ? 'text-win font-bold' : mainTone === 'loss' ? 'text-loss font-bold' : 'text-fg-muted'}>
+                                    {winPct}% ({v.wins}/{v.count})
+                                  </span>
                                 </div>
-
-                                <div className="flex items-center gap-1.5">
-                                  {v.wins > 0 && <Badge tone="win">{v.wins} W</Badge>}
-                                  {v.losses > 0 && <Badge tone="loss">{v.losses} L</Badge>}
+                                <div className="h-2 w-full rounded-full bg-bg-2 overflow-hidden flex border border-line/40">
+                                  <div
+                                    className={cn(
+                                      'h-full transition-all duration-300 rounded-full',
+                                      winPct >= 50
+                                        ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
+                                        : winPct > 0
+                                          ? 'bg-gradient-to-r from-amber-500 to-amber-400'
+                                          : 'bg-rose-500',
+                                    )}
+                                    style={{ width: `${Math.max(4, winPct)}%` }}
+                                  />
                                 </div>
                               </div>
                             </div>
-
-                            {/* Refined Proportion Track */}
-                            <div className="relative mt-4">
-                              <div className="flex items-center justify-between text-2xs text-fg-dim font-mono mb-1.5">
-                                <span>Win Rate</span>
-                                <span className={tone === 'win' ? 'text-win font-bold' : tone === 'loss' ? 'text-loss font-bold' : 'text-fg-muted'}>
-                                  {winPct}% ({v.wins}/{v.count})
-                                </span>
-                              </div>
-                              <div className="h-2 w-full rounded-full bg-bg-2 overflow-hidden flex border border-line/40">
-                                <div
-                                  className={cn(
-                                    'h-full transition-all duration-300 rounded-full',
-                                    winPct >= 50
-                                      ? 'bg-gradient-to-r from-emerald-500 to-teal-400'
-                                      : winPct > 0
-                                        ? 'bg-gradient-to-r from-amber-500 to-amber-400'
-                                        : 'bg-rose-500',
-                                  )}
-                                  style={{ width: `${Math.max(4, winPct)}%` }}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      },
-                    )
-                  )}
-                </Card>
+                          );
+                        },
+                      )
+                    )}
+                  </Card>
+                </div>
               ) : active ? (
                 <BreakdownCard
                   key={active.fieldKey}
                   breakdown={active}
                   metricMode={metricMode}
+                  fieldDefinition={selectedTemplate?.fields.find((f) => f.key === active.fieldKey)}
                 />
               ) : null}
             </div>

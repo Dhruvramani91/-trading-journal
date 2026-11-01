@@ -8,6 +8,7 @@ interface BreakdownBarCardProps {
     displayMetric?: string;
   }>;
   variant?: 'winRate' | 'metric' | 'duration';
+  metricMode?: 'r' | 'pnl';
   className?: string;
 }
 
@@ -21,7 +22,7 @@ export function BreakdownBarCard({
   const maxVal = Math.max(
     ...items.map((it) => {
       if (variant === 'winRate') return it.winRate ?? 0;
-      return it.avgMetric ?? 0;
+      return Math.abs(it.avgMetric ?? 0);
     }),
     1,
   );
@@ -59,23 +60,26 @@ export function BreakdownBarCard({
         {items.map((item, idx) => {
           let heightPct = 0;
           let labelText = '';
+          const hasTrades = (item.count ?? 0) > 0;
+          const val = item.avgMetric ?? 0;
 
           if (variant === 'winRate') {
             const wr = Math.round(item.winRate ?? 0);
-            heightPct = item.count ? Math.max(12, wr) : 8;
+            heightPct = hasTrades ? Math.max(14, wr) : 10;
             labelText = `${wr}%`;
           } else if (variant === 'duration') {
-            const dur = item.avgMetric ?? 0;
-            heightPct = item.count ? Math.max(12, (dur / maxVal) * 100) : 8;
+            const dur = Math.max(0, val);
+            heightPct = hasTrades ? Math.max(14, Math.min(100, (dur / maxVal) * 100)) : 10;
             labelText = item.displayMetric || `${dur}m`;
           } else {
-            const val = item.avgMetric ?? 0;
-            heightPct = item.count ? Math.max(12, (val / maxVal) * 100) : 8;
-            labelText = item.displayMetric || (item.count ? val.toFixed(2) : '—');
+            // Metric variant: scale by absolute value relative to maxVal
+            const absVal = Math.abs(val);
+            heightPct = hasTrades ? Math.max(14, Math.min(100, (absVal / maxVal) * 100)) : 10;
+            labelText = item.displayMetric || (hasTrades ? val.toFixed(1) : '—');
           }
 
-          const hasTrades = (item.count ?? 0) > 0;
           const isTop = topItem && topItem.label === item.label && hasTrades;
+          const isNegative = hasTrades && val < 0;
 
           return (
             <div key={idx} className="flex flex-col items-center justify-end h-full group">
@@ -84,23 +88,27 @@ export function BreakdownBarCard({
                 className={`text-[10px] sm:text-[11px] font-mono font-semibold mb-2 transition-all duration-200 truncate ${
                   isTop
                     ? 'text-sky-500 font-bold'
-                    : hasTrades
-                      ? 'text-fg-muted group-hover:text-fg'
-                      : 'text-fg-dim/40'
+                    : isNegative
+                      ? 'text-rose-500 font-semibold'
+                      : hasTrades
+                        ? 'text-fg-muted group-hover:text-fg'
+                        : 'text-fg-dim/40'
                 }`}
               >
-                {hasTrades ? labelText : '—'}
+                {hasTrades ? (item.displayMetric || labelText) : '—'}
               </div>
 
-              {/* Column Track & Neon Glowing Rounded Bar */}
+              {/* Column Track & Glowing Rounded Bar */}
               <div className="w-full flex justify-center items-end h-28">
                 <div
                   className={`w-full max-w-[42px] rounded-t-2xl sm:rounded-t-[20px] transition-all duration-500 relative overflow-hidden flex flex-col justify-start items-center ${
                     isTop
                       ? 'bg-gradient-to-t from-sky-600 via-sky-500 to-sky-300 shadow-[0_0_20px_rgba(56,189,248,0.45)] ring-1 ring-sky-300/40'
-                      : hasTrades
-                        ? 'bg-gradient-to-t from-zinc-700/60 via-zinc-600/70 to-zinc-400/80 dark:from-zinc-800/80 dark:via-zinc-700/80 dark:to-zinc-500/90 hover:from-zinc-600 hover:to-zinc-400'
-                        : 'bg-zinc-800/20 dark:bg-zinc-800/30'
+                      : isNegative
+                        ? 'bg-gradient-to-t from-rose-800/80 via-rose-700/70 to-rose-500/80 shadow-[0_0_15px_rgba(244,63,94,0.3)] ring-1 ring-rose-500/30'
+                        : hasTrades
+                          ? 'bg-gradient-to-t from-zinc-700/60 via-zinc-600/70 to-zinc-400/80 dark:from-zinc-800/80 dark:via-zinc-700/80 dark:to-zinc-500/90 hover:from-zinc-600 hover:to-zinc-400'
+                          : 'bg-zinc-800/20 dark:bg-zinc-800/30'
                   }`}
                   style={{
                     height: `${heightPct}%`,
@@ -126,7 +134,7 @@ export function BreakdownBarCard({
                 </span>
                 {item.count != null && (
                   <span className="text-[10px] text-fg-dim font-mono mt-0.5">
-                    {item.count} {item.count === 1 ? 'tr' : 'tr'}
+                    {item.count} tr
                   </span>
                 )}
               </div>
