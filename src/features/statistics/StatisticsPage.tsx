@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { BarChart3, ChevronDown } from 'lucide-react';
 
-import { PageHeader } from '@/components/ui/PageHeader';
 import { Loader } from '@/components/ui/Loader';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
@@ -170,6 +169,7 @@ export function StatisticsPage() {
   const { trades, loaded, load } = useTradesStore();
 
   const [tab, setTab] = useState<string>('instrument');
+  const [metricMode, setMetricMode] = useState<'r' | 'pnl'>('r');
   const [templateOptions, setTemplateOptions] = useState<TemplateDefinition[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState('default-ict-2026');
 
@@ -367,9 +367,55 @@ export function StatisticsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Statistics" />
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-line pb-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-fg">
+            Statistics
+          </h1>
+          <p className="text-sm font-medium text-fg-muted mt-1">
+            Performance analytics, win rates, and strategy breakdowns.
+          </p>
+        </div>
 
-      {availableTemplates.length > 1 && <div className="max-w-sm"><label className="mb-1.5 block text-sm font-medium text-fg-muted" htmlFor="stats-template">Strategy breakdown</label><Select id="stats-template" value={effectiveTemplateId} onChange={(event) => setSelectedTemplateId(event.target.value)}>{availableTemplates.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</Select></div>}
+        {/* PnL ($) ⇄ Realized R Toggle Segment */}
+        <div className="inline-flex h-10 items-center p-1 rounded-xl bg-bg-1 dark:bg-[#121417] border border-line shadow-sm self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => setMetricMode('r')}
+            className={cn(
+              'h-8 px-3.5 rounded-lg text-xs font-semibold tracking-tight transition-all flex items-center justify-center',
+              metricMode === 'r'
+                ? 'bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm'
+                : 'text-fg-muted hover:text-fg',
+            )}
+          >
+            Realized R
+          </button>
+          <button
+            type="button"
+            onClick={() => setMetricMode('pnl')}
+            className={cn(
+              'h-8 px-3.5 rounded-lg text-xs font-semibold tracking-tight transition-all flex items-center justify-center',
+              metricMode === 'pnl'
+                ? 'bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm'
+                : 'text-fg-muted hover:text-fg',
+            )}
+          >
+            P&amp;L ($)
+          </button>
+        </div>
+      </div>
+
+      {availableTemplates.length > 1 && (
+        <div className="max-w-sm">
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-fg-dim" htmlFor="stats-template">
+            Strategy breakdown
+          </label>
+          <Select id="stats-template" value={effectiveTemplateId} onChange={(event) => setSelectedTemplateId(event.target.value)}>
+            {availableTemplates.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+          </Select>
+        </div>
+      )}
 
       {!loaded || !s ? (
         <Loader size="sm" title="Loading statistics…" className="min-h-56" />
@@ -744,15 +790,10 @@ export function StatisticsPage() {
                   )}
                 </Card>
               ) : active ? (
-                /*
-                 * IMPORTANT:
-                 * Template/strategy breakdowns remain untouched.
-                 * They continue using the existing R-based
-                 * BreakdownCard / analytics engine.
-                 */
                 <BreakdownCard
                   key={active.fieldKey}
                   breakdown={active}
+                  metricMode={metricMode}
                 />
               ) : null}
             </div>
