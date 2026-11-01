@@ -1,60 +1,51 @@
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Calendar, TrendingUp } from 'lucide-react';
-import { PageHeader } from '@/components/ui/PageHeader';
-import { Loader } from '@/components/ui/Loader';
-import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  Plus,
+  Info,
+} from 'lucide-react';
 import { Button } from '@/components/ui/Button';
-import { Switch } from '@/components/ui/switch';
-import { Stat } from '@/components/ui/Stat';
-import { EmptyState } from '@/components/ui/EmptyState';
+import { Loader } from '@/components/ui/Loader';
 import { useTradesStore, bootTradesStore } from '@/store/tradesStore';
-import { byDay, dayKey, summary } from '@/analytics/core';
-import { formatR, formatPct, formatSignedMoney } from '@/lib/format';
+import { byDay, dayKey } from '@/analytics/core';
+import { formatR, formatSignedMoney } from '@/lib/format';
 import { cn } from '@/lib/cn';
-import { WeeklySummary } from '@/components/calendar/WeeklySummary';
+import { computeTraderScore } from '@/analytics/core/dashboardAnalytics';
+import { TraderScoreRadar } from '../dashboard/components/TraderScoreRadar';
 import type { Trade } from '@/domain/models/trade';
 import type { DayPerformance } from '@/analytics/core';
 
-const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const MONTH_NAMES = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December',
+];
 
-function formatCompactCalendarMoney(value: number): string {
-  const compactValue = new Intl.NumberFormat('en-US', {
-    notation: 'compact',
-    maximumFractionDigits: 1,
-  }).format(Math.abs(value));
-  const sign = value > 0 ? '+' : value < 0 ? '-' : '';
-  return `${sign}$${compactValue}`;
-}
+const WEEKDAY_HEADERS = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
 
 function daysInMonth(year: number, month: number): number {
   return new Date(year, month + 1, 0).getDate();
 }
 
-function firstDayOffset(year: number, month: number, showWeekends: boolean): number {
+/**
+ * Returns monday-based offset for day 1 of the given year/month.
+ * 0 = Monday, 6 = Sunday.
+ */
+function getMondayBasedOffset(year: number, month: number): number {
   const day = new Date(year, month, 1).getDay();
-
-  // Calendar starts on Monday.
-  const mondayBasedDay = day === 0 ? 7 : day;
-
-  if (showWeekends) {
-    return mondayBasedDay - 1;
-  }
-
-  // When weekends are hidden, a month beginning on Saturday/Sunday
-  // starts with the first visible weekday instead of leaving weekend gaps.
-  if (mondayBasedDay > 5) {
-    return 0;
-  }
-
-  return mondayBasedDay - 1;
-}
-
-function monthLabel(year: number, month: number): string {
-  return new Date(year, month, 1).toLocaleDateString('en-US', {
-    month: 'long',
-    year: 'numeric',
-  });
+  return day === 0 ? 6 : day - 1;
 }
 
 function dayKeyFromParts(year: number, month: number, day: number): string {
@@ -62,18 +53,6 @@ function dayKeyFromParts(year: number, month: number, day: number): string {
   const m = String(month + 1).padStart(2, '0');
   const d = String(day).padStart(2, '0');
   return `${y}-${m}-${d}`;
-}
-
-function rTone(totalR: number): string {
-  if (totalR > 0) return 'text-win';
-  if (totalR < 0) return 'text-loss';
-  return 'text-be';
-}
-
-function rBg(totalR: number): string {
-  if (totalR > 0) return 'bg-win-fill/10 border-win-fill/30 hover:bg-win-fill/20';
-  if (totalR < 0) return 'bg-loss-fill/10 border-loss-fill/30 hover:bg-loss-fill/20';
-  return 'bg-be/10 border-be/30 hover:bg-be/20';
 }
 
 export function CalendarPage() {
@@ -84,13 +63,14 @@ export function CalendarPage() {
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
 
-  // ON by default so the existing calendar behavior is preserved.
-  const [showWeekends, setShowWeekends] = useState(true);
-  const [showR, setShowR] = useState(true);
-  const [showPnl, setShowPnl] = useState(true);
-  const weekendsSwitchId = useId();
-  const rSwitchId = useId();
-  const pnlSwitchId = useId();
+  // View modes: Daily, Monthly, Yearly
+  const [viewMode, setViewMode] = useState<'Daily' | 'Monthly' | 'Yearly'>('Daily');
+
+  // Metric display toggles
+  const [metricMode, setMetricMode] = useState<'pnl' | 'r'>('pnl');
+
+  // Selected day for side panel breakdown
+  const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null);
 
   useEffect(() => {
     bootTradesStore();
@@ -100,30 +80,34 @@ export function CalendarPage() {
     if (!loaded) void load();
   }, [loaded, load]);
 
-  const dayMap = useMemo<Map<string, DayPerformance & { totalPnl: number | null }>>(() => {
-    if (!loaded) return new Map<string, DayPerformance & { totalPnl: number | null }>();
+  // Aggregate trades by day
+  const dayMap = useMemo<Map<string, DayPerformance & { totalPnl: number | null; trades: Trade[] }>>(() => {
+    if (!loaded) return new Map();
 
     const days = byDay(trades);
-    const map = new Map<string, DayPerformance & { totalPnl: number | null }>();
+    const map = new Map<string, DayPerformance & { totalPnl: number | null; trades: Trade[] }>();
 
     for (const d of days) {
-      map.set(d.date, { ...d, totalPnl: null });
+      map.set(d.date, { ...d, totalPnl: null, trades: [] });
     }
 
     for (const trade of trades) {
-      const day = map.get(dayKey(trade.openedAt));
-      if (!day || trade.pnl == null || !Number.isFinite(trade.pnl)) continue;
-      day.totalPnl = (day.totalPnl ?? 0) + trade.pnl;
+      const dKey = dayKey(trade.openedAt);
+      const day = map.get(dKey);
+      if (!day) continue;
+      day.trades.push(trade);
+      if (trade.pnl != null && Number.isFinite(trade.pnl)) {
+        day.totalPnl = (day.totalPnl ?? 0) + trade.pnl;
+      }
     }
 
     return map;
   }, [loaded, trades]);
 
+  // Trades in current month
   const monthTrades = useMemo(() => {
     if (!loaded) return [] as Trade[];
-
     const prefix = `${year}-${String(month + 1).padStart(2, '0')}`;
-
     return trades.filter((t) => {
       const d = new Date(t.openedAt);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -131,41 +115,108 @@ export function CalendarPage() {
     });
   }, [loaded, trades, year, month]);
 
-  const monthSummary = useMemo(() => {
-    if (monthTrades.length === 0) return null;
-    return summary(monthTrades);
-  }, [monthTrades]);
-
-  const totalDays = daysInMonth(year, month);
-  const offset = firstDayOffset(year, month, showWeekends);
-  const visibleDayCount = showWeekends
-    ? totalDays
-    : Array.from({ length: totalDays }, (_, index) => new Date(year, month, index + 1))
-        .filter((date) => date.getDay() !== 0 && date.getDay() !== 6).length;
-  const calendarRows = Math.ceil((offset + visibleDayCount) / (showWeekends ? 7 : 5));
-
-  const visibleWeekdays = showWeekends
-    ? WEEKDAY_LABELS
-    : WEEKDAY_LABELS.slice(0, 5);
-
-  const weeklySummary = useMemo(() => {
-    const weeks = Array.from({ length: calendarRows }, () => ({ count: 0, wins: 0, losses: 0, bes: 0, totalR: 0 }));
-    for (const day of dayMap.values()) {
-      const date = new Date(`${day.date}T00:00:00`);
-      if (date.getFullYear() !== year || date.getMonth() !== month) continue;
-      const dayOfMonth = date.getDate();
-      const weekday = date.getDay();
-      if (!showWeekends && (weekday === 0 || weekday === 6)) continue;
-      const visibleIndex = showWeekends
-        ? dayOfMonth - 1
-        : Array.from({ length: dayOfMonth - 1 }, (_, index) => new Date(year, month, index + 1))
-            .filter((item) => item.getDay() !== 0 && item.getDay() !== 6).length;
-      const week = weeks[Math.floor((offset + visibleIndex) / (showWeekends ? 7 : 5))];
-      if (!week) continue;
-      week.count += day.count; week.wins += day.wins; week.losses += day.losses; week.bes += day.bes; week.totalR += day.totalR;
+  // Selected day or month trades for the right-hand score panel
+  const displayTrades = useMemo(() => {
+    if (selectedDayKey && dayMap.has(selectedDayKey)) {
+      return dayMap.get(selectedDayKey)!.trades;
     }
-    return weeks;
-  }, [calendarRows, dayMap, month, offset, showWeekends, year]);
+    return monthTrades;
+  }, [selectedDayKey, dayMap, monthTrades]);
+
+  // Radar score computed for current display set
+  const scoreData = useMemo(() => {
+    return computeTraderScore(displayTrades, metricMode);
+  }, [displayTrades, metricMode]);
+
+  // Grid calculation (always 42 cells = 6 rows x 7 days)
+  const totalDaysCurrentMonth = daysInMonth(year, month);
+  const firstDayOffset = getMondayBasedOffset(year, month);
+
+  // Previous month trailing days
+  const prevMonthTotalDays = daysInMonth(month === 0 ? year - 1 : year, month === 0 ? 11 : month - 1);
+
+  const calendarGrid = useMemo(() => {
+    const cells: Array<{
+      dayNumber: number;
+      monthType: 'prev' | 'current' | 'next';
+      dateKey: string;
+      isToday: boolean;
+      dateObj: Date;
+    }> = [];
+
+    // 1. Previous month trailing days
+    for (let i = firstDayOffset - 1; i >= 0; i--) {
+      const dayNum = prevMonthTotalDays - i;
+      const mIdx = month === 0 ? 11 : month - 1;
+      const yVal = month === 0 ? year - 1 : year;
+      const dKey = dayKeyFromParts(yVal, mIdx, dayNum);
+      cells.push({
+        dayNumber: dayNum,
+        monthType: 'prev',
+        dateKey: dKey,
+        isToday: false,
+        dateObj: new Date(yVal, mIdx, dayNum),
+      });
+    }
+
+    // 2. Current month days
+    for (let day = 1; day <= totalDaysCurrentMonth; day++) {
+      const dKey = dayKeyFromParts(year, month, day);
+      const isToday =
+        day === now.getDate() &&
+        month === now.getMonth() &&
+        year === now.getFullYear();
+      cells.push({
+        dayNumber: day,
+        monthType: 'current',
+        dateKey: dKey,
+        isToday,
+        dateObj: new Date(year, month, day),
+      });
+    }
+
+    // 3. Next month leading days (fill up to 35 or 42 cells)
+    const targetLength = cells.length > 35 ? 42 : 35;
+    const remaining = targetLength - cells.length;
+    for (let day = 1; day <= remaining; day++) {
+      const mIdx = month === 11 ? 0 : month + 1;
+      const yVal = month === 11 ? year + 1 : year;
+      const dKey = dayKeyFromParts(yVal, mIdx, day);
+      cells.push({
+        dayNumber: day,
+        monthType: 'next',
+        dateKey: dKey,
+        isToday: false,
+        dateObj: new Date(yVal, mIdx, day),
+      });
+    }
+
+    return cells;
+  }, [year, month, totalDaysCurrentMonth, firstDayOffset, prevMonthTotalDays]);
+
+  // Weekly summaries for 5 or 6 rows
+  const weekSummaries = useMemo(() => {
+    const rowCount = calendarGrid.length / 7;
+    const rows: Array<{ count: number; totalR: number; totalPnl: number }> = [];
+
+    for (let r = 0; r < rowCount; r++) {
+      let count = 0;
+      let totalR = 0;
+      let totalPnl = 0;
+      for (let c = 0; c < 7; c++) {
+        const cell = calendarGrid[r * 7 + c];
+        if (!cell) continue;
+        const perf = dayMap.get(cell.dateKey);
+        if (perf) {
+          count += perf.count;
+          totalR += perf.totalR;
+          totalPnl += perf.totalPnl ?? 0;
+        }
+      }
+      rows.push({ count, totalR, totalPnl });
+    }
+    return rows;
+  }, [calendarGrid, dayMap]);
 
   function goPrev() {
     if (month === 0) {
@@ -174,6 +225,7 @@ export function CalendarPage() {
     } else {
       setMonth(month - 1);
     }
+    setSelectedDayKey(null);
   }
 
   function goNext() {
@@ -183,316 +235,346 @@ export function CalendarPage() {
     } else {
       setMonth(month + 1);
     }
+    setSelectedDayKey(null);
   }
 
   function goToday() {
     setYear(now.getFullYear());
     setMonth(now.getMonth());
+    setSelectedDayKey(null);
   }
 
-  const isCurrentMonth =
-    year === now.getFullYear() && month === now.getMonth();
+  // Selected day stats for the side card
+  const selectedDayPerf = selectedDayKey ? dayMap.get(selectedDayKey) : null;
+  const isSelectedActive = Boolean(selectedDayKey && selectedDayPerf);
+
+  // Top info bar text
+  const periodTradeCount = monthTrades.length;
 
   if (!loaded) {
     return <Loader title="Loading calendar…" className="min-h-64" />;
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 animate-fade-in">
-      <div className="lg:flex lg:h-[calc(100dvh-3.5rem)] lg:flex-col">
-        <PageHeader
-          title="Monthly Performance"
-          description="A calendar view of your daily R, with each day colored by performance."
-          className="lg:shrink-0 lg:pb-3"
-        />
+    <div className="mx-auto w-full max-w-[1440px] space-y-4 pb-16">
+      {/* 1. Header Toolbar */}
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {/* Left: Month / Year Controls */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Prev Arrow */}
+          <button
+            type="button"
+            onClick={goPrev}
+            className="p-2 rounded-xl bg-[#121417] border border-[#1f242c] text-[#8c94a0] hover:text-white hover:border-[#2f3642] transition-colors shadow-sm"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
 
-        <Card className="lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
-        <CardHeader className="flex-col sm:flex-row items-stretch sm:items-center gap-3 lg:shrink-0 lg:px-4 lg:py-2.5">
-          <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={goPrev}
-              leftIcon={<ChevronLeft className="h-4 w-4" />}
+          {/* Month Selector Dropdown */}
+          <div className="relative">
+            <select
+              value={month}
+              onChange={(e) => {
+                setMonth(Number(e.target.value));
+                setSelectedDayKey(null);
+              }}
+              className="appearance-none bg-[#121417] border border-[#1f242c] rounded-xl px-4 py-2 pr-9 text-sm font-semibold text-white hover:border-[#2f3642] focus:outline-none focus:border-sky-500/50 cursor-pointer shadow-sm"
             >
-              Prev
-            </Button>
-
-            <h2 className="text-base sm:text-lg font-bold text-fg min-w-[9rem] sm:min-w-[11rem] text-center">
-              {monthLabel(year, month)}
-            </h2>
-
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={goNext}
-              leftIcon={<ChevronRight className="h-4 w-4" />}
-            >
-              Next
-            </Button>
+              {MONTH_NAMES.map((mName, idx) => (
+                <option key={idx} value={idx}>
+                  {mName}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="w-3.5 h-3.5 text-[#8c94a0] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
-          <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 w-full sm:w-auto sm:ml-auto">
-            {/* Weekend visibility toggle */}
-            <div className="inline-flex items-center gap-2 rounded-lg border border-line bg-bg-2 px-2.5 py-1.5 text-xs font-medium text-fg-muted transition-colors hover:bg-bg-3 hover:text-fg">
-              <label htmlFor={weekendsSwitchId} className="cursor-pointer">Weekends</label>
-              <Switch id={weekendsSwitchId} checked={showWeekends} onCheckedChange={setShowWeekends} aria-label="Show weekends" />
-            </div>
-
-            <div className="inline-flex items-center gap-2 rounded-lg border border-line bg-bg-2 px-2.5 py-1.5 text-xs font-medium text-fg-muted transition-colors hover:bg-bg-3 hover:text-fg">
-              <label htmlFor={rSwitchId} className="cursor-pointer">R</label>
-              <Switch id={rSwitchId} checked={showR} onCheckedChange={setShowR} aria-label="Show R values" />
-            </div>
-
-            <div className="inline-flex items-center gap-2 rounded-lg border border-line bg-bg-2 px-2.5 py-1.5 text-xs font-medium text-fg-muted transition-colors hover:bg-bg-3 hover:text-fg">
-              <label htmlFor={pnlSwitchId} className="cursor-pointer">P&amp;L</label>
-              <Switch id={pnlSwitchId} checked={showPnl} onCheckedChange={setShowPnl} aria-label="Show P&L values" />
-            </div>
-
-            {!isCurrentMonth && (
-              <Button variant="outline" size="sm" onClick={goToday}>
-                Today
-              </Button>
-            )}
+          {/* Year Selector Dropdown */}
+          <div className="relative">
+            <select
+              value={year}
+              onChange={(e) => {
+                setYear(Number(e.target.value));
+                setSelectedDayKey(null);
+              }}
+              className="appearance-none bg-[#121417] border border-[#1f242c] rounded-xl px-4 py-2 pr-9 text-sm font-semibold text-white hover:border-[#2f3642] focus:outline-none focus:border-sky-500/50 cursor-pointer shadow-sm font-mono"
+            >
+              {[2024, 2025, 2026, 2027, 2028].map((yVal) => (
+                <option key={yVal} value={yVal}>
+                  {yVal}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="w-3.5 h-3.5 text-[#8c94a0] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
-        </CardHeader>
 
-        <CardBody className="p-2 sm:p-4 md:p-5 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col lg:p-3">
-          {trades.length === 0 ? (
-            <EmptyState
-              icon={<Calendar className="h-6 w-6" />}
-              title="No trades yet"
-              description="Add trades from the journal to see calendar performance."
-            />
-          ) : (
-            <div className="grid gap-3 lg:min-h-0 lg:flex-1 xl:grid-cols-[minmax(0,1fr)_150px]">
-              <>
-              <div className="w-full min-w-0 pb-2 pr-1 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
-              <div className="min-w-0 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">
-              {/* Weekday header */}
-              <div
+          {/* Next Arrow */}
+          <button
+            type="button"
+            onClick={goNext}
+            className="p-2 rounded-xl bg-[#121417] border border-[#1f242c] text-[#8c94a0] hover:text-white hover:border-[#2f3642] transition-colors shadow-sm"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+
+          {/* Today Button */}
+          <button
+            type="button"
+            onClick={goToday}
+            className="px-4 py-2 rounded-xl bg-[#121417] border border-[#1f242c] text-xs font-semibold text-white hover:bg-[#181b20] hover:border-[#2f3642] transition-colors shadow-sm"
+          >
+            Today
+          </button>
+        </div>
+
+        {/* Right: View Toggles & Note / Action */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* PnL vs R toggle */}
+          <div className="inline-flex items-center p-1 rounded-xl bg-[#121417] border border-[#1f242c] shadow-sm">
+            <button
+              type="button"
+              onClick={() => setMetricMode('pnl')}
+              className={cn(
+                'px-3 py-1 rounded-lg text-xs font-semibold tracking-tight transition-all',
+                metricMode === 'pnl'
+                  ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30 shadow-sm'
+                  : 'text-[#8c94a0] hover:text-white',
+              )}
+            >
+              P&amp;L
+            </button>
+            <button
+              type="button"
+              onClick={() => setMetricMode('r')}
+              className={cn(
+                'px-3 py-1 rounded-lg text-xs font-semibold tracking-tight transition-all',
+                metricMode === 'r'
+                  ? 'bg-sky-500/20 text-sky-400 border border-sky-500/30 shadow-sm'
+                  : 'text-[#8c94a0] hover:text-white',
+              )}
+            >
+              R
+            </button>
+          </div>
+
+          {/* Daily / Monthly / Yearly segment */}
+          <div className="inline-flex items-center p-1 rounded-xl bg-[#121417] border border-[#1f242c] shadow-sm">
+            {(['Daily', 'Monthly', 'Yearly'] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setViewMode(mode)}
                 className={cn(
-                  'grid gap-0.5 mb-2 sm:gap-2',
-                  showWeekends ? 'grid-cols-7' : 'grid-cols-5',
+                  'px-3 py-1 rounded-lg text-xs font-semibold tracking-tight transition-all',
+                  viewMode === mode
+                    ? 'bg-sky-600/30 text-sky-300 border border-sky-500/40 shadow-sm'
+                    : 'text-[#8c94a0] hover:text-white',
                 )}
               >
-                {visibleWeekdays.map((label) => (
-                  <div
-                    key={label}
-                    className="py-2 text-center text-[9px] font-bold uppercase tracking-wider text-fg-dim sm:text-[11px]"
-                  >
-                    {label}
-                  </div>
-                ))}
-              </div>
+                {mode}
+              </button>
+            ))}
+          </div>
 
-              {/* Day cells grid */}
-              <div
-                className={cn(
-                  'grid min-h-0 flex-1 gap-1 sm:gap-1.5 lg:gap-1',
-                  showWeekends ? 'grid-cols-7' : 'grid-cols-5',
-                )}
-                style={{ gridTemplateRows: `repeat(${calendarRows}, minmax(0, 1fr))` }}
-              >
-                {Array.from({ length: totalDays }, (_, i) => {
-                  const day = i + 1;
-                  const date = new Date(year, month, day);
-                  const weekday = date.getDay();
+          {/* Add Note Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 px-3.5 rounded-xl border-[#1f242c] text-xs font-semibold text-white bg-[#121417] hover:bg-[#181b20]"
+            leftIcon={<Plus className="w-3.5 h-3.5" />}
+            onClick={() => navigate('/journal/new')}
+          >
+            Add trade
+          </Button>
+        </div>
+      </header>
 
-                  // Hide Saturday and Sunday when the toggle is OFF.
-                  if (!showWeekends && (weekday === 0 || weekday === 6)) {
-                    return null;
-                  }
-
-                  const key = dayKeyFromParts(year, month, day);
-                  const perf = dayMap.get(key);
-                  const accessibleDate = date.toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
-
-                  const isToday =
-                    day === now.getDate() &&
-                    month === now.getMonth() &&
-                    year === now.getFullYear();
-
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      aria-label={perf
-                        ? `${accessibleDate}: ${perf.count} trade${perf.count === 1 ? '' : 's'}${showR ? `, ${formatR(perf.totalR, 1)} realized R` : ''}${showPnl && perf.totalPnl != null ? `, ${formatSignedMoney(perf.totalPnl)} P&L` : ''}`
-                        : accessibleDate}
-                      disabled={!perf}
-                      style={day === 1 ? { gridColumnStart: offset + 1 } : undefined}
-                      onClick={() => {
-                        if (perf) navigate('/journal');
-                      }}
-                      className={cn(
-                        'relative flex min-h-[64px] min-w-0 flex-col items-stretch justify-between rounded-lg border p-1.5 transition-colors sm:min-h-[104px] sm:rounded-xl sm:p-3 lg:min-h-0 lg:rounded-lg lg:p-2',
-                        perf
-                          ? cn(
-                              rBg(perf.totalR),
-                              'cursor-pointer shadow-sm hover:brightness-105',
-                            )
-                          : 'border-line/60 bg-bg-2/60 text-fg-dim',
-                        isToday && 'ring-2 ring-focus shadow-sm',
-                      )}
-                    >
-                      <div className="flex w-full items-center justify-between gap-1">
-                        <span
-                          className={cn(
-                            'self-start text-xs font-semibold lg:text-[11px]',
-                            perf ? 'text-fg' : 'text-fg-dim',
-                            isToday && 'text-accent font-bold',
-                          )}
-                        >
-                          {day}
-                        </span>
-                        {perf && (
-                          <span className="truncate text-[9px] font-medium text-fg-dim sm:text-[10px] lg:text-[9px]">
-                            <span className="sm:hidden">{perf.count}</span>
-                            <span className="hidden sm:inline">{perf.count} trade{perf.count === 1 ? '' : 's'}</span>
-                          </span>
-                        )}
-                      </div>
-
-                      {perf && (
-                        <div className="mt-1 flex w-full min-w-0 flex-col gap-1 sm:mt-2 sm:gap-1.5 lg:mt-1 lg:gap-0.5">
-                          {(showR || showPnl) ? (
-                            <>
-                              {showR && (
-                                <div className="flex min-w-0 items-baseline justify-start gap-1 sm:justify-between sm:gap-2">
-                                  <span className="sr-only text-[10px] font-medium uppercase tracking-wide text-fg-dim sm:not-sr-only">R</span>
-                                  <span className={cn('min-w-0 truncate text-[10px] font-bold tabular-nums sm:text-sm lg:text-xs', rTone(perf.totalR))}>
-                                    {formatR(perf.totalR, 1)}
-                                  </span>
-                                </div>
-                              )}
-                              {showPnl && (
-                                <div className="flex min-w-0 items-baseline justify-start gap-1 sm:justify-between sm:gap-2">
-                                  <span className="sr-only text-[10px] font-medium uppercase tracking-wide text-fg-dim sm:not-sr-only">P&amp;L</span>
-                                  <span title={perf.totalPnl == null ? undefined : formatSignedMoney(perf.totalPnl)} className={cn('min-w-0 truncate text-[9px] font-bold tabular-nums sm:text-[13px] lg:text-xs', perf.totalPnl == null ? 'text-fg-dim' : perf.totalPnl > 0 ? 'text-win' : perf.totalPnl < 0 ? 'text-loss' : 'text-be')}>
-                                    {perf.totalPnl == null ? '—' : <><span className="sm:hidden">{formatCompactCalendarMoney(perf.totalPnl)}</span><span className="hidden sm:inline">{formatSignedMoney(perf.totalPnl)}</span></>}
-                                  </span>
-                                </div>
-                              )}
-                            </>
-                          ) : null}
-                        </div>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-              </div>
-              </div>
-              </>
-              <WeeklySummary weeks={weeklySummary} />
-            </div>
-          )}
-        </CardBody>
-        </Card>
+      {/* 2. Top Info Sub-banner */}
+      <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#121417] border border-[#1f242c] text-xs text-[#8c94a0]">
+        <span className="w-1.5 h-1.5 rounded-full bg-sky-500 inline-block" />
+        {periodTradeCount === 0 ? (
+          <span className="font-medium tracking-wide">NO TRADES IN THIS PERIOD</span>
+        ) : (
+          <span className="font-medium tracking-wide">
+            {periodTradeCount} TRADE{periodTradeCount === 1 ? '' : 'S'} LOGGED IN {(MONTH_NAMES[month] ?? '').toUpperCase()} {year}
+          </span>
+        )}
       </div>
 
-      {/* Month summary */}
-      {monthSummary && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5 sm:gap-3">
-          <Card>
-            <CardBody className="p-3.5 sm:p-4">
-              <Stat
-                label="Total R"
-                value={formatR(monthSummary.totalR)}
-                tone={
-                  monthSummary.totalR > 0
-                    ? 'win'
-                    : monthSummary.totalR < 0
-                      ? 'loss'
-                      : 'default'
-                }
-              />
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardBody className="p-3.5 sm:p-4">
-              <Stat label="Trades" value={String(monthSummary.count)} />
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardBody className="p-3.5 sm:p-4">
-              <Stat
-                label="Win Rate"
-                value={
-                  monthSummary.winRate == null
-                    ? '—'
-                    : formatPct(monthSummary.winRate)
-                }
-              />
-            </CardBody>
-          </Card>
-
-          <Card>
-            <CardBody className="p-3.5 sm:p-4">
-              <Stat label="Best R" value={formatR(monthSummary.bestR)} tone="win" />
-            </CardBody>
-          </Card>
-
-          <Card className="col-span-2 sm:col-span-1">
-            <CardBody className="p-3.5 sm:p-4">
-              <Stat label="Worst R" value={formatR(monthSummary.worstR)} tone="loss" />
-            </CardBody>
-          </Card>
-        </div>
-      )}
-
-      {/* Daily breakdown */}
-      {monthTrades.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-accent" />
-              Daily breakdown
-            </CardTitle>
-          </CardHeader>
-
-          <CardBody className="p-0">
-            <div className="divide-y divide-line">
-              {byDay(monthTrades).map((d) => (
-                <div
-                  key={d.date}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between px-4 py-3 text-sm hover:bg-bg-4 transition-colors gap-2"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-fg font-semibold text-xs font-mono w-24">
-                      {new Date(d.date + 'T00:00:00').toLocaleDateString(
-                        'en-US',
-                        {
-                          weekday: 'short',
-                          month: 'short',
-                          day: 'numeric',
-                        },
-                      )}
-                    </span>
-
-                    <span className="text-fg-dim text-xs">
-                      {d.count} trade{d.count === 1 ? '' : 's'}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between sm:justify-end gap-4">
-                    <span className="text-2xs text-fg-dim">
-                      {d.wins}W / {d.losses}L / {d.bes}BE
-                    </span>
-
-                    <span className={cn('font-bold tabular-nums', rTone(d.totalR))}>
-                      {formatR(d.totalR)}
-                    </span>
-                  </div>
+      {/* 3. Main Grid: 7-day + Week Column (Left) and Score Radar (Right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        {/* Left: Calendar Matrix (8 cols: Mon-Sun + Week summary) */}
+        <div className="lg:col-span-8 bg-[#121417] border border-[#1f242c] rounded-2xl p-4 sm:p-5 flex flex-col justify-between overflow-x-auto">
+          <div className="min-w-[620px]">
+            {/* Weekday Header */}
+            <div className="grid grid-cols-8 gap-1.5 mb-2.5 text-center">
+              {WEEKDAY_HEADERS.map((hName) => (
+                <div key={hName} className="text-[11px] font-bold text-[#555e6d] uppercase tracking-wider py-1">
+                  {hName}
                 </div>
               ))}
+              <div className="text-[11px] font-bold text-[#555e6d] uppercase tracking-wider py-1">
+                WEEK
+              </div>
             </div>
-          </CardBody>
-        </Card>
-      )}
+
+            {/* Calendar Cells Grid with Week Summary Column */}
+            <div className="flex flex-col gap-1.5">
+              {Array.from({ length: calendarGrid.length / 7 }).map((_, rIdx) => {
+                const weekRow = weekSummaries[rIdx];
+                return (
+                  <div key={rIdx} className="grid grid-cols-8 gap-1.5">
+                    {/* 7 Days */}
+                    {calendarGrid.slice(rIdx * 7, rIdx * 7 + 7).map((cell) => {
+                      const perf = dayMap.get(cell.dateKey);
+                      const hasTrades = Boolean(perf && perf.count > 0);
+                      const isSelected = selectedDayKey === cell.dateKey;
+                      const isPrevOrNext = cell.monthType !== 'current';
+
+                      const isWin = perf && (metricMode === 'r' ? perf.totalR > 0 : (perf.totalPnl ?? 0) > 0);
+                      const isLoss = perf && (metricMode === 'r' ? perf.totalR < 0 : (perf.totalPnl ?? 0) < 0);
+
+                      return (
+                        <div
+                          key={cell.dateKey}
+                          onClick={() => {
+                            setSelectedDayKey(isSelected ? null : cell.dateKey);
+                          }}
+                          className={cn(
+                            'min-h-[82px] rounded-xl p-2.5 flex flex-col justify-between transition-all border cursor-pointer select-none',
+                            // Inactive vs Active Day styling
+                            hasTrades
+                              ? isWin
+                                ? 'bg-emerald-950/20 border-emerald-500/40 hover:border-emerald-400/70 shadow-[0_0_12px_rgba(34,197,94,0.12)]'
+                                : isLoss
+                                  ? 'bg-rose-950/20 border-rose-500/40 hover:border-rose-400/70 shadow-[0_0_12px_rgba(244,63,94,0.12)]'
+                                  : 'bg-zinc-900/40 border-zinc-700/40 hover:border-zinc-500'
+                              : 'bg-[#0d0f12] border-[#181b20] hover:border-[#22272f]',
+                            cell.isToday && 'ring-2 ring-sky-500 shadow-md',
+                            isSelected && 'border-sky-400 bg-sky-950/20',
+                            isPrevOrNext && 'opacity-40',
+                          )}
+                        >
+                          {/* Top: Day number + Trade dots */}
+                          <div className="flex items-center justify-between">
+                            <span
+                              className={cn(
+                                'text-xs font-semibold font-mono',
+                                isPrevOrNext ? 'text-[#48505e]' : 'text-white',
+                                cell.isToday && 'text-sky-400 font-bold',
+                              )}
+                            >
+                              {cell.dayNumber}
+                            </span>
+
+                            {/* Small Trade indicator dots */}
+                            {hasTrades && (
+                              <div className="flex items-center gap-0.5">
+                                {Array.from({ length: Math.min(4, perf!.count) }).map((_, dIdx) => (
+                                  <span
+                                    key={dIdx}
+                                    className={cn(
+                                      'w-1.5 h-1.5 rounded-full',
+                                      isWin ? 'bg-emerald-400' : isLoss ? 'bg-rose-400' : 'bg-zinc-400',
+                                    )}
+                                  />
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Bottom: Monetary P&L / R & Trade count */}
+                          {hasTrades ? (
+                            <div className="mt-1">
+                              <span
+                                className={cn(
+                                  'text-xs font-bold font-mono tracking-tight block truncate',
+                                  isWin ? 'text-emerald-400' : isLoss ? 'text-rose-400' : 'text-zinc-400',
+                                )}
+                              >
+                                {metricMode === 'r'
+                                  ? formatR(perf!.totalR, 1)
+                                  : perf!.totalPnl != null
+                                    ? formatSignedMoney(perf!.totalPnl)
+                                    : '—'}
+                              </span>
+                              <span className="text-[10px] text-[#8c94a0] block truncate mt-0.5">
+                                {perf!.count} trade{perf!.count === 1 ? '' : 's'} · {perf!.count > 0 ? `${Math.round((perf!.wins / perf!.count) * 100)}%` : '0%'}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className="h-4" />
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* 8th Column: Week Summary Block */}
+                    <div className="min-h-[82px] rounded-xl p-2 bg-[#0d0f12]/60 border border-[#181b20] flex flex-col justify-center items-center text-center">
+                      {weekRow && weekRow.count > 0 ? (
+                        <div>
+                          <span
+                            className={cn(
+                              'text-xs font-bold font-mono block',
+                              weekRow.totalR > 0 ? 'text-emerald-400' : weekRow.totalR < 0 ? 'text-rose-400' : 'text-zinc-400',
+                            )}
+                          >
+                            {metricMode === 'r'
+                              ? formatR(weekRow.totalR, 1)
+                              : formatSignedMoney(weekRow.totalPnl)}
+                          </span>
+                          <span className="text-[10px] text-[#555e6d] font-mono mt-0.5 block">
+                            {weekRow.count} trades
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-[10px] text-[#333a44] font-mono">—</span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Right: SureScore / Precision Score Card */}
+        <div className="lg:col-span-4 bg-[#121417] border border-[#1f242c] rounded-2xl p-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <h3 className="text-xs font-bold tracking-wider text-[#8c94a0] uppercase flex items-center gap-1.5">
+                  SURESCORE / PRECISION SCORE
+                  <Info className="w-3.5 h-3.5 text-[#555e6d]" />
+                </h3>
+                <p className="text-xs text-[#555e6d] mt-0.5">
+                  {isSelectedActive
+                    ? `Day: ${selectedDayKey} · ${selectedDayPerf?.count} trade(s)`
+                    : `Month: ${MONTH_NAMES[month]} ${year} · ${displayTrades.length} trade(s)`}
+                </p>
+              </div>
+              <span className="text-3xl font-extrabold font-mono text-emerald-400 tracking-tight">
+                {scoreData.overallScore.toFixed(1)}
+              </span>
+            </div>
+
+            {/* Radar Spider Plot */}
+            <div className="flex justify-center my-2">
+              <TraderScoreRadar scoreData={scoreData} />
+            </div>
+          </div>
+
+          {/* Breakdown Stats Grid */}
+          <div className="grid grid-cols-2 gap-x-4 gap-y-2 mt-4 pt-4 border-t border-[#1f242c] text-xs">
+            {scoreData.axes.map((ax) => (
+              <div key={ax.label} className="flex items-center justify-between">
+                <span className="text-[#8c94a0]">{ax.label}</span>
+                <span className="font-mono font-bold text-white">{ax.displayValue}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
