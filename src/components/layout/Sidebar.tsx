@@ -1,6 +1,5 @@
 import {
   BarChart3,
-  FlaskConical,
   CalendarDays,
   LayoutDashboard,
   Layers,
@@ -37,7 +36,6 @@ const GROUPS = [
     label: 'Workspace',
     links: [
       { to: '/accounts', label: 'Accounts', icon: Wallet },
-      { to: '/backtests', label: 'Backtest storage', icon: FlaskConical },
     ],
   },
   {

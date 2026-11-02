@@ -234,13 +234,13 @@ export function DashboardPage() {
   return (
     <div className="mx-auto w-full max-w-[1440px] space-y-6 pb-16">
       {/* 1. Header with Title, Time, PnL/R Toggle, Account, Privacy & Snapshot */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-line pb-5">
+      <header className="flex flex-col gap-4 border-b border-line pb-5 lg:flex-row lg:items-center lg:justify-between">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: motionTokens.duration.base, ease: motionTokens.ease }}
         >
-          <h1 className="text-2xl font-semibold tracking-tight text-fg flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-fg flex items-center gap-2">
             {greeting}
           </h1>
           <p className="text-xs font-normal text-fg-muted mt-1">{formattedCurrentDate}</p>
@@ -250,7 +250,7 @@ export function DashboardPage() {
           variants={staggerContainer}
           initial="hidden"
           animate="visible"
-          className="flex flex-wrap items-center gap-2.5"
+          className="flex flex-wrap items-center gap-2 sm:gap-2.5"
         >
           {/* PnL ⇄ R Segmented Toggle */}
           <motion.div variants={fadeUp} className="inline-flex h-9 items-center p-0.5 rounded-lg bg-bg-2 border border-line">
@@ -258,7 +258,7 @@ export function DashboardPage() {
               type="button"
               onClick={() => setMetric('pnl')}
               className={cn(
-                'h-7 px-3 rounded-md text-xs font-medium transition-colors flex items-center justify-center',
+                'h-7 px-2.5 sm:px-3 rounded-md text-xs font-medium transition-colors flex items-center justify-center',
                 metric === 'pnl'
                   ? 'bg-bg-1 text-fg shadow-sm border border-line/50 font-semibold'
                   : 'text-fg-muted hover:text-fg',
@@ -270,7 +270,7 @@ export function DashboardPage() {
               type="button"
               onClick={() => setMetric('r')}
               className={cn(
-                'h-7 px-3 rounded-md text-xs font-medium transition-colors flex items-center justify-center',
+                'h-7 px-2.5 sm:px-3 rounded-md text-xs font-medium transition-colors flex items-center justify-center',
                 metric === 'r'
                   ? 'bg-bg-1 text-fg shadow-sm border border-line/50 font-semibold'
                   : 'text-fg-muted hover:text-fg',
@@ -281,11 +281,11 @@ export function DashboardPage() {
           </motion.div>
 
           {/* Account Selector Custom Form Select */}
-          <motion.div variants={fadeUp} className="min-w-[140px]">
+          <motion.div variants={fadeUp} className="min-w-[130px] flex-1 sm:flex-initial">
             <Select
               value={selectedAccountId}
               onChange={(e) => handleAccountChange(e.target.value)}
-              className="h-9 text-xs font-medium rounded-lg border-line bg-bg-1"
+              className="h-9 text-xs font-medium rounded-lg border-line bg-bg-1 w-full"
             >
               <option value="all">All Accounts</option>
               {accounts.map((acc) => (
@@ -302,14 +302,14 @@ export function DashboardPage() {
             type="button"
             onClick={() => setIsPrivate(!isPrivate)}
             title={isPrivate ? 'Show sensitive balances' : 'Hide sensitive balances'}
-            className="h-9 w-9 flex items-center justify-center rounded-lg bg-bg-1 border border-line text-fg-muted hover:text-fg hover:border-line-strong transition-colors"
+            className="h-9 w-9 shrink-0 flex items-center justify-center rounded-lg bg-bg-1 border border-line text-fg-muted hover:text-fg hover:border-line-strong transition-colors"
           >
             {isPrivate ? <EyeOff className="w-4 h-4 text-amber-500 dark:text-amber-400" /> : <Eye className="w-4 h-4" />}
           </motion.button>
 
           {/* New Trade Primary CTA */}
-          <motion.div variants={fadeUp}>
-            <Button asChild variant="primary" className="h-9 px-3.5 text-xs font-medium rounded-lg" leftIcon={<TrendingUp className="h-3.5 w-3.5" />}>
+          <motion.div variants={fadeUp} className="w-full sm:w-auto">
+            <Button asChild variant="primary" className="h-9 px-3.5 text-xs font-medium rounded-lg w-full sm:w-auto" leftIcon={<TrendingUp className="h-3.5 w-3.5" />}>
               <Link to="/journal/new">New trade</Link>
             </Button>
           </motion.div>

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import {
   BarChart3,
-  FlaskConical,
   CalendarDays,
   LayoutDashboard,
   Layers,
@@ -30,7 +29,6 @@ const PRIMARY_ITEMS = [
 const MORE_ITEMS = [
   { to: '/mistakes', label: 'Mistakes', icon: TriangleAlert },
   { to: '/accounts', label: 'Accounts', icon: Wallet },
-  { to: '/backtests', label: 'Backtest storage', icon: FlaskConical },
   { to: '/figma-templates', label: 'Figma templates', icon: Layers },
   { to: '/settings', label: 'Settings', icon: Settings },
 ] as const;
@@ -58,13 +56,14 @@ export function MobileNav() {
 
   return (
     <div className="relative z-40 md:hidden">
-      <header className="relative flex h-14 items-center border-b border-line bg-bg-1 px-4">
-        <Link to="/dashboard" className="flex min-w-0 items-center gap-2.5" aria-label="The Precision Lab dashboard">
+      <header className="relative flex h-14 items-center justify-between border-b border-line bg-bg-1 px-4">
+        <Link to="/dashboard" className="flex items-center gap-2.5" aria-label="The Precision Lab dashboard">
           <BrandLogo size="md" />
+          <span className="text-sm font-semibold tracking-tight text-fg">
+            The Precision Lab
+          </span>
         </Link>
-        <span aria-hidden="true" className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 truncate text-sm font-semibold tracking-tight text-fg">
-          The Precision Lab
-        </span>
+        <ThemeToggle className="h-9 w-9 border-0 bg-transparent shadow-none hover:bg-bg-3" />
       </header>
 
       <nav aria-label="Main navigation" className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-bg-1/95 px-2 pt-2 pb-[max(env(safe-area-inset-bottom),0.5rem)] shadow-pop backdrop-blur-sm motion-reduce:backdrop-blur-none">
