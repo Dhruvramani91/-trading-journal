@@ -43,7 +43,7 @@ import { Card, CardBody, CardHeader, CardTitle } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Segmented } from '@/components/ui/Select';
-import { Loader } from '@/components/ui/Loader';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 type AccountId = Account['id'];
 
@@ -277,12 +277,14 @@ function AccountCard({
   account,
   stats,
   statsAvailable,
+  statsLoading,
   onEdit,
   onDelete,
 }: {
   account: Account;
   stats: ReturnType<typeof calculateAccountSummary>;
   statsAvailable: boolean;
+  statsLoading: boolean;
   onEdit: () => void;
   onDelete: () => void;
 }) {
@@ -363,80 +365,111 @@ function AccountCard({
         />
       </div>
 
-      {statsAvailable ? <div className="mt-5 space-y-4">
-        <div className="grid grid-cols-2 divide-x divide-line rounded-lg border border-line bg-bg-2/50">
-          <div className="p-3">
-            <div className="text-xs font-medium text-fg-dim">
-              P&L
+      {statsLoading ? (
+        <div className="mt-5 space-y-4">
+          <div className="grid grid-cols-2 divide-x divide-line rounded-lg border border-line bg-bg-2/50">
+            <div className="p-3 space-y-2">
+              <Skeleton className="h-3.5 w-12" />
+              <Skeleton className="h-6 w-24" />
             </div>
-            <div
-              className={cn(
-                'mt-1 text-xl font-semibold font-mono tabular-nums',
-                performance.totalPnl > 0
-                  ? 'text-win'
-                  : performance.totalPnl < 0
-                    ? 'text-loss'
-                    : 'text-fg'
-              )}
-            >
-              {formatSignedMoney(performance.totalPnl)}
+            <div className="p-3 space-y-2">
+              <Skeleton className="h-3.5 w-14" />
+              <Skeleton className="h-6 w-20" />
             </div>
           </div>
-
-          <div className="p-3">
-            <div className="text-xs font-medium text-fg-dim">
-              Total R
+          <div className="grid grid-cols-2 gap-4 px-0.5">
+            <div className="space-y-1.5">
+              <div className="flex justify-between">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-3 w-8" />
+              </div>
+              <Skeleton className="h-1.5 w-full rounded-full" />
             </div>
-            <div
-              className={cn(
-                'mt-1 text-xl font-semibold font-mono tabular-nums',
-                tradeStats.totalR > 0
-                  ? 'text-win'
-                  : tradeStats.totalR < 0
-                    ? 'text-loss'
-                    : 'text-fg'
-              )}
-            >
-              {formatR(tradeStats.totalR)}
+            <div className="space-y-1.5">
+              <div className="flex justify-between">
+                <Skeleton className="h-3 w-14" />
+                <Skeleton className="h-3 w-8" />
+              </div>
+              <Skeleton className="h-1.5 w-full rounded-full" />
             </div>
           </div>
         </div>
-
-        <div className="grid grid-cols-2 gap-4 px-0.5">
-          <div>
-            <div className="flex items-center justify-between text-xs text-fg-dim mb-1">
-              <span>Profit target</span>
-              <span className="font-medium text-fg-muted">
-                {Math.round(profitTargetPct)}%
-              </span>
-            </div>
-            <div className="h-1.5 rounded-full bg-bg-3 overflow-hidden">
-              <div
-                className="h-full rounded-full bg-accent transition-all"
-                style={{ width: `${Math.max(0, Math.min(100, profitTargetPct))}%` }}
-              />
-            </div>
-          </div>
-
-          <div>
-            <div className="flex items-center justify-between text-xs text-fg-dim mb-1">
-              <span>Drawdown</span>
-              <span className="font-medium text-fg-muted">
-                {Math.round(drawdownPct)}%
-              </span>
-            </div>
-            <div className="h-1.5 rounded-full bg-bg-3 overflow-hidden">
+      ) : statsAvailable ? (
+        <div className="mt-5 space-y-4">
+          <div className="grid grid-cols-2 divide-x divide-line rounded-lg border border-line bg-bg-2/50">
+            <div className="p-3">
+              <div className="text-xs font-medium text-fg-dim">
+                P&L
+              </div>
               <div
                 className={cn(
-                  'h-full rounded-full transition-all',
-                  'bg-fg-muted'
+                  'mt-1 text-xl font-semibold font-mono tabular-nums',
+                  performance.totalPnl > 0
+                    ? 'text-win'
+                    : performance.totalPnl < 0
+                      ? 'text-loss'
+                      : 'text-fg'
                 )}
-                style={{ width: `${drawdownPct}%` }}
-              />
+              >
+                {formatSignedMoney(performance.totalPnl)}
+              </div>
+            </div>
+
+            <div className="p-3">
+              <div className="text-xs font-medium text-fg-dim">
+                Total R
+              </div>
+              <div
+                className={cn(
+                  'mt-1 text-xl font-semibold font-mono tabular-nums',
+                  tradeStats.totalR > 0
+                    ? 'text-win'
+                    : tradeStats.totalR < 0
+                      ? 'text-loss'
+                      : 'text-fg'
+                )}
+              >
+                {formatR(tradeStats.totalR)}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 px-0.5">
+            <div>
+              <div className="flex items-center justify-between text-xs text-fg-dim mb-1">
+                <span>Profit target</span>
+                <span className="font-medium text-fg-muted">
+                  {Math.round(profitTargetPct)}%
+                </span>
+              </div>
+              <div className="h-1.5 rounded-full bg-bg-3 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-accent transition-all"
+                  style={{ width: `${Math.max(0, Math.min(100, profitTargetPct))}%` }}
+                />
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between text-xs text-fg-dim mb-1">
+                <span>Drawdown</span>
+                <span className="font-medium text-fg-muted">
+                  {Math.round(drawdownPct)}%
+                </span>
+              </div>
+              <div className="h-1.5 rounded-full bg-bg-3 overflow-hidden">
+                <div
+                  className={cn(
+                    'h-full rounded-full transition-all',
+                    'bg-fg-muted'
+                  )}
+                  style={{ width: `${drawdownPct}%` }}
+                />
+              </div>
             </div>
           </div>
         </div>
-      </div> : (
+      ) : (
         <p className="mt-5 text-sm text-fg-dim" role="status">
           Attachment statistics are unavailable until account trades load.
         </p>
@@ -444,15 +477,20 @@ function AccountCard({
 
       <div className="mt-4 flex items-center justify-between gap-3 border-t border-line pt-3">
         <div className="flex items-center gap-3 text-xs">
-          {statsAvailable ? <Badge tone="neutral">
-            {tradeStats.totalTrades} trade{tradeStats.totalTrades !== 1 ? 's' : ''}
-          </Badge> : null}
-
-          {statsAvailable && tradeStats.totalTrades > 0 && (
-            <Badge tone={tradeStats.winRate > 0 ? 'win' : 'loss'}>
-              {Math.round(tradeStats.winRate)}% win
-            </Badge>
-          )}
+          {statsLoading ? (
+            <Skeleton className="h-5 w-16 rounded-md" />
+          ) : statsAvailable ? (
+            <>
+              <Badge tone="neutral">
+                {tradeStats.totalTrades} trade{tradeStats.totalTrades !== 1 ? 's' : ''}
+              </Badge>
+              {tradeStats.totalTrades > 0 && (
+                <Badge tone={tradeStats.winRate > 0 ? 'win' : 'loss'}>
+                  {Math.round(tradeStats.winRate)}% win
+                </Badge>
+              )}
+            </>
+          ) : null}
         </div>
 
         <Link
@@ -506,6 +544,7 @@ export function AccountsPage() {
   const [activeTab, setActiveTab] = useState<AccountType>('futures');
 
   const [initialLoading, setInitialLoading] = useState(true);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const [formOpen, setFormOpen] = useState(false);
@@ -522,11 +561,22 @@ export function AccountsPage() {
     try {
       if (!userId) throw new Error('No authenticated user.');
 
+      // Phase 1: Fetch and render accounts immediately
       const data = await accountRepository.listForUser(userId);
       setAccounts(data);
       setLoadError(null);
+      setInitialLoading(false);
 
+      if (data.length === 0) {
+        setAttachmentsMap({});
+        setStatsLoading(false);
+        return;
+      }
+
+      // Phase 2: Asynchronously load trade attachments and summaries in parallel
+      setStatsLoading(true);
       const map: Record<AccountId, AccountTradeAttachment[]> = {};
+      for (const account of data) map[account.id] = [];
 
       let attachmentError: unknown = null;
       try {
@@ -551,7 +601,6 @@ export function AccountsPage() {
           attachments,
           tradeById,
         );
-        for (const account of data) map[account.id] = [];
         for (const attachment of enrichedAttachments) {
           (map[attachment.accountId] ??= []).push(attachment);
         }
@@ -568,8 +617,9 @@ export function AccountsPage() {
       }
     } catch (err) {
       setLoadError(errorMessage(err, 'Couldn’t load your accounts.'));
-    } finally {
       setInitialLoading(false);
+    } finally {
+      setStatsLoading(false);
     }
   }, [userId]);
 
@@ -725,11 +775,85 @@ export function AccountsPage() {
 
   if (initialLoading) {
     return (
-      <Loader
-        title="Loading accounts…"
-        subtitle="Preparing your account performance."
-        className="min-h-[calc(100dvh-6rem)] sm:min-h-[calc(100dvh-6.5rem)] md:min-h-[calc(100dvh-3rem)] lg:min-h-[calc(100dvh-3.5rem)]"
-      />
+      <div className="space-y-6 animate-fade-in" aria-busy="true" aria-label="Loading accounts">
+        <PageHeader
+          title="Accounts"
+          actions={
+            <Button
+              variant="primary"
+              size="md"
+              leftIcon={<Plus className="h-4 w-4" />}
+              disabled
+            >
+              Add Account
+            </Button>
+          }
+        />
+
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-9 w-44 rounded-lg" />
+          <Skeleton className="h-4 w-28" />
+        </div>
+
+        {/* Hero Performance Overview Skeleton */}
+        <Card className="overflow-hidden">
+          <CardHeader className="flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1.5">
+              <Skeleton className="h-5 w-40" />
+              <Skeleton className="h-3.5 w-60" />
+            </div>
+            <Skeleton className="h-5 w-20 rounded-md" />
+          </CardHeader>
+          <CardBody>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="rounded-lg bg-bg-2/50 border border-line p-3 space-y-2">
+                  <Skeleton className="h-3.5 w-16" />
+                  <Skeleton className="h-6 w-24" />
+                </div>
+              ))}
+            </div>
+          </CardBody>
+        </Card>
+
+        {/* Account Cards Grid Skeleton */}
+        <div className="grid gap-4 md:grid-cols-2">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <article key={i} className="rounded-xl border border-line bg-bg-1 p-5 shadow-card space-y-5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3 flex-1">
+                  <Skeleton className="h-10 w-10 shrink-0 rounded-xl" />
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-48" />
+                    <div className="flex gap-1.5 pt-1">
+                      <Skeleton className="h-5 w-16 rounded-md" />
+                      <Skeleton className="h-5 w-14 rounded-md" />
+                    </div>
+                  </div>
+                </div>
+                <Skeleton className="h-8 w-8 rounded-lg" />
+              </div>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 divide-x divide-line rounded-lg border border-line bg-bg-2/50">
+                  <div className="p-3 space-y-2">
+                    <Skeleton className="h-3 w-10" />
+                    <Skeleton className="h-5 w-20" />
+                  </div>
+                  <div className="p-3 space-y-2">
+                    <Skeleton className="h-3 w-12" />
+                    <Skeleton className="h-5 w-16" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <Skeleton className="h-3 w-full" />
+                  <Skeleton className="h-3 w-full" />
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
     );
   }
 
@@ -873,6 +997,7 @@ export function AccountsPage() {
                 account={account}
                 stats={summary}
                 statsAvailable={!attachmentsLoadFailed}
+                statsLoading={statsLoading}
                 onEdit={() => openEdit(account)}
                 onDelete={() => requestDelete(account)}
               />
