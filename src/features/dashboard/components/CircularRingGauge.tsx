@@ -26,7 +26,7 @@ export function CircularRingGauge({
           r={radius}
           fill="none"
           stroke="currentColor"
-          className="text-line-strong/30 dark:text-[#262b34]"
+          className="text-line-strong/20 dark:text-line"
           strokeWidth={strokeWidth}
         />
         <motion.circle

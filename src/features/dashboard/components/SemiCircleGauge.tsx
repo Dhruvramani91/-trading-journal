@@ -35,7 +35,7 @@ export function SemiCircleGauge({
             d="M 12 50 A 38 38 0 0 1 88 50"
             fill="none"
             stroke="currentColor"
-            className="text-line-strong/30 dark:text-[#262b34]"
+            className="text-line-strong/20 dark:text-line"
             strokeWidth={strokeWidth}
             strokeLinecap="round"
           />

@@ -37,11 +37,11 @@ export default function DashboardEquityChart({ data, metric, isPrivate }: Dashbo
         />
         <ReTooltip
           contentStyle={{
-            background: '#121417',
-            border: '1px solid #1f242c',
-            borderRadius: '0.75rem',
-            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-            color: '#f1f3f5',
+            background: 'var(--bg-2, #18181b)',
+            border: '1px solid var(--line, #27272a)',
+            borderRadius: '0.5rem',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+            color: 'var(--fg, #f4f4f5)',
             fontSize: '0.75rem',
           }}
           formatter={(value: unknown, _name: unknown, item: TooltipPayloadEntry) => {

@@ -45,16 +45,16 @@ export function BreakdownBarCard({
 
   return (
     <div
-      className={`bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card hover:border-line-strong transition-all duration-200 ${className}`}
+      className={`bg-bg-1 border border-line rounded-xl p-5 flex flex-col justify-between shadow-card transition-colors duration-200 ${className}`}
     >
       {/* Header with Title, Top Performer Pill, and optional headerRight controls */}
       <div className="flex items-center justify-between gap-2 mb-4">
         <div className="flex items-center gap-2">
-          <h3 className="text-xs font-semibold text-fg tracking-tight">{title}</h3>
+          <h3 className="text-xs font-medium text-fg tracking-normal">{title}</h3>
           {topItem && (
-            <span className="text-[10px] font-semibold text-fg-dim px-2 py-0.5 rounded-full bg-bg-2 dark:bg-[#181b20] border border-line/60">
+            <span className="text-[11px] font-medium text-fg-muted px-2 py-0.5 rounded-md bg-bg-2 border border-line">
               {topItem.label}:{' '}
-              <span className="text-sky-500 font-mono font-bold">
+              <span className="text-fg font-mono font-semibold">
                 {variant === 'winRate'
                   ? `${Math.round(topItem.winRate ?? 0)}%`
                   : topItem.displayMetric || `${topItem.avgMetric?.toFixed(1)}`}
@@ -65,8 +65,8 @@ export function BreakdownBarCard({
         {headerRight && <div className="flex items-center">{headerRight}</div>}
       </div>
 
-      {/* Modern High-End Vertical Bar Columns Matrix */}
-      <div className="grid grid-flow-col auto-cols-fr gap-2 sm:gap-3 items-end min-h-[170px] pt-2 pb-2">
+      {/* Vertical Bar Columns Matrix */}
+      <div className="grid grid-flow-col auto-cols-fr gap-2 sm:gap-3 items-end h-44 pt-2 pb-2">
         {items.map((item, idx) => {
           let heightPct = 0;
           const hasTrades = (item.count ?? 0) > 0;
@@ -85,14 +85,12 @@ export function BreakdownBarCard({
           }
 
           const isNegative = hasTrades && val < 0;
-          // Every item with activity (> 0 count, or winRate > 0, or avgMetric > 0) gets the full vivid glowing sky blue color
-          const isGlowing = hasTrades && !isNegative && (val > 0 || (item.winRate ?? 0) > 0);
           const isTop = topItem && topItem.label === item.label && hasTrades;
 
           return (
             <div
               key={idx}
-              className="flex flex-col items-center justify-end h-full group cursor-pointer transition-transform duration-150 hover:-translate-y-1"
+              className="flex flex-col items-center justify-end h-full group cursor-pointer transition-colors"
             >
               {/* Value Indicator Above Bar */}
               <motion.div
@@ -104,11 +102,11 @@ export function BreakdownBarCard({
                   delay: hasTrades ? 0.3 + idx * 0.07 : 0.1,
                   ease: motionTokens.ease,
                 }}
-                className={`text-[10px] sm:text-[11px] font-mono font-semibold mb-2 transition-all duration-200 truncate ${
-                  isGlowing || isTop
-                    ? 'text-sky-500 font-bold group-hover:text-sky-400'
+                className={`text-[10px] sm:text-[11px] font-mono mb-2 transition-colors duration-150 truncate ${
+                  isTop
+                    ? 'text-sky-500 dark:text-sky-400 font-semibold'
                     : isNegative
-                      ? 'text-rose-500 font-semibold group-hover:text-rose-400'
+                      ? 'text-rose-500 font-medium'
                       : hasTrades
                         ? 'text-fg-muted group-hover:text-fg'
                         : 'text-fg-dim/40'
@@ -131,25 +129,25 @@ export function BreakdownBarCard({
                 )}
               </motion.div>
 
-              {/* Column Track & Glowing Rounded Bar */}
+              {/* Column Track & Refined Bar */}
               <div className="w-full flex justify-center items-end h-28">
                 <motion.div
                   initial={{ height: hasTrades ? 0 : '10%', opacity: 0 }}
                   whileInView={{ height: `${heightPct}%`, opacity: 1 }}
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{
-                    duration: 0.65,
+                    duration: 0.6,
                     delay: idx * 0.07,
-                    ease: [0.16, 1, 0.3, 1], // Smooth snappy cubic-bezier spring feel
+                    ease: motionTokens.ease,
                   }}
-                  className={`w-full max-w-[42px] rounded-t-2xl sm:rounded-t-[20px] relative overflow-hidden flex flex-col justify-start items-center ${
-                    isGlowing || isTop
-                      ? 'bg-gradient-to-t from-sky-600 via-sky-500 to-sky-400 shadow-[0_0_20px_rgba(56,189,248,0.45)] ring-1 ring-sky-300/40 group-hover:shadow-[0_0_25px_rgba(56,189,248,0.65)] group-hover:from-sky-500 group-hover:to-sky-300'
+                  className={`w-full max-w-[36px] rounded-t-md relative overflow-hidden transition-colors ${
+                    isTop
+                      ? 'bg-sky-500 dark:bg-sky-400/90 group-hover:bg-sky-400'
                       : isNegative
-                        ? 'bg-gradient-to-t from-rose-800/80 via-rose-700/70 to-rose-500/80 shadow-[0_0_15px_rgba(244,63,94,0.3)] ring-1 ring-rose-500/30 group-hover:shadow-[0_0_20px_rgba(244,63,94,0.5)] group-hover:to-rose-400'
+                        ? 'bg-rose-500/80 group-hover:bg-rose-500'
                         : hasTrades
-                          ? 'bg-gradient-to-t from-zinc-700/60 via-zinc-600/70 to-zinc-400/80 dark:from-zinc-800/80 dark:via-zinc-700/80 dark:to-zinc-500/90 group-hover:from-zinc-600 group-hover:to-zinc-300'
-                          : 'bg-zinc-800/20 dark:bg-zinc-800/30 group-hover:bg-zinc-800/40'
+                          ? 'bg-fg-muted/30 group-hover:bg-fg-muted/50'
+                          : 'bg-bg-3/50'
                   }`}
                 />
               </div>
@@ -160,12 +158,12 @@ export function BreakdownBarCard({
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.4, delay: idx * 0.05 }}
-                className="flex flex-col items-center mt-3 text-center"
+                className="flex flex-col items-center mt-2.5 text-center"
               >
                 <span
-                  className={`text-xs font-semibold tracking-tight truncate max-w-full transition-colors ${
-                    isGlowing || isTop
-                      ? 'text-sky-500 font-bold group-hover:text-sky-400'
+                  className={`text-xs font-medium tracking-normal truncate max-w-full transition-colors ${
+                    isTop
+                      ? 'text-fg font-semibold'
                       : 'text-fg-muted group-hover:text-fg'
                   }`}
                 >

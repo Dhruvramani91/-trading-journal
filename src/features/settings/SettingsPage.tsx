@@ -8,7 +8,6 @@ import {
   PanelsTopLeft,
   UserRound,
   Palette,
-  Sparkles,
 } from 'lucide-react';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { Card, CardBody, CardTitle } from '@/components/ui/Card';
@@ -35,24 +34,23 @@ export function SettingsPage() {
       />
 
       {/* Account & Profile Spotlight Banner */}
-      <div className="relative overflow-hidden rounded-2xl border border-line bg-gradient-to-r from-bg-1 via-bg-2 to-bg-1 p-4 sm:p-5 shadow-card">
+      <div className="relative overflow-hidden rounded-xl border border-line bg-bg-1 p-4 sm:p-5 shadow-card">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-500 dark:text-sky-400 font-bold text-lg shadow-inner">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-bg-2 border border-line text-fg font-semibold text-base">
               {user?.avatar ? (
-                <img src={user.avatar} alt="" className="h-full w-full rounded-xl object-cover" />
+                <img src={user.avatar} alt="" className="h-full w-full rounded-lg object-cover" />
               ) : (
-                <UserRound className="h-6 w-6" />
+                <UserRound className="h-5 w-5 text-fg-muted" />
               )}
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold tracking-tight text-fg">
+                <h2 className="text-sm font-semibold tracking-normal text-fg">
                   {user?.name || user?.email || 'Active Trader'}
                 </h2>
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                  <Sparkles className="w-2.5 h-2.5" />
-                  Active Pro
+                <span className="inline-flex items-center rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  Pro
                 </span>
               </div>
               <p className="text-xs text-fg-muted mt-0.5">{user?.email}</p>
@@ -62,34 +60,34 @@ export function SettingsPage() {
           <Button
             asChild
             variant="outline"
-            className="rounded-xl border-line text-xs font-semibold self-start sm:self-auto hover:bg-bg-3 h-10 px-4"
+            className="rounded-lg border-line text-xs font-medium self-start sm:self-auto hover:bg-bg-2 h-9 px-3.5"
           >
-            <Link to="/profile">Edit Profile →</Link>
+            <Link to="/profile">Edit profile</Link>
           </Button>
         </div>
       </div>
 
       {/* Settings Grid: All Options In Balanced Compact Cards */}
       <section className="space-y-2.5">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-fg-dim px-1">
-          Preferences & Workspace
+        <h3 className="text-xs font-medium text-fg-dim px-1">
+          Preferences &amp; workspace
         </h3>
         <div className="grid gap-2.5 sm:grid-cols-2">
           {/* Appearance Card */}
-          <Card className="shadow-card border-line transition-all hover:border-line-strong hover:bg-bg-2/70">
-            <CardBody className="flex min-h-[96px] items-center justify-between gap-4 p-5">
-              <div className="flex items-center gap-4 min-w-0">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-600 dark:text-sky-400">
-                  <Palette className="h-5 w-5" />
+          <Card className="shadow-card border-line transition-colors hover:border-line-strong">
+            <CardBody className="flex min-h-[88px] items-center justify-between gap-4 p-4 sm:p-5">
+              <div className="flex items-center gap-3.5 min-w-0">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-bg-2 border border-line text-fg-muted">
+                  <Palette className="h-4.5 w-4.5" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <CardTitle className="text-base font-semibold">Interface Theme</CardTitle>
-                  <span className="mt-1 block text-xs text-fg-muted leading-relaxed">
+                  <CardTitle className="text-sm font-semibold">Interface theme</CardTitle>
+                  <span className="mt-0.5 block text-xs text-fg-muted">
                     Switch between dark and light modes.
                   </span>
                 </span>
               </div>
-              <ThemeToggle showLabel={false} className="h-10 w-10 shrink-0 rounded-xl border border-line bg-bg-2 hover:bg-bg-3 shadow-sm flex items-center justify-center" />
+              <ThemeToggle showLabel={false} className="h-9 w-9 shrink-0 rounded-lg border border-line bg-bg-2 hover:bg-bg-3 flex items-center justify-center" />
             </CardBody>
           </Card>
 
@@ -171,18 +169,18 @@ function SettingsLink({
   return (
     <Link
       to={to}
-      className="group block rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/70"
+      className="group block rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/70"
     >
-      <Card className="h-full border-line shadow-card transition-all duration-200 group-hover:-translate-y-0.5 group-hover:border-line-strong group-hover:bg-bg-2/70">
-        <CardBody className="flex min-h-[104px] items-center gap-4 p-5">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-line bg-bg-2 shadow-sm transition-colors group-hover:border-line-strong">
+      <Card className="h-full border-line shadow-card transition-colors duration-150 group-hover:border-line-strong group-hover:bg-bg-2">
+        <CardBody className="flex min-h-[96px] items-center gap-3.5 p-4 sm:p-5">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-line bg-bg-2 shadow-sm transition-colors group-hover:border-line-strong">
             {icon}
           </span>
           <span className="min-w-0 flex-1">
-            <CardTitle>{title}</CardTitle>
-            <span className="mt-1 block text-xs text-fg-muted leading-relaxed">{description}</span>
+            <CardTitle className="text-sm font-semibold">{title}</CardTitle>
+            <span className="mt-0.5 block text-xs text-fg-muted leading-relaxed">{description}</span>
           </span>
-          <ArrowRight className="h-4 w-4 shrink-0 text-fg-dim transition-transform group-hover:translate-x-1 group-hover:text-fg" />
+          <ArrowRight className="h-4 w-4 shrink-0 text-fg-dim transition-transform group-hover:translate-x-0.5 group-hover:text-fg" />
         </CardBody>
       </Card>
     </Link>

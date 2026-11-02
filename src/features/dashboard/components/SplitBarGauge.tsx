@@ -23,7 +23,7 @@ export function SplitBarGauge({
   return (
     <div className={`w-full flex flex-col justify-center gap-1.5 ${className}`}>
       {/* Dual Progress Bar */}
-      <div className="w-full h-2 rounded-full bg-bg-3 dark:bg-[#181b20] overflow-hidden flex items-center">
+      <div className="w-full h-2 rounded-full bg-bg-3 overflow-hidden flex items-center">
         <motion.div
           className="h-full bg-emerald-500 rounded-l-full"
           initial={{ width: 0 }}

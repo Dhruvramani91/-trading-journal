@@ -623,8 +623,8 @@ export function JournalPage() {
               {journalSections.map((section) => (
                 <section key={section.id} aria-label={`${section.template.name} trades`}>
                   <div className="flex flex-col gap-1 border-b border-line bg-bg-1 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
-                    <span className="text-sm font-medium text-fg">{journalSections.length === 1 ? 'Your trades' : `${section.template.name} trades`}</span>
-                    <span className="text-xs text-fg-muted">{section.trades.length} trade{section.trades.length === 1 ? '' : 's'} · Strategy fields shown for this template. Select a row for full details.</span>
+                    <span className="text-xs font-semibold uppercase tracking-wider text-fg-dim">{journalSections.length === 1 ? 'Trades' : `${section.template.name} trades`}</span>
+                    <span className="font-mono text-xs text-fg-muted">{section.trades.length} {section.trades.length === 1 ? 'trade' : 'trades'}</span>
                   </div>
                   <JournalTradeTable trades={section.trades} fields={section.fields} sortKey={sortKey} sortDir={sortDir} toggleSort={toggleSort} onOpen={(id) => navigate(`/journal/${id}`)} onSelect={(trade) => setSelectedTradeId(trade.id)} />
                 </section>
@@ -694,20 +694,20 @@ function JournalTradeTable({
         <TH aria-label="Open trade" align="center" className="w-[58px]" />
       </TR></THead>
       <TBody>{trades.map((trade) => (
-        <TR key={trade.id} interactive onClick={() => onOpen(trade.id)} className="h-[64px] odd:bg-bg-2 even:bg-bg-3/35">
-          <TD align="center" className="sticky left-0 z-[5] whitespace-nowrap bg-bg-2 font-mono font-semibold text-fg group-even:bg-bg-3 group-hover:bg-bg-4">{trade.number != null ? `#${String(trade.number).padStart(2, '0')}` : '—'}</TD>
-          <TD align="center" className="whitespace-nowrap text-xs text-fg-muted" title={formatDate(trade.openedAt)}>{formatDate(trade.openedAt)}</TD>
-          <TD align="center"><span className="inline-flex items-center gap-2 font-semibold text-fg"><InstrumentMark instrument={trade.instrument} className="h-7 w-7" />{trade.instrument}</span></TD>
+        <TR key={trade.id} interactive onClick={() => onOpen(trade.id)} className="h-12 odd:bg-bg-1 even:bg-bg-2/40 transition-colors hover:bg-bg-3">
+          <TD align="center" className="sticky left-0 z-[5] whitespace-nowrap bg-bg-1 font-mono text-xs font-medium text-fg-dim group-even:bg-bg-2 group-hover:bg-bg-3">{trade.number != null ? `#${String(trade.number).padStart(2, '0')}` : '—'}</TD>
+          <TD align="center" className="whitespace-nowrap font-mono text-xs text-fg-muted" title={formatDate(trade.openedAt)}>{formatDate(trade.openedAt)}</TD>
+          <TD align="center"><span className="inline-flex items-center gap-1.5 font-medium text-fg text-xs"><InstrumentMark instrument={trade.instrument} className="h-6 w-6" />{trade.instrument}</span></TD>
           <TD align="center"><DirectionPill direction={trade.direction} /></TD>
           <TD align="center"><TradeGradeBadge grade={trade.grade} /></TD>
           <TD align="center"><ResultPill result={trade.result} /></TD>
-          <TD align="center" className={cn('whitespace-nowrap font-mono text-sm font-semibold', trade.r > 0 ? 'text-win' : trade.r < 0 ? 'text-loss' : 'text-be')}>{formatR(trade.r)}</TD>
+          <TD align="center" className={cn('whitespace-nowrap font-mono text-xs font-semibold', trade.r > 0 ? 'text-win' : trade.r < 0 ? 'text-loss' : 'text-be')}>{formatR(trade.r)}</TD>
           <TD align="center" className="whitespace-nowrap font-mono num text-xs text-fg-muted">{trade.entry ?? '—'}</TD>
           <TD align="center" className="whitespace-nowrap font-mono num text-xs text-fg-muted">{trade.exit ?? '—'}</TD>
-          <TD align="center" className="whitespace-nowrap">{trade.pnl == null ? <span className="font-mono text-sm text-fg-dim">—</span> : <span className={trade.pnl > 0 ? 'font-mono text-sm font-semibold text-win' : trade.pnl < 0 ? 'font-mono text-sm font-semibold text-loss' : 'font-mono text-sm font-semibold text-be'}>{formatSignedMoney(trade.pnl)}</span>}</TD>
+          <TD align="center" className="whitespace-nowrap">{trade.pnl == null ? <span className="font-mono text-xs text-fg-dim">—</span> : <span className={trade.pnl > 0 ? 'font-mono text-xs font-semibold text-win' : trade.pnl < 0 ? 'font-mono text-xs font-semibold text-loss' : 'font-mono text-xs font-semibold text-be'}>{formatSignedMoney(trade.pnl)}</span>}</TD>
           <TD align="center" className="whitespace-nowrap font-mono num text-xs text-fg-muted">{formatDuration(trade.durationMin)}</TD>
           {fields.map((field) => { const value = readFieldLabel(trade, field.key); return <TD key={field.key} align="center" className="w-[200px] min-w-[200px] max-w-[240px] whitespace-normal break-words text-xs text-fg-muted" title={value}>{value}</TD>; })}
-          <TD align="center" className="w-[58px]"><button type="button" aria-label={`View trade ${trade.number ?? ''} details`} title="View full trade details" onClick={(event) => { event.stopPropagation(); onOpen(trade.id); }} className="rounded-md p-2 text-fg-dim transition-colors hover:bg-accent/10 hover:text-accent"><Eye className="h-4 w-4" /></button></TD>
+          <TD align="center" className="w-[58px]"><button type="button" aria-label={`View trade ${trade.number ?? ''} details`} title="View full trade details" onClick={(event) => { event.stopPropagation(); onOpen(trade.id); }} className="rounded-md p-1.5 text-fg-dim transition-colors hover:bg-accent/10 hover:text-accent"><Eye className="h-4 w-4" /></button></TD>
         </TR>
       ))}</TBody>
     </Table>
@@ -764,7 +764,7 @@ function TradeDetailSheet({ trade, onClose, onEdit, onDelete }: { trade: Trade |
   return <Dialog.Root open={Boolean(trade)} onOpenChange={(open) => { if (!open) onClose(); }}>
     <Dialog.Portal>
       <Dialog.Overlay className="fixed inset-0 z-[110] bg-black/60" />
-      <Dialog.Content aria-describedby="trade-detail-description" className="fixed inset-x-0 bottom-0 z-[111] mx-auto flex max-h-[90dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-2xl border border-line bg-bg-2 shadow-2xl focus:outline-none sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-h-[86dvh] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl">
+      <Dialog.Content aria-describedby="trade-detail-description" className="fixed inset-x-0 bottom-0 z-[111] mx-auto flex max-h-[90dvh] w-full max-w-2xl flex-col overflow-hidden rounded-t-xl border border-line bg-bg-2 shadow-card focus:outline-none sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-h-[86dvh] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl">
         {trade ? <>
           <header className="flex shrink-0 items-start justify-between gap-4 border-b border-line bg-bg-1 px-4 py-4 sm:px-6">
             <div className="min-w-0"><Dialog.Title className="flex flex-wrap items-center gap-2 text-lg font-semibold text-fg"><InstrumentMark instrument={trade.instrument} className="h-8 w-8" />{trade.instrument}<DirectionPill direction={trade.direction} /></Dialog.Title><Dialog.Description id="trade-detail-description" className="mt-1 text-sm text-fg-muted">{formatDate(trade.openedAt)} · Trade {trade.number != null ? `#${String(trade.number).padStart(2, '0')}` : '—'}</Dialog.Description></div>
@@ -808,11 +808,11 @@ const SORT_OPTIONS: { key: SortKey; label: string }[] = [
 function JournalSortSheet({ open, sortKey, sortDir, onSelect, onDirectionChange, onReset, onClose }: { open: boolean; sortKey: SortKey; sortDir: 'asc' | 'desc'; onSelect: (key: SortKey) => void; onDirectionChange: (dir: 'asc' | 'desc') => void; onReset: () => void; onClose: () => void }) {
   return <Dialog.Root open={open} onOpenChange={(value) => { if (!value) onClose(); }}>
     <Dialog.Portal><Dialog.Overlay className="fixed inset-0 z-[100] bg-black/60" />
-      <Dialog.Content aria-describedby="journal-sort-description" className="fixed inset-x-0 bottom-0 z-[101] mx-auto flex max-h-[88dvh] w-full max-w-xl flex-col overflow-hidden rounded-t-2xl border border-line bg-bg-2 shadow-2xl focus:outline-none sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-h-[85dvh] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl">
-        <header className="flex items-start justify-between border-b border-line px-4 py-4 sm:px-6"><div><Dialog.Title className="text-base font-semibold text-fg">Sort trades</Dialog.Title><Dialog.Description id="journal-sort-description" className="mt-1 text-sm text-fg-muted">Choose how trades are ordered.</Dialog.Description></div><button type="button" onClick={onClose} className="rounded-lg p-2 text-fg-muted hover:bg-bg-4 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50" aria-label="Close sort"><X className="h-5 w-5" /></button></header>
-        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:px-6"><p className="mb-2 text-xs font-semibold uppercase tracking-wide text-fg-dim">Sort by</p><div className="grid grid-cols-2 gap-2">{SORT_OPTIONS.map((option) => <button key={option.key} type="button" aria-pressed={sortKey === option.key} onClick={() => onSelect(option.key)} className={cn('flex min-h-11 items-center justify-between gap-2 rounded-xl border px-3 text-left text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50', sortKey === option.key ? 'border-line-strong bg-bg-4 text-fg' : 'border-line bg-bg-1 text-fg-muted hover:bg-bg-3 hover:text-fg')}>{option.label}{sortKey === option.key ? <Check className="h-4 w-4" /> : null}</button>)}</div>
-          <p className="mb-2 mt-5 text-xs font-semibold uppercase tracking-wide text-fg-dim">Direction</p><div className="grid grid-cols-2 gap-2"><button type="button" aria-pressed={sortDir === 'desc'} onClick={() => onDirectionChange('desc')} className={cn('min-h-11 rounded-xl border px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50', sortDir === 'desc' ? 'border-line-strong bg-bg-4 text-fg' : 'border-line bg-bg-1 text-fg-muted hover:bg-bg-3')}>Descending</button><button type="button" aria-pressed={sortDir === 'asc'} onClick={() => onDirectionChange('asc')} className={cn('min-h-11 rounded-xl border px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50', sortDir === 'asc' ? 'border-line-strong bg-bg-4 text-fg' : 'border-line bg-bg-1 text-fg-muted hover:bg-bg-3')}>Ascending</button></div>
-        </div><footer className="flex justify-between border-t border-line bg-bg-1 p-4 sm:px-6"><Button variant="ghost" onClick={onReset}>Reset sort</Button><Button variant="primary" onClick={onClose}>Done</Button></footer>
+      <Dialog.Content aria-describedby="journal-sort-description" className="fixed inset-x-0 bottom-0 z-[101] mx-auto flex max-h-[88dvh] w-full max-w-xl flex-col overflow-hidden rounded-t-xl border border-line bg-bg-2 shadow-card focus:outline-none sm:inset-auto sm:left-1/2 sm:top-1/2 sm:max-h-[85dvh] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl">
+        <header className="flex items-start justify-between border-b border-line px-4 py-4 sm:px-6"><div><Dialog.Title className="text-sm font-semibold text-fg">Sort trades</Dialog.Title><Dialog.Description id="journal-sort-description" className="mt-0.5 text-xs text-fg-muted">Choose how trades are ordered.</Dialog.Description></div><button type="button" onClick={onClose} className="rounded-lg p-2 text-fg-muted hover:bg-bg-4 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50" aria-label="Close sort"><X className="h-4 w-4" /></button></header>
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:px-6"><p className="mb-2 text-xs font-medium text-fg-muted">Sort by</p><div className="grid grid-cols-2 gap-2">{SORT_OPTIONS.map((option) => <button key={option.key} type="button" aria-pressed={sortKey === option.key} onClick={() => onSelect(option.key)} className={cn('flex min-h-10 items-center justify-between gap-2 rounded-lg border px-3 text-left text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50 transition-colors', sortKey === option.key ? 'border-line-strong bg-bg-1 text-fg shadow-sm' : 'border-line bg-bg-1/50 text-fg-muted hover:bg-bg-2 hover:text-fg')}>{option.label}{sortKey === option.key ? <Check className="h-3.5 w-3.5" /> : null}</button>)}</div>
+          <p className="mb-2 mt-5 text-xs font-medium text-fg-muted">Direction</p><div className="grid grid-cols-2 gap-2"><button type="button" aria-pressed={sortDir === 'desc'} onClick={() => onDirectionChange('desc')} className={cn('min-h-10 rounded-lg border px-3 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50 transition-colors', sortDir === 'desc' ? 'border-line-strong bg-bg-1 text-fg shadow-sm' : 'border-line bg-bg-1/50 text-fg-muted hover:bg-bg-2')}>Descending</button><button type="button" aria-pressed={sortDir === 'asc'} onClick={() => onDirectionChange('asc')} className={cn('min-h-10 rounded-lg border px-3 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50 transition-colors', sortDir === 'asc' ? 'border-line-strong bg-bg-1 text-fg shadow-sm' : 'border-line bg-bg-1/50 text-fg-muted hover:bg-bg-2')}>Ascending</button></div>
+        </div><footer className="flex justify-between border-t border-line bg-bg-1 p-4 sm:px-6"><Button variant="ghost" className="h-8 px-3 text-xs" onClick={onReset}>Reset sort</Button><Button variant="primary" className="h-8 px-3 text-xs" onClick={onClose}>Done</Button></footer>
       </Dialog.Content>
     </Dialog.Portal>
   </Dialog.Root>;
@@ -831,7 +831,7 @@ function ActiveFilterChips({ filters, fields, onRemove, onClear }: { filters: Jo
     (filters.templateBooleans[field.key] ?? []).forEach((value) => chips.push({ id: `boolean:${field.key}:${value}`, key: `boolean:${field.key}`, value, label: `${field.label}: ${value ? 'Yes' : 'No'}` }));
   }
   if (!chips.length) return null;
-  return <div className="flex min-w-0 flex-wrap items-center gap-2" aria-label="Active filters">{chips.map((chip) => <button key={chip.id} type="button" onClick={() => onRemove(chip.key, chip.value)} className="inline-flex min-h-10 max-w-full items-center gap-2 rounded-full border border-line bg-bg-2 px-3 text-xs text-fg-muted hover:bg-bg-3 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50"><span className="max-w-[15rem] truncate">{chip.label}</span><X className="h-3.5 w-3.5 shrink-0" /></button>)}<button type="button" onClick={onClear} className="min-h-10 rounded-lg px-3 text-sm font-medium text-fg-muted underline underline-offset-4 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50">Clear all</button></div>;
+  return <div className="flex min-w-0 flex-wrap items-center gap-1.5" aria-label="Active filters">{chips.map((chip) => <button key={chip.id} type="button" onClick={() => onRemove(chip.key, chip.value)} className="inline-flex h-7 max-w-full items-center gap-1.5 rounded-md border border-line bg-bg-2 px-2 text-xs text-fg-muted hover:bg-bg-3 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50 transition-colors"><span className="max-w-[15rem] truncate">{chip.label}</span><X className="h-3 w-3 shrink-0" /></button>)}<button type="button" onClick={onClear} className="h-7 rounded-md px-2 text-xs font-medium text-fg-muted hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/50 transition-colors">Clear all</button></div>;
 }
 
 function JournalFilterPanel({
@@ -978,7 +978,7 @@ function JournalFilterPanel({
 
         aria-labelledby="journal-filter-title"
 
-        className="flex max-h-[90dvh] w-full min-w-0 max-w-4xl flex-col overflow-hidden rounded-t-2xl border border-line bg-bg-2 shadow-2xl sm:max-h-[92dvh] sm:rounded-2xl"
+        className="flex max-h-[90dvh] w-full min-w-0 max-w-4xl flex-col overflow-hidden rounded-t-xl border border-line bg-bg-2 shadow-card sm:max-h-[92dvh] sm:rounded-xl"
 
         onMouseDown={(event) => event.stopPropagation()}
 
@@ -1300,12 +1300,9 @@ function FilterSection({
 
   return (
 
-    <section className="border-b border-line py-4 first:pt-2 last:border-b-0">
-
-      <div className="mb-2.5 text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-dim">{title}</div>
-
+    <section className="border-b border-line py-3.5 first:pt-2 last:border-b-0">
+      <div className="mb-2 text-xs font-medium text-fg-dim">{title}</div>
       {children}
-
     </section>
 
   );

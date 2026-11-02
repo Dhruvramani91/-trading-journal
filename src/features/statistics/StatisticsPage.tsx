@@ -55,11 +55,11 @@ function Metric({
   return (
     <div className="flex min-h-[76px] min-w-0 items-start justify-between gap-3 px-1 py-1">
       <div className="min-w-0">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-fg-dim">{label}</p>
+        <p className="text-xs font-medium text-fg-dim">{label}</p>
 
         <p
           className={cn(
-            'mt-1 font-mono font-extrabold tracking-tight',
+            'mt-1 font-mono font-semibold tracking-tight',
             size === 'lg' ? 'text-2xl sm:text-[1.75rem]' : 'text-lg',
             tone === 'win' && 'text-emerald-600 dark:text-emerald-400',
             tone === 'loss' && 'text-rose-600 dark:text-rose-400',
@@ -70,7 +70,7 @@ function Metric({
         </p>
 
         {sub ? (
-          <div className="mt-1.5 text-2xs text-fg-muted">
+          <div className="mt-1 text-xs text-fg-muted">
             {sub}
           </div>
         ) : null}
@@ -372,24 +372,24 @@ export function StatisticsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-line pb-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-fg">
+          <h1 className="text-2xl font-semibold tracking-tight text-fg">
             Statistics
           </h1>
-          <p className="text-sm font-medium text-fg-muted mt-1">
+          <p className="text-xs font-normal text-fg-muted mt-1">
             Performance analytics, win rates, and strategy breakdowns.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
           {/* Vertical Bars ⇄ Horizontal Rows View Toggle */}
-          <div className="inline-flex h-10 items-center p-1 rounded-xl bg-bg-1 dark:bg-[#121417] border border-line shadow-sm">
+          <div className="inline-flex h-9 items-center p-0.5 rounded-lg bg-bg-2 border border-line">
             <button
               type="button"
               onClick={() => setViewMode('vertical')}
               className={cn(
-                'h-8 px-3 rounded-lg text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5',
+                'h-7 px-2.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5',
                 viewMode === 'vertical'
-                  ? 'bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm'
+                  ? 'bg-bg-1 text-fg shadow-sm border border-line/50 font-semibold'
                   : 'text-fg-muted hover:text-fg',
               )}
             >
@@ -400,9 +400,9 @@ export function StatisticsPage() {
               type="button"
               onClick={() => setViewMode('horizontal')}
               className={cn(
-                'h-8 px-3 rounded-lg text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5',
+                'h-7 px-2.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5',
                 viewMode === 'horizontal'
-                  ? 'bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm'
+                  ? 'bg-bg-1 text-fg shadow-sm border border-line/50 font-semibold'
                   : 'text-fg-muted hover:text-fg',
               )}
             >
@@ -412,14 +412,14 @@ export function StatisticsPage() {
           </div>
 
           {/* PnL ($) ⇄ Realized R Toggle Segment */}
-          <div className="inline-flex h-10 items-center p-1 rounded-xl bg-bg-1 dark:bg-[#121417] border border-line shadow-sm">
+          <div className="inline-flex h-9 items-center p-0.5 rounded-lg bg-bg-2 border border-line">
             <button
               type="button"
               onClick={() => setMetricMode('r')}
               className={cn(
-                'h-8 px-3.5 rounded-lg text-xs font-semibold tracking-tight transition-all flex items-center justify-center',
+                'h-7 px-3 rounded-md text-xs font-medium transition-colors flex items-center justify-center',
                 metricMode === 'r'
-                  ? 'bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm'
+                  ? 'bg-bg-1 text-fg shadow-sm border border-line/50 font-semibold'
                   : 'text-fg-muted hover:text-fg',
               )}
             >
@@ -429,9 +429,9 @@ export function StatisticsPage() {
               type="button"
               onClick={() => setMetricMode('pnl')}
               className={cn(
-                'h-8 px-3.5 rounded-lg text-xs font-semibold tracking-tight transition-all flex items-center justify-center',
+                'h-7 px-3 rounded-md text-xs font-medium transition-colors flex items-center justify-center',
                 metricMode === 'pnl'
-                  ? 'bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm'
+                  ? 'bg-bg-1 text-fg shadow-sm border border-line/50 font-semibold'
                   : 'text-fg-muted hover:text-fg',
               )}
             >
@@ -443,7 +443,7 @@ export function StatisticsPage() {
 
       {availableTemplates.length > 1 && (
         <div className="max-w-sm">
-          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-fg-dim" htmlFor="stats-template">
+          <label className="mb-1.5 block text-xs font-medium text-fg-dim" htmlFor="stats-template">
             Strategy breakdown
           </label>
           <Select id="stats-template" value={effectiveTemplateId} onChange={(event) => setSelectedTemplateId(event.target.value)}>
@@ -473,50 +473,50 @@ export function StatisticsPage() {
             className="space-y-4"
           >
             {/* Top 5 Metric Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
               {metricMode === 'pnl' ? (
                 <>
                   {/* Total P&L */}
-                  <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card">
+                  <div className="bg-bg-1 border border-line rounded-xl p-5 flex flex-col justify-between shadow-card">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Total P&L</span>
-                      <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-bg-2 dark:bg-[#181b20] text-fg-muted border border-line">
+                      <span className="text-xs font-medium text-fg-muted">Total P&L</span>
+                      <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-bg-2 text-fg-muted border border-line">
                         Currency
                       </span>
                     </div>
                     <div className="mt-1">
                       <div
                         className={cn(
-                          'text-3xl font-extrabold font-mono tracking-tight',
+                          'text-2xl sm:text-3xl font-semibold font-mono tracking-tight',
                           pnlStats.totalPnl > 0 ? 'text-emerald-600 dark:text-emerald-400' : pnlStats.totalPnl < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-fg',
                         )}
                       >
                         {formatMoney(pnlStats.totalPnl)}
                       </div>
-                      <span className="text-[11px] text-fg-dim font-medium mt-1.5 block">
+                      <span className="text-[11px] text-fg-dim font-normal mt-1 block">
                         Net cash balance generated
                       </span>
                     </div>
                   </div>
 
                   {/* Avg P&L */}
-                  <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card">
+                  <div className="bg-bg-1 border border-line rounded-xl p-5 flex flex-col justify-between shadow-card">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Average P&L</span>
-                      <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-bg-2 dark:bg-[#181b20] text-fg-muted border border-line">
-                        Per Trade
+                      <span className="text-xs font-medium text-fg-muted">Average P&L</span>
+                      <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-bg-2 text-fg-muted border border-line">
+                        Per trade
                       </span>
                     </div>
                     <div className="mt-1">
                       <div
                         className={cn(
-                          'text-3xl font-extrabold font-mono tracking-tight',
+                          'text-2xl sm:text-3xl font-semibold font-mono tracking-tight',
                           pnlStats.averagePnl > 0 ? 'text-emerald-600 dark:text-emerald-400' : pnlStats.averagePnl < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-fg',
                         )}
                       >
                         {formatMoney(pnlStats.averagePnl)}
                       </div>
-                      <span className="text-[11px] text-fg-dim font-medium mt-1.5 block">
+                      <span className="text-[11px] text-fg-dim font-normal mt-1 block">
                         Average profit per execution
                       </span>
                     </div>
@@ -525,46 +525,46 @@ export function StatisticsPage() {
               ) : (
                 <>
                   {/* Total R */}
-                  <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card">
+                  <div className="bg-bg-1 border border-line rounded-xl p-5 flex flex-col justify-between shadow-card">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Total R</span>
-                      <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-bg-2 dark:bg-[#181b20] text-fg-muted border border-line">
-                        R Multiple
+                      <span className="text-xs font-medium text-fg-muted">Total R</span>
+                      <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-bg-2 text-fg-muted border border-line">
+                        R multiple
                       </span>
                     </div>
                     <div className="mt-1">
                       <div
                         className={cn(
-                          'text-3xl font-extrabold font-mono tracking-tight',
+                          'text-2xl sm:text-3xl font-semibold font-mono tracking-tight',
                           (s.totalR ?? 0) > 0 ? 'text-emerald-600 dark:text-emerald-400' : (s.totalR ?? 0) < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-fg',
                         )}
                       >
                         {formatR(s.totalR ?? 0)}
                       </div>
-                      <span className="text-[11px] text-fg-dim font-medium mt-1.5 block">
+                      <span className="text-[11px] text-fg-dim font-normal mt-1 block">
                         Realized R across all trades
                       </span>
                     </div>
                   </div>
 
                   {/* Expectancy */}
-                  <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card">
+                  <div className="bg-bg-1 border border-line rounded-xl p-5 flex flex-col justify-between shadow-card">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Expectancy</span>
-                      <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-bg-2 dark:bg-[#181b20] text-fg-muted border border-line">
+                      <span className="text-xs font-medium text-fg-muted">Expectancy</span>
+                      <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-bg-2 text-fg-muted border border-line">
                         Edge
                       </span>
                     </div>
                     <div className="mt-1">
                       <div
                         className={cn(
-                          'text-3xl font-extrabold font-mono tracking-tight',
+                          'text-2xl sm:text-3xl font-semibold font-mono tracking-tight',
                           (s.expectancy ?? 0) > 0 ? 'text-emerald-600 dark:text-emerald-400' : (s.expectancy ?? 0) < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-fg',
                         )}
                       >
                         {formatR(s.expectancy ?? 0)}
                       </div>
-                      <span className="text-[11px] text-fg-dim font-medium mt-1.5 block">
+                      <span className="text-[11px] text-fg-dim font-normal mt-1 block">
                         Expected return per execution
                       </span>
                     </div>
@@ -573,13 +573,13 @@ export function StatisticsPage() {
               )}
 
               {/* Win Rate */}
-              <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex items-center justify-between shadow-card">
+              <div className="bg-bg-1 border border-line rounded-xl p-5 flex items-center justify-between shadow-card">
                 <div className="flex flex-col justify-between h-full">
-                  <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Win Rate</span>
-                  <div className="text-3xl font-extrabold font-mono text-fg tracking-tight mt-2">
+                  <span className="text-xs font-medium text-fg-muted">Win rate</span>
+                  <div className="text-2xl sm:text-3xl font-semibold font-mono text-fg tracking-tight mt-2">
                     {s.winRate == null ? '—' : formatPct(s.winRate)}
                   </div>
-                  <span className="text-[11px] text-fg-dim font-medium mt-1">
+                  <span className="text-[11px] text-fg-dim font-normal mt-1">
                     {metricMode === 'pnl' ? `Avg ${formatMoney(pnlStats.averagePnl)}` : `Avg ${formatR(s.avgR ?? 0)}`}
                   </span>
                 </div>
@@ -587,15 +587,15 @@ export function StatisticsPage() {
               </div>
 
               {/* Trades */}
-              <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card">
+              <div className="bg-bg-1 border border-line rounded-xl p-5 flex flex-col justify-between shadow-card">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">Trades</span>
-                  <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-bg-2 dark:bg-[#181b20] text-fg-muted border border-line">
+                  <span className="text-xs font-medium text-fg-muted">Trades</span>
+                  <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-bg-2 text-fg-muted border border-line">
                     {s.count ?? 0} executed
                   </span>
                 </div>
                 <div className="mt-1">
-                  <div className="text-3xl font-extrabold font-mono text-fg tracking-tight">
+                  <div className="text-2xl sm:text-3xl font-semibold font-mono text-fg tracking-tight">
                     {s.count ?? 0}
                   </div>
                   <div className="mt-2 flex flex-wrap gap-1.5">
@@ -607,20 +607,20 @@ export function StatisticsPage() {
               </div>
 
               {/* Best Performer Metric */}
-              <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card">
+              <div className="bg-bg-1 border border-line rounded-xl p-5 flex flex-col justify-between shadow-card">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold text-fg-muted uppercase tracking-wider">
-                    {metricMode === 'pnl' ? 'Best P&L' : 'Best Trade'}
+                  <span className="text-xs font-medium text-fg-muted">
+                    {metricMode === 'pnl' ? 'Best P&L' : 'Best trade'}
                   </span>
-                  <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-bg-2 dark:bg-[#181b20] text-fg-muted border border-line">
+                  <span className="text-[11px] font-mono px-2 py-0.5 rounded-md bg-bg-2 text-fg-muted border border-line">
                     High
                   </span>
                 </div>
                 <div className="mt-1">
-                  <div className="text-3xl font-extrabold font-mono text-emerald-600 dark:text-emerald-400 tracking-tight">
+                  <div className="text-2xl sm:text-3xl font-semibold font-mono text-emerald-600 dark:text-emerald-400 tracking-tight">
                     {metricMode === 'pnl' ? formatMoney(pnlStats.bestPnl) : formatR(s.bestR ?? 0)}
                   </div>
-                  <span className="text-[11px] text-fg-dim font-medium mt-1.5 block">
+                  <span className="text-[11px] text-fg-dim font-normal mt-1 block">
                     {metricMode === 'pnl' ? 'Largest single trade gain' : 'Largest single trade R'}
                   </span>
                 </div>
@@ -628,11 +628,11 @@ export function StatisticsPage() {
             </div>
 
             {/* Accordion: Extended In-Depth Analytics */}
-            <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl overflow-hidden shadow-card">
+            <div className="bg-bg-1 border border-line rounded-xl overflow-hidden shadow-card">
               <details className="group">
                 <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 px-5 py-3.5 text-sm font-semibold text-fg hover:bg-bg-2/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus/60 [&::-webkit-details-marker]:hidden">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold uppercase tracking-wider text-fg-muted">More statistics</span>
+                    <span className="text-xs font-semibold text-fg">More statistics</span>
                     <span className="text-xs text-fg-dim font-normal">— Best & worst trades, drawdowns, streaks</span>
                   </div>
                   <span className="flex items-center gap-2 text-xs font-medium text-fg-muted group-hover:text-fg">
@@ -758,23 +758,23 @@ export function StatisticsPage() {
                       variant="metric"
                       metricMode={metricMode}
                       headerRight={
-                        <div className="inline-flex h-8 items-center p-0.5 rounded-lg bg-bg-2 dark:bg-[#181b20] border border-line/70 shadow-sm">
+                        <div className="inline-flex h-7 items-center p-0.5 rounded-md bg-bg-2 border border-line">
                           <button
                             type="button"
                             title="Vertical Bars"
                             onClick={() => setViewMode('vertical')}
-                            className="h-7 px-2.5 rounded-md text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm"
+                            className="h-6 px-2 rounded text-xs font-medium transition-colors flex items-center gap-1.5 bg-bg-1 text-fg shadow-sm font-semibold"
                           >
-                            <BarChart3 className="h-3.5 w-3.5" />
+                            <BarChart3 className="h-3 w-3" />
                             <span className="hidden sm:inline">Bars</span>
                           </button>
                           <button
                             type="button"
                             title="Horizontal Rows"
                             onClick={() => setViewMode('horizontal')}
-                            className="h-7 px-2.5 rounded-md text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 text-fg-muted hover:text-fg"
+                            className="h-6 px-2 rounded text-xs font-medium transition-colors flex items-center gap-1.5 text-fg-muted hover:text-fg"
                           >
-                            <Rows3 className="h-3.5 w-3.5" />
+                            <Rows3 className="h-3 w-3" />
                             <span className="hidden sm:inline">Rows</span>
                           </button>
                         </div>
@@ -789,23 +789,23 @@ export function StatisticsPage() {
                             Compare execution quality by win rate and {metricMode === 'pnl' ? 'P&L' : 'realized R'}.
                           </p>
                         </div>
-                        <div className="inline-flex h-8 items-center p-0.5 rounded-lg bg-bg-2 dark:bg-[#181b20] border border-line/70 shadow-sm">
+                        <div className="inline-flex h-7 items-center p-0.5 rounded-md bg-bg-2 border border-line">
                           <button
                             type="button"
                             title="Vertical Bars"
                             onClick={() => setViewMode('vertical')}
-                            className="h-7 px-2.5 rounded-md text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 text-fg-muted hover:text-fg"
+                            className="h-6 px-2 rounded text-xs font-medium transition-colors flex items-center gap-1.5 text-fg-muted hover:text-fg"
                           >
-                            <BarChart3 className="h-3.5 w-3.5" />
+                            <BarChart3 className="h-3 w-3" />
                             <span className="hidden sm:inline">Bars</span>
                           </button>
                           <button
                             type="button"
                             title="Horizontal Rows"
                             onClick={() => setViewMode('horizontal')}
-                            className="h-7 px-2.5 rounded-md text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm"
+                            className="h-6 px-2 rounded text-xs font-medium transition-colors flex items-center gap-1.5 bg-bg-1 text-fg shadow-sm font-semibold"
                           >
-                            <Rows3 className="h-3.5 w-3.5" />
+                            <Rows3 className="h-3 w-3" />
                             <span className="hidden sm:inline">Rows</span>
                           </button>
                         </div>
@@ -884,23 +884,23 @@ export function StatisticsPage() {
                       variant="metric"
                       metricMode={metricMode}
                       headerRight={
-                        <div className="inline-flex h-8 items-center p-0.5 rounded-lg bg-bg-2 dark:bg-[#181b20] border border-line/70 shadow-sm">
+                        <div className="inline-flex h-7 items-center p-0.5 rounded-md bg-bg-2 border border-line">
                           <button
                             type="button"
                             title="Vertical Bars"
                             onClick={() => setViewMode('vertical')}
-                            className="h-7 px-2.5 rounded-md text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm"
+                            className="h-6 px-2 rounded text-xs font-medium transition-colors flex items-center gap-1.5 bg-bg-1 text-fg shadow-sm font-semibold"
                           >
-                            <BarChart3 className="h-3.5 w-3.5" />
+                            <BarChart3 className="h-3 w-3" />
                             <span className="hidden sm:inline">Bars</span>
                           </button>
                           <button
                             type="button"
                             title="Horizontal Rows"
                             onClick={() => setViewMode('horizontal')}
-                            className="h-7 px-2.5 rounded-md text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 text-fg-muted hover:text-fg"
+                            className="h-6 px-2 rounded text-xs font-medium transition-colors flex items-center gap-1.5 text-fg-muted hover:text-fg"
                           >
-                            <Rows3 className="h-3.5 w-3.5" />
+                            <Rows3 className="h-3 w-3" />
                             <span className="hidden sm:inline">Rows</span>
                           </button>
                         </div>
@@ -924,14 +924,14 @@ export function StatisticsPage() {
                           <span className="text-xs text-fg-dim hidden sm:inline">
                             {instruments.length} traded
                           </span>
-                          <div className="inline-flex h-8 items-center p-0.5 rounded-lg bg-bg-2 dark:bg-[#181b20] border border-line/70 shadow-sm">
+                          <div className="inline-flex h-7 items-center p-0.5 rounded-md bg-bg-2 border border-line">
                             <button
                               type="button"
                               title="Vertical Bars"
                               onClick={() => setViewMode('vertical')}
-                              className="h-7 px-2.5 rounded-md text-xs font-semibold tracking-tight transition-all flex items-center gap-1.5 text-fg-muted hover:text-fg"
+                              className="h-6 px-2 rounded text-xs font-medium transition-colors flex items-center gap-1.5 text-fg-muted hover:text-fg"
                             >
-                              <BarChart3 className="h-3.5 w-3.5" />
+                              <BarChart3 className="h-3 w-3" />
                               <span className="hidden sm:inline">Bars</span>
                             </button>
                             <button

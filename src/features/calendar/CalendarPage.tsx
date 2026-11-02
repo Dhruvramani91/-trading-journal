@@ -270,7 +270,7 @@ export function CalendarPage() {
           <button
             type="button"
             onClick={goPrev}
-            className="p-2 rounded-xl bg-bg-1 dark:bg-[#121417] border border-line text-fg-muted hover:text-fg hover:border-line-strong transition-colors shadow-sm"
+            className="h-9 w-9 flex items-center justify-center rounded-lg bg-bg-1 border border-line text-fg-muted hover:text-fg hover:border-line-strong transition-colors"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -283,7 +283,7 @@ export function CalendarPage() {
                 setMonth(Number(e.target.value));
                 setSelectedDayKey(null);
               }}
-              className="appearance-none bg-bg-1 dark:bg-[#121417] border border-line rounded-xl px-4 py-2 pr-9 text-sm font-semibold text-fg hover:border-line-strong focus:outline-none focus:border-sky-500/50 cursor-pointer shadow-sm"
+              className="appearance-none bg-bg-1 border border-line rounded-lg h-9 px-3 pr-8 text-xs font-medium text-fg hover:border-line-strong focus:outline-none cursor-pointer"
             >
               {MONTH_NAMES.map((mName, idx) => (
                 <option key={idx} value={idx}>
@@ -291,7 +291,7 @@ export function CalendarPage() {
                 </option>
               ))}
             </select>
-            <ChevronDown className="w-3.5 h-3.5 text-fg-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ChevronDown className="w-3.5 h-3.5 text-fg-muted absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
           {/* Year Selector Dropdown */}
@@ -302,7 +302,7 @@ export function CalendarPage() {
                 setYear(Number(e.target.value));
                 setSelectedDayKey(null);
               }}
-              className="appearance-none bg-bg-1 dark:bg-[#121417] border border-line rounded-xl px-4 py-2 pr-9 text-sm font-semibold text-fg hover:border-line-strong focus:outline-none focus:border-sky-500/50 cursor-pointer shadow-sm font-mono"
+              className="appearance-none bg-bg-1 border border-line rounded-lg h-9 px-3 pr-8 text-xs font-medium text-fg hover:border-line-strong focus:outline-none cursor-pointer font-mono"
             >
               {[2024, 2025, 2026, 2027, 2028].map((yVal) => (
                 <option key={yVal} value={yVal}>
@@ -310,14 +310,14 @@ export function CalendarPage() {
                 </option>
               ))}
             </select>
-            <ChevronDown className="w-3.5 h-3.5 text-fg-muted absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ChevronDown className="w-3.5 h-3.5 text-fg-muted absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
 
           {/* Next Arrow */}
           <button
             type="button"
             onClick={goNext}
-            className="p-2 rounded-xl bg-bg-1 dark:bg-[#121417] border border-line text-fg-muted hover:text-fg hover:border-line-strong transition-colors shadow-sm"
+            className="h-9 w-9 flex items-center justify-center rounded-lg bg-bg-1 border border-line text-fg-muted hover:text-fg hover:border-line-strong transition-colors"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -326,23 +326,23 @@ export function CalendarPage() {
           <button
             type="button"
             onClick={goToday}
-            className="px-4 py-2 rounded-xl bg-bg-1 dark:bg-[#121417] border border-line text-xs font-semibold text-fg hover:bg-bg-2 hover:border-line-strong transition-colors shadow-sm"
+            className="h-9 px-3 rounded-lg bg-bg-1 border border-line text-xs font-medium text-fg hover:bg-bg-2 transition-colors"
           >
             Today
           </button>
         </div>
 
         {/* Right: View Toggles & Note / Action */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           {/* PnL vs R toggle */}
-          <div className="inline-flex items-center p-1 rounded-xl bg-bg-1 dark:bg-[#121417] border border-line shadow-sm">
+          <div className="inline-flex h-9 items-center p-0.5 rounded-lg bg-bg-2 border border-line">
             <button
               type="button"
               onClick={() => setMetricMode('pnl')}
               className={cn(
-                'px-3 py-1 rounded-lg text-xs font-semibold tracking-tight transition-all',
+                'h-7 px-3 rounded-md text-xs font-medium transition-colors',
                 metricMode === 'pnl'
-                  ? 'bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm'
+                  ? 'bg-bg-1 text-fg shadow-sm border border-line/50 font-semibold'
                   : 'text-fg-muted hover:text-fg',
               )}
             >
@@ -352,9 +352,9 @@ export function CalendarPage() {
               type="button"
               onClick={() => setMetricMode('r')}
               className={cn(
-                'px-3 py-1 rounded-lg text-xs font-semibold tracking-tight transition-all',
+                'h-7 px-3 rounded-md text-xs font-medium transition-colors',
                 metricMode === 'r'
-                  ? 'bg-sky-500/20 text-sky-600 dark:text-sky-400 border border-sky-500/30 shadow-sm'
+                  ? 'bg-bg-1 text-fg shadow-sm border border-line/50 font-semibold'
                   : 'text-fg-muted hover:text-fg',
               )}
             >
@@ -363,16 +363,16 @@ export function CalendarPage() {
           </div>
 
           {/* Daily / Monthly / Yearly segment */}
-          <div className="inline-flex items-center p-1 rounded-xl bg-bg-1 dark:bg-[#121417] border border-line shadow-sm">
+          <div className="inline-flex h-9 items-center p-0.5 rounded-lg bg-bg-2 border border-line">
             {(['Daily', 'Monthly', 'Yearly'] as const).map((mode) => (
               <button
                 key={mode}
                 type="button"
                 onClick={() => setViewMode(mode)}
                 className={cn(
-                  'px-3 py-1 rounded-lg text-xs font-semibold tracking-tight transition-all',
+                  'h-7 px-3 rounded-md text-xs font-medium transition-colors',
                   viewMode === mode
-                    ? 'bg-sky-600/20 text-sky-600 dark:text-sky-300 border border-sky-500/40 shadow-sm'
+                    ? 'bg-bg-1 text-fg shadow-sm border border-line/50 font-semibold'
                     : 'text-fg-muted hover:text-fg',
                 )}
               >
@@ -385,35 +385,35 @@ export function CalendarPage() {
           <Button
             variant="outline"
             size="sm"
-            className="h-9 px-3 rounded-xl border-line text-xs font-semibold text-fg bg-bg-1 dark:bg-[#121417] hover:bg-bg-2"
+            className="h-9 px-3 rounded-lg border-line text-xs font-medium text-fg bg-bg-1 hover:bg-bg-2"
             onClick={() => setIsScoreOpen(!isScoreOpen)}
-            leftIcon={isScoreOpen ? <PanelRightClose className="w-3.5 h-3.5 text-sky-500" /> : <PanelRightOpen className="w-3.5 h-3.5 text-sky-500" />}
+            leftIcon={isScoreOpen ? <PanelRightClose className="w-3.5 h-3.5 text-fg-muted" /> : <PanelRightOpen className="w-3.5 h-3.5 text-fg-muted" />}
             title={isScoreOpen ? 'Collapse score panel to expand calendar' : 'Show score panel'}
           >
-            {isScoreOpen ? 'Expand calendar' : 'Show score'}
+            {isScoreOpen ? 'Expand' : 'Score'}
           </Button>
 
           {/* Add Trade Button */}
           <Button
-            variant="outline"
+            variant="primary"
             size="sm"
-            className="h-9 px-3.5 rounded-xl border-line text-xs font-semibold text-fg bg-bg-1 dark:bg-[#121417] hover:bg-bg-2"
+            className="h-9 px-3.5 rounded-lg text-xs font-medium"
             leftIcon={<Plus className="w-3.5 h-3.5" />}
             onClick={() => navigate('/journal/new')}
           >
-            Add trade
+            New trade
           </Button>
         </div>
       </header>
 
       {/* 2. Top Info Sub-banner */}
-      <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-bg-1 dark:bg-[#121417] border border-line text-xs text-fg-muted shadow-card">
+      <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-bg-1 border border-line text-xs text-fg-muted shadow-card">
         <span className="w-1.5 h-1.5 rounded-full bg-sky-500 inline-block" />
         {periodTradeCount === 0 ? (
-          <span className="font-medium tracking-wide">NO TRADES IN THIS PERIOD</span>
+          <span className="font-medium">No trades logged in this period</span>
         ) : (
-          <span className="font-medium tracking-wide">
-            {periodTradeCount} TRADE{periodTradeCount === 1 ? '' : 'S'} LOGGED IN {(MONTH_NAMES[month] ?? '').toUpperCase()} {year}
+          <span className="font-medium">
+            {periodTradeCount} {periodTradeCount === 1 ? 'trade' : 'trades'} logged in {MONTH_NAMES[month]} {year}
           </span>
         )}
       </div>
@@ -423,7 +423,7 @@ export function CalendarPage() {
         {/* Left: Calendar Matrix (Full width when collapsed, 8 cols when score is open) */}
         <div
           className={cn(
-            'bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-3 sm:p-4 md:p-5 flex flex-col justify-between shadow-card transition-all duration-300 relative',
+            'bg-bg-1 border border-line rounded-xl p-3 sm:p-4 md:p-5 flex flex-col justify-between shadow-card transition-all duration-300 relative',
             isScoreOpen ? 'lg:col-span-8' : 'lg:col-span-12',
           )}
         >
@@ -446,12 +446,12 @@ export function CalendarPage() {
             {/* Weekday Header */}
             <div className="grid grid-cols-8 gap-1 sm:gap-1.5 mb-2.5 text-center">
               {WEEKDAY_HEADERS.map((hName) => (
-                <div key={hName} className="text-[10px] sm:text-[11px] font-bold text-fg-dim uppercase tracking-wider py-1 truncate">
+                <div key={hName} className="text-[10px] sm:text-[11px] font-medium text-fg-dim py-1 truncate">
                   {hName}
                 </div>
               ))}
-              <div className="text-[10px] sm:text-[11px] font-bold text-fg-dim uppercase tracking-wider py-1 truncate">
-                WEEK
+              <div className="text-[10px] sm:text-[11px] font-medium text-fg-dim py-1 truncate">
+                Week
               </div>
             </div>
 
@@ -478,17 +478,17 @@ export function CalendarPage() {
                             setSelectedDayKey(isSelected ? null : cell.dateKey);
                           }}
                           className={cn(
-                            'min-h-[64px] sm:min-h-[76px] lg:min-h-[82px] rounded-xl p-1.5 sm:p-2.5 flex flex-col justify-between transition-all border cursor-pointer select-none',
+                            'min-h-[64px] sm:min-h-[76px] lg:min-h-[82px] rounded-lg p-1.5 sm:p-2.5 flex flex-col justify-between transition-colors border cursor-pointer select-none',
                             // Inactive vs Active Day styling
                             hasTrades
                               ? isWin
-                                ? 'bg-emerald-500/10 dark:bg-emerald-950/20 border-emerald-500/40 hover:border-emerald-400/70 shadow-[0_0_12px_rgba(34,197,94,0.12)]'
+                                ? 'bg-emerald-500/10 border-emerald-500/30 hover:border-emerald-500/60'
                                 : isLoss
-                                  ? 'bg-rose-500/10 dark:bg-rose-950/20 border-rose-500/40 hover:border-rose-400/70 shadow-[0_0_12px_rgba(244,63,94,0.12)]'
-                                  : 'bg-zinc-500/10 dark:bg-zinc-900/40 border-zinc-500/30 dark:border-zinc-700/40 hover:border-zinc-400'
-                              : 'bg-bg-0/60 dark:bg-[#0d0f12] border-line/50 hover:border-line-strong',
-                            cell.isToday && 'ring-2 ring-sky-500 shadow-md',
-                            isSelected && 'border-sky-400 bg-sky-500/10 dark:bg-sky-950/20',
+                                  ? 'bg-rose-500/10 border-rose-500/30 hover:border-rose-500/60'
+                                  : 'bg-bg-2 border-line hover:border-line-strong'
+                              : 'bg-bg-1/60 border-line/40 hover:border-line',
+                            cell.isToday && 'ring-1 ring-sky-500',
+                            isSelected && 'border-sky-400 bg-sky-500/10',
                             isPrevOrNext && 'opacity-40',
                           )}
                         >
@@ -547,7 +547,7 @@ export function CalendarPage() {
                     })}
 
                     {/* 8th Column: Week Summary Block */}
-                    <div className="min-h-[64px] sm:min-h-[76px] lg:min-h-[82px] rounded-xl p-1.5 sm:p-2 bg-bg-2/50 dark:bg-[#0d0f12]/60 border border-line/60 flex flex-col justify-center items-center text-center">
+                    <div className="min-h-[64px] sm:min-h-[76px] lg:min-h-[82px] rounded-lg p-1.5 sm:p-2 bg-bg-2 border border-line/60 flex flex-col justify-center items-center text-center">
                       {weekRow && weekRow.count > 0 ? (
                         <div>
                           <span
@@ -577,12 +577,12 @@ export function CalendarPage() {
 
         {/* Right: SureScore / Precision Score Card (collapsible) */}
         {isScoreOpen && (
-          <div className="lg:col-span-4 bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-5 flex flex-col justify-between shadow-card animate-in fade-in duration-200">
+          <div className="lg:col-span-4 bg-bg-1 border border-line rounded-xl p-5 flex flex-col justify-between shadow-card animate-in fade-in duration-200">
             <div>
               <div className="flex items-start justify-between mb-3">
                 <div>
-                  <h3 className="text-xs font-bold tracking-wider text-fg-muted uppercase flex items-center gap-1.5">
-                    SURESCORE / PRECISION SCORE
+                  <h3 className="text-xs font-semibold text-fg flex items-center gap-1.5">
+                    Precision Score
                     <Info className="w-3.5 h-3.5 text-fg-dim" />
                   </h3>
                   <p className="text-xs text-fg-dim mt-0.5">
@@ -591,7 +591,7 @@ export function CalendarPage() {
                       : `Month: ${MONTH_NAMES[month]} ${year} · ${displayTrades.length} trade(s)`}
                   </p>
                 </div>
-                <span className="text-3xl font-extrabold font-mono text-emerald-600 dark:text-emerald-400 tracking-tight">
+                <span className="text-2xl sm:text-3xl font-semibold font-mono text-emerald-600 dark:text-emerald-400 tracking-tight">
                   {scoreData.overallScore.toFixed(1)}
                 </span>
               </div>

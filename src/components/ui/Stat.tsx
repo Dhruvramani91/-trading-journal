@@ -20,9 +20,9 @@ export function Stat({ label, value, hint, tone = 'default', className }: StatPr
           : 'text-fg';
 
   return (
-    <div className={cn('flex min-w-0 flex-col gap-1.5', className)}>
-      <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-fg-dim">{label}</span>
-      <span className={cn('font-mono text-2xl sm:text-[1.7rem] font-extrabold tracking-tight leading-none', valueColor)}>{value}</span>
+    <div className={cn('flex min-w-0 flex-col gap-1', className)}>
+      <span className="text-xs font-medium text-fg-dim">{label}</span>
+      <span className={cn('font-mono text-2xl sm:text-[1.7rem] font-semibold tracking-tight leading-none', valueColor)}>{value}</span>
       {hint ? <span className="text-xs leading-5 text-fg-muted">{hint}</span> : null}
     </div>
   );

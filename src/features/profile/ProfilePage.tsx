@@ -255,36 +255,36 @@ export function ProfilePage() {
         actions={<div className="flex flex-wrap gap-2"><Button asChild variant="secondary" leftIcon={<CreditCard className="h-4 w-4" />}><Link to="/manage-subscription">Manage subscription</Link></Button><Button asChild variant="secondary" leftIcon={<ArrowLeft className="h-4 w-4" />}><Link to="/settings">Back to settings</Link></Button></div>}
       />
 
-      <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-6 sm:p-7 shadow-card">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+      <div className="bg-bg-1 border border-line rounded-xl p-5 sm:p-6 shadow-card">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-5">
           <div className="relative shrink-0">
             {currentUser.avatar ? (
               <img
                 src={currentUser.avatar}
                 alt={displayName}
-                className="h-20 w-20 rounded-2xl object-cover border border-line shadow-sm"
+                className="h-16 w-16 rounded-xl object-cover border border-line shadow-sm"
               />
             ) : (
-              <div className="h-20 w-20 rounded-2xl bg-sky-500/15 border border-sky-500/25 text-sky-500 flex items-center justify-center text-xl font-bold shadow-sm">
+              <div className="h-16 w-16 rounded-xl bg-bg-2 border border-line text-fg flex items-center justify-center text-lg font-bold shadow-sm">
                 {getInitials(displayName)}
               </div>
             )}
           </div>
 
           <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <h2 className="text-xl sm:text-2xl font-bold text-fg tracking-tight">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-lg sm:text-xl font-bold text-fg tracking-tight">
                 {displayName}
               </h2>
 
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-2.5 py-0.5 text-2xs font-semibold text-emerald-600 dark:text-emerald-400">
+              <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-2xs font-medium text-emerald-600 dark:text-emerald-400">
                 <ShieldCheck className="h-3 w-3" />
                 Verified Pro
               </span>
             </div>
 
-            <p className="mt-1 text-sm text-fg-muted break-all">{currentUser.email}</p>
-            <p className="mt-2 text-xs font-medium text-fg-dim">{traderLevelLabel}</p>
+            <p className="mt-1 text-xs text-fg-muted break-all">{currentUser.email}</p>
+            <p className="mt-1.5 text-xs font-medium text-fg-dim">{traderLevelLabel}</p>
           </div>
 
           <Button
@@ -293,63 +293,63 @@ export function ProfilePage() {
             onClick={openEditor}
             leftIcon={<UserRound className="h-3.5 w-3.5" />}
           >
-            Edit Profile
+            Edit profile
           </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-6 shadow-card">
-          <div className="flex items-center gap-2 mb-4">
-            <UserRound className="h-4 w-4 text-sky-500" />
+        <div className="bg-bg-1 border border-line rounded-xl p-5 shadow-card">
+          <div className="flex items-center gap-2 mb-3">
+            <UserRound className="h-4 w-4 text-fg-dim" />
             <h3 className="text-sm font-semibold text-fg tracking-tight">Account details</h3>
           </div>
 
           <div className="space-y-1">
-            <div className="flex items-center justify-between gap-4 py-3 border-b border-line">
-              <div className="flex items-center gap-3 min-w-0">
+            <div className="flex items-center justify-between gap-4 py-2.5 border-b border-line">
+              <div className="flex items-center gap-2.5 min-w-0">
                 <Mail className="h-4 w-4 text-fg-dim shrink-0" />
-                <span className="text-sm text-fg-muted">Email</span>
+                <span className="text-xs text-fg-muted">Email</span>
               </div>
-              <span className="text-sm font-medium text-fg text-right break-all">
+              <span className="text-xs font-medium text-fg text-right break-all">
                 {currentUser.email}
               </span>
             </div>
 
-            <div className="flex items-center justify-between gap-4 py-3 border-b border-line">
-              <div className="flex items-center gap-3">
+            <div className="flex items-center justify-between gap-4 py-2.5 border-b border-line">
+              <div className="flex items-center gap-2.5">
                 <ShieldCheck className="h-4 w-4 text-fg-dim shrink-0" />
-                <span className="text-sm text-fg-muted">Account type</span>
+                <span className="text-xs text-fg-muted">Account type</span>
               </div>
-              <span className="text-sm font-medium text-fg">{traderLevelLabel}</span>
+              <span className="text-xs font-medium text-fg">{traderLevelLabel}</span>
             </div>
           </div>
         </div>
 
-        <div className="bg-bg-1 dark:bg-[#121417] border border-line rounded-2xl p-6 shadow-card">
-          <div className="flex items-center gap-2 mb-4">
-            <BarChart3 className="h-4 w-4 text-sky-500" />
+        <div className="bg-bg-1 border border-line rounded-xl p-5 shadow-card">
+          <div className="flex items-center gap-2 mb-3">
+            <BarChart3 className="h-4 w-4 text-fg-dim" />
             <h3 className="text-sm font-semibold text-fg tracking-tight">Trading snapshot</h3>
           </div>
 
           <div>
-            <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-xl border border-line bg-bg-2 dark:bg-[#181b20] p-3.5">
-                <p className="text-2xs uppercase tracking-wider font-semibold text-fg-dim">
+            <div className="grid grid-cols-3 gap-2.5">
+              <div className="rounded-lg border border-line bg-bg-2 p-3">
+                <p className="text-xs font-medium text-fg-dim">
                   Trades
                 </p>
-                <p className="mt-1 text-lg font-bold text-fg tabular-nums">
+                <p className="mt-1 text-base font-bold text-fg tabular-nums">
                   {billingLoading ? '—' : canViewTradingSnapshot ? stats.count : '—'}
                 </p>
               </div>
 
-              <div className="rounded-xl border border-line bg-bg-2 dark:bg-[#181b20] p-3.5">
-                <p className="text-2xs uppercase tracking-wider font-semibold text-fg-dim">
+              <div className="rounded-lg border border-line bg-bg-2 p-3">
+                <p className="text-xs font-medium text-fg-dim">
                   Total R
                 </p>
                 <p
                   className={cn(
-                    'mt-1 text-lg font-bold tabular-nums',
+                    'mt-1 text-base font-bold tabular-nums',
                     canViewTradingSnapshot && stats.totalR > 0
                       ? 'text-emerald-500 dark:text-emerald-400'
                       : canViewTradingSnapshot && stats.totalR < 0
@@ -361,17 +361,17 @@ export function ProfilePage() {
                 </p>
               </div>
 
-              <div className="rounded-xl border border-line bg-bg-2 dark:bg-[#181b20] p-3.5">
-                <p className="text-2xs uppercase tracking-wider font-semibold text-fg-dim">
+              <div className="rounded-lg border border-line bg-bg-2 p-3">
+                <p className="text-xs font-medium text-fg-dim">
                   Win rate
                 </p>
-                <p className="mt-1 text-lg font-bold text-fg tabular-nums">
+                <p className="mt-1 text-base font-bold text-fg tabular-nums">
                   {billingLoading || !canViewTradingSnapshot || stats.winRate == null ? '—' : formatPct(stats.winRate)}
                 </p>
               </div>
             </div>
             {!billingLoading && !canViewTradingSnapshot && (
-              <p className="mt-3 text-xs text-fg-muted">Your trading snapshot is available while your subscription is active.</p>
+              <p className="mt-2.5 text-xs text-fg-muted">Your trading snapshot is available while your subscription is active.</p>
             )}
           </div>
         </div>
@@ -385,15 +385,15 @@ export function ProfilePage() {
           }}
         >
           <div
-            className="w-full max-w-4xl rounded-2xl border border-line bg-bg-1 shadow-2xl animate-fade-in"
+            className="w-full max-w-4xl rounded-xl border border-line bg-bg-1 shadow-2xl animate-fade-in"
             role="dialog"
             aria-modal="true"
             aria-labelledby="edit-profile-title"
           >
-            <div className="flex items-center justify-between border-b border-line bg-bg-1/95 px-5 py-4 sm:px-7">
+            <div className="flex items-center justify-between border-b border-line bg-bg-1/95 px-5 py-4 sm:px-6">
               <div>
-                <h3 id="edit-profile-title" className="text-base font-bold text-fg">
-                  Edit Profile
+                <h3 id="edit-profile-title" className="text-base font-semibold text-fg">
+                  Edit profile
                 </h3>
                 <p className="mt-0.5 text-xs text-fg-muted">
                   A couple of details to make your workspace yours.
@@ -411,10 +411,10 @@ export function ProfilePage() {
               </button>
             </div>
 
-            <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-12 lg:gap-8">
+            <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-12 lg:gap-6">
               <section aria-labelledby="profile-form-heading" className="lg:col-span-7">
                 <div className="mb-4">
-                  <h4 id="profile-form-heading" className="text-xl font-bold tracking-tight text-fg sm:text-2xl">
+                  <h4 id="profile-form-heading" className="text-lg font-bold tracking-tight text-fg">
                     Set up your profile
                   </h4>
                   <p className="mt-0.5 text-xs text-fg-muted">Two quick details. You can change them anytime.</p>
@@ -422,7 +422,7 @@ export function ProfilePage() {
 
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="profile-name" className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-fg-dim">
+                    <label htmlFor="profile-name" className="mb-1.5 block text-xs font-medium text-fg-dim">
                       Your name
                     </label>
                     <input
@@ -431,13 +431,13 @@ export function ProfilePage() {
                       onChange={(event) => setName(event.target.value)}
                       maxLength={50}
                       autoComplete="name"
-                      className="h-10 w-full rounded-xl border border-line bg-bg-2 px-3.5 text-sm text-fg outline-none transition-colors placeholder:text-fg-dim focus-visible:border-focus focus-visible:ring-2 focus-visible:ring-focus/20"
+                      className="h-9 w-full rounded-lg border border-line bg-bg-2 px-3 text-sm text-fg outline-none transition-colors placeholder:text-fg-dim focus-visible:border-focus focus-visible:ring-1 focus-visible:ring-focus/20"
                       placeholder="What should we call you?"
                     />
                   </div>
 
                   <fieldset>
-                    <legend className="text-xs font-semibold uppercase tracking-wider text-fg-dim">Trading experience</legend>
+                    <legend className="text-xs font-medium text-fg-dim">Trading experience</legend>
                     <p className="mb-2 mt-0.5 text-xs text-fg-muted">Pick what feels closest. You can update this later.</p>
                     <div className="space-y-2">
                       {([
@@ -448,14 +448,14 @@ export function ProfilePage() {
                         <label
                           key={value}
                           className={cn(
-                            'group flex cursor-pointer items-center gap-3 rounded-xl border px-3.5 py-2.5 transition-colors focus-within:ring-2 focus-within:ring-focus/40',
+                            'group flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 transition-colors focus-within:ring-2 focus-within:ring-focus/40',
                             traderLevel === value
                               ? 'border-line-strong bg-bg-3'
                               : 'border-line bg-bg-2 hover:border-line-strong hover:bg-bg-3/70',
                           )}
                         >
                           <input
-                            className="h-4 w-4 shrink-0 accent-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                            className="h-4 w-4 shrink-0 accent-fg focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-focus"
                             type="radio"
                             name="trader-level"
                             value={value}
@@ -463,7 +463,7 @@ export function ProfilePage() {
                             onChange={() => setTraderLevel(value)}
                           />
                           <span className="min-w-0">
-                            <span className="block text-xs font-bold text-fg">{label}</span>
+                            <span className="block text-xs font-semibold text-fg">{label}</span>
                             <span className="block text-2xs text-fg-muted leading-tight">{description}</span>
                           </span>
                         </label>
@@ -474,40 +474,40 @@ export function ProfilePage() {
               </section>
 
               <aside aria-label="Live profile preview" className="flex flex-col justify-center lg:col-span-5">
-                <div className="rounded-2xl border border-line bg-bg-2 p-4 sm:p-5">
-                  <div className="mb-4 flex items-center justify-between border-b border-line pb-3">
+                <div className="rounded-xl border border-line bg-bg-2 p-4">
+                  <div className="mb-3.5 flex items-center justify-between border-b border-line pb-2.5">
                     <div className="flex items-center gap-2">
-                      <span className="h-2 w-2 rounded-full bg-fg-muted" aria-hidden="true" />
-                      <span className="text-xs font-semibold uppercase tracking-wider text-fg-muted">Your profile preview</span>
+                      <span className="h-1.5 w-1.5 rounded-full bg-fg-muted" aria-hidden="true" />
+                      <span className="text-xs font-medium text-fg-muted">Your profile preview</span>
                     </div>
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-bg-3 px-2 py-0.5 text-2xs font-semibold text-fg-muted">
+                    <span className="inline-flex items-center gap-1.5 rounded-md border border-line bg-bg-3 px-2 py-0.5 text-2xs font-medium text-fg-muted">
                       <Eye className="h-3 w-3" /> Live
                     </span>
                   </div>
 
-                  <div className="rounded-xl border border-line bg-bg-1 p-3.5">
-                    <div className="flex items-center gap-3.5">
+                  <div className="rounded-lg border border-line bg-bg-1 p-3">
+                    <div className="flex items-center gap-3">
                       <div className="relative shrink-0">
                         {preview ? (
-                          <img src={preview} alt="Profile preview" className="h-14 w-14 rounded-full border border-line object-cover" />
+                          <img src={preview} alt="Profile preview" className="h-12 w-12 rounded-full border border-line object-cover" />
                         ) : (
-                          <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border border-line-strong bg-bg-3 text-lg font-bold text-fg">
+                          <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border border-line-strong bg-bg-3 text-base font-bold text-fg">
                             {getInitials(name)}
                           </div>
                         )}
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="absolute -top-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full border-2 border-bg-1 bg-fg text-bg-1 shadow-md transition-all hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                          className="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border border-bg-1 bg-fg text-bg-1 shadow-sm transition-all hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-focus"
                           aria-label="Upload profile picture"
                           title="Change profile photo"
                         >
-                          <Camera className="h-3.5 w-3.5" />
+                          <Camera className="h-3 w-3" />
                         </button>
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex min-w-0 items-center gap-1.5">
-                          <span className={cn('truncate text-sm font-bold', name.trim() ? 'text-fg' : 'text-fg-dim')}>
+                          <span className={cn('truncate text-xs font-semibold', name.trim() ? 'text-fg' : 'text-fg-dim')}>
                             {name.trim() || 'Your name'}
                           </span>
                           <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-500" aria-label="Verified account" />
@@ -516,8 +516,8 @@ export function ProfilePage() {
                         <p className="mt-0.5 text-2xs text-fg-dim">ThePrecisionLab trader</p>
                       </div>
                     </div>
-                    <div className="mt-3 flex items-center gap-2 border-t border-line pt-3">
-                      <span className="inline-flex items-center gap-1.5 rounded-md border border-line bg-bg-3 px-2 py-0.5 text-2xs font-semibold text-fg-muted">
+                    <div className="mt-2.5 flex items-center gap-2 border-t border-line pt-2.5">
+                      <span className="inline-flex items-center gap-1.5 rounded-md border border-line bg-bg-3 px-2 py-0.5 text-2xs font-medium text-fg-muted">
                         <span className="h-1.5 w-1.5 rounded-full bg-fg-muted" aria-hidden="true" />
                         {traderLevel.charAt(0).toUpperCase() + traderLevel.slice(1)}
                       </span>

@@ -201,17 +201,14 @@ export function TraderScoreRadar({ scoreData, className = '' }: TraderScoreRadar
           </span>
         </div>
 
-        {/* Gradient Slider Meter */}
-        <div className="relative w-full h-1.5 rounded-full bg-bg-3 dark:bg-[#181b20] mt-2 mb-1">
+        {/* Score Slider Track */}
+        <div className="relative w-full h-1.5 rounded-full bg-bg-3 mt-2 mb-1">
           <div
-            className="absolute inset-0 rounded-full"
-            style={{
-              background: 'linear-gradient(90deg, #ef4444 0%, #eab308 40%, #22c55e 80%, #38bdf8 100%)',
-            }}
+            className="absolute inset-0 rounded-full bg-gradient-to-r from-line to-sky-500/80"
           />
           {/* Slider Thumb Indicator */}
           <motion.div
-            className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white border-2 border-line-strong dark:border-[#090a0c] shadow-[0_0_8px_rgba(56,189,248,0.8)] -ml-2"
+            className="absolute top-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-fg border-2 border-bg-1 shadow-sm -ml-1.5"
             initial={{ left: '0%' }}
             animate={{ left: `${Math.min(98, Math.max(2, scoreData.overallScore))}%` }}
             transition={{ duration: motionTokens.duration.slow, ease: motionTokens.ease }}

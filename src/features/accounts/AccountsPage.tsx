@@ -364,14 +364,14 @@ function AccountCard({
       </div>
 
       {statsAvailable ? <div className="mt-5 space-y-4">
-        <div className="grid grid-cols-2 divide-x divide-line rounded-xl border border-line bg-bg-3/70">
-          <div className="p-3.5">
-            <div className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
+        <div className="grid grid-cols-2 divide-x divide-line rounded-lg border border-line bg-bg-2/50">
+          <div className="p-3">
+            <div className="text-xs font-medium text-fg-dim">
               P&L
             </div>
             <div
               className={cn(
-                'mt-1 text-2xl font-bold',
+                'mt-1 text-xl font-semibold font-mono tabular-nums',
                 performance.totalPnl > 0
                   ? 'text-win'
                   : performance.totalPnl < 0
@@ -383,13 +383,13 @@ function AccountCard({
             </div>
           </div>
 
-          <div className="p-3.5">
-            <div className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
+          <div className="p-3">
+            <div className="text-xs font-medium text-fg-dim">
               Total R
             </div>
             <div
               className={cn(
-                'mt-1 text-2xl font-bold tabular-nums',
+                'mt-1 text-xl font-semibold font-mono tabular-nums',
                 tradeStats.totalR > 0
                   ? 'text-win'
                   : tradeStats.totalR < 0
@@ -773,13 +773,13 @@ export function AccountsPage() {
           </CardHeader>
           <CardBody>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="rounded-lg bg-bg-3/70 p-3">
-                <div className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
+              <div className="rounded-lg bg-bg-2/50 border border-line p-3">
+                <div className="text-xs font-medium text-fg-dim">
                   Total P&amp;L
                 </div>
                 <div
                   className={cn(
-                    'mt-1 text-2xl font-bold',
+                    'mt-1 text-xl font-semibold font-mono tabular-nums',
                     heroStats.totalPnl > 0
                       ? 'text-win'
                       : heroStats.totalPnl < 0
@@ -791,13 +791,13 @@ export function AccountsPage() {
                 </div>
               </div>
 
-              <div className="rounded-lg bg-bg-3/70 p-3">
-                <div className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
+              <div className="rounded-lg bg-bg-2/50 border border-line p-3">
+                <div className="text-xs font-medium text-fg-dim">
                   Total R
                 </div>
                 <div
                   className={cn(
-                    'mt-1 text-2xl font-bold tabular-nums',
+                    'mt-1 text-xl font-semibold font-mono tabular-nums',
                     heroStats.totalR > 0
                       ? 'text-win'
                       : heroStats.totalR < 0
@@ -809,20 +809,20 @@ export function AccountsPage() {
                 </div>
               </div>
 
-              <div className="rounded-lg bg-bg-3/70 p-3">
-                <div className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
-                  Win Rate
+              <div className="rounded-lg bg-bg-2/50 border border-line p-3">
+                <div className="text-xs font-medium text-fg-dim">
+                  Win rate
                 </div>
-                <div className="mt-1 text-2xl font-bold tabular-nums text-fg">
+                <div className="mt-1 text-xl font-semibold font-mono tabular-nums text-fg">
                   {formatPct(heroStats.winRate / 100)}
                 </div>
               </div>
 
-              <div className="rounded-lg bg-bg-3/70 p-3">
-                <div className="text-2xs font-semibold uppercase tracking-wider text-fg-dim">
+              <div className="rounded-lg bg-bg-2/50 border border-line p-3">
+                <div className="text-xs font-medium text-fg-dim">
                   Trades
                 </div>
-                <div className="mt-1 text-2xl font-bold tabular-nums text-fg">
+                <div className="mt-1 text-xl font-semibold font-mono tabular-nums text-fg">
                   {heroStats.totalTrades}
                 </div>
               </div>
